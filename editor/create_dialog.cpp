@@ -2,9 +2,11 @@
 /*  create_dialog.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -160,13 +162,13 @@ bool CreateDialog::_should_hide_type(const StringName &p_type) const {
 
 		String script_path = ScriptServer::get_global_class_path(p_type);
 		if (script_path.begins_with("res://addons/")) {
-			int i = script_path.find("/", 13); // 13 is length of "res://addons/".
+			int i = script_path.find_char('/', 13); // 13 is length of "res://addons/".
 			while (i > -1) {
 				const String plugin_path = script_path.substr(0, i).path_join("plugin.cfg");
 				if (FileAccess::exists(plugin_path)) {
 					return !EditorNode::get_singleton()->is_addon_plugin_enabled(plugin_path);
 				}
-				i = script_path.find("/", i + 1);
+				i = script_path.find_char('/', i + 1);
 			}
 		}
 	}
@@ -468,7 +470,7 @@ void CreateDialog::_notification(int p_what) {
 			recent->set_fixed_icon_size(Size2(icon_width, icon_width));
 
 			search_box->set_right_icon(get_editor_theme_icon(SNAME("Search")));
-			favorite->set_icon(get_editor_theme_icon(SNAME("Favorites")));
+			favorite->set_button_icon(get_editor_theme_icon(SNAME("Favorites")));
 		} break;
 	}
 }
@@ -613,7 +615,7 @@ Variant CreateDialog::get_drag_data_fw(const Point2 &p_point, Control *p_from) {
 
 		Button *tb = memnew(Button);
 		tb->set_flat(true);
-		tb->set_icon(ti->get_icon(0));
+		tb->set_button_icon(ti->get_icon(0));
 		tb->set_text(ti->get_text(0));
 		tb->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 		favorites->set_drag_preview(tb);

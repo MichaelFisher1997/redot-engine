@@ -2,9 +2,11 @@
 /*  web_tools_editor_plugin.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -80,7 +82,7 @@ void WebToolsEditorPlugin::_download_zip() {
 	const String output_path = String("/tmp").path_join(output_name);
 
 	zipFile zip = zipOpen2(output_path.utf8().get_data(), APPEND_STATUS_CREATE, nullptr, &io);
-	const String base_path = resource_path.substr(0, resource_path.rfind("/")) + "/";
+	const String base_path = resource_path.substr(0, resource_path.rfind_char('/')) + "/";
 	_zip_recursive(resource_path, base_path, zip);
 	zipClose(zip, nullptr);
 	{

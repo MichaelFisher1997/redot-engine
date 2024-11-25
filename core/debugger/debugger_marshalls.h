@@ -2,9 +2,11 @@
 /*  debugger_marshalls.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,6 +33,7 @@
 #ifndef DEBUGGER_MARSHALLS_H
 #define DEBUGGER_MARSHALLS_H
 
+#include "core/input/shortcut.h"
 #include "core/object/script_language.h"
 
 struct DebuggerMarshalls {
@@ -68,6 +71,9 @@ struct DebuggerMarshalls {
 		Array serialize();
 		bool deserialize(const Array &p_arr);
 	};
+
+	static Array serialize_key_shortcut(const Ref<Shortcut> &p_shortcut);
+	static Ref<Shortcut> deserialize_key_shortcut(const Array &p_keys);
 };
 
 #endif // DEBUGGER_MARSHALLS_H

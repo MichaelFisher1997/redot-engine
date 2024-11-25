@@ -2,9 +2,11 @@
 /*  editor_resource_picker.h                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -81,6 +83,8 @@ class EditorResourcePicker : public HBoxContainer {
 		CONVERT_BASE_ID = 1000,
 	};
 
+	Object *resource_owner = nullptr;
+
 	PopupMenu *edit_menu = nullptr;
 
 	void _update_resource_preview(const String &p_path, const Ref<Texture2D> &p_preview, const Ref<Texture2D> &p_small_preview, ObjectID p_obj);
@@ -102,6 +106,7 @@ class EditorResourcePicker : public HBoxContainer {
 	void _ensure_allowed_types() const;
 	bool _is_drop_valid(const Dictionary &p_drag_data) const;
 	bool _is_type_valid(const String &p_type_name, const HashSet<StringName> &p_allowed_types) const;
+	bool _is_custom_type_script() const;
 
 	Variant get_drag_data_fw(const Point2 &p_point, Control *p_from);
 	bool can_drop_data_fw(const Point2 &p_point, const Variant &p_data, Control *p_from) const;
@@ -136,6 +141,8 @@ public:
 	bool is_toggle_mode() const;
 	void set_toggle_pressed(bool p_pressed);
 	bool is_toggle_pressed() const;
+
+	void set_resource_owner(Object *p_object);
 
 	void set_editable(bool p_editable);
 	bool is_editable() const;

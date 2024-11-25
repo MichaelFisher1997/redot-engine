@@ -2,9 +2,11 @@
 /*  replication_editor.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -353,8 +355,8 @@ void ReplicationEditor::_notification(int p_what) {
 		}
 		case NOTIFICATION_ENTER_TREE: {
 			add_theme_style_override(SceneStringName(panel), EditorNode::get_singleton()->get_editor_theme()->get_stylebox(SceneStringName(panel), SNAME("Panel")));
-			add_pick_button->set_icon(get_theme_icon(SNAME("Add"), EditorStringName(EditorIcons)));
-			pin->set_icon(get_theme_icon(SNAME("Pin"), EditorStringName(EditorIcons)));
+			add_pick_button->set_button_icon(get_theme_icon(SNAME("Add"), EditorStringName(EditorIcons)));
+			pin->set_button_icon(get_theme_icon(SNAME("Pin"), EditorStringName(EditorIcons)));
 		} break;
 	}
 }
@@ -375,7 +377,7 @@ void ReplicationEditor::_add_pressed() {
 		return;
 	}
 
-	int idx = np_text.find(":");
+	int idx = np_text.find_char(':');
 	if (idx == -1) {
 		np_text = ".:" + np_text;
 	} else if (idx == 0) {
@@ -554,7 +556,7 @@ void ReplicationEditor::_add_property(const NodePath &p_property, bool p_spawn, 
 	Node *root_node = current && !current->get_root_path().is_empty() ? current->get_node(current->get_root_path()) : nullptr;
 	Ref<Texture2D> icon = _get_class_icon(root_node);
 	if (root_node) {
-		String path = prop.substr(0, prop.find(":"));
+		String path = prop.substr(0, prop.find_char(':'));
 		String subpath = prop.substr(path.size());
 		Node *node = root_node->get_node_or_null(path);
 		if (!node) {

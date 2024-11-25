@@ -2,9 +2,11 @@
 /*  path_utils.cpp                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -212,7 +214,7 @@ String relative_to_impl(const String &p_path, const String &p_relative_to) {
 #ifdef WINDOWS_ENABLED
 String get_drive_letter(const String &p_norm_path) {
 	int idx = p_norm_path.find(":/");
-	if (idx != -1 && idx < p_norm_path.find("/")) {
+	if (idx != -1 && idx < p_norm_path.find_char('/')) {
 		return p_norm_path.substr(0, idx + 1);
 	}
 	return String();

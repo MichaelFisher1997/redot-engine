@@ -2,9 +2,11 @@
 /*  gdextension.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -99,7 +101,7 @@ public:
 
 	virtual Variant call(Object *p_object, const Variant **p_args, int p_arg_count, Callable::CallError &r_error) const override {
 #ifdef TOOLS_ENABLED
-		ERR_FAIL_COND_V_MSG(!valid, Variant(), vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
+		ERR_FAIL_COND_V_MSG(!valid, Variant(), vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Redot.", name));
 		ERR_FAIL_COND_V_MSG(p_object && p_object->is_extension_placeholder(), Variant(), vformat("Cannot call GDExtension method bind '%s' on placeholder instance.", name));
 #endif
 		Variant ret;
@@ -113,7 +115,7 @@ public:
 	}
 	virtual void validated_call(Object *p_object, const Variant **p_args, Variant *r_ret) const override {
 #ifdef TOOLS_ENABLED
-		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
+		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Redot.", name));
 		ERR_FAIL_COND_MSG(p_object && p_object->is_extension_placeholder(), vformat("Cannot call GDExtension method bind '%s' on placeholder instance.", name));
 #endif
 		ERR_FAIL_COND_MSG(vararg, "Vararg methods don't have validated call support. This is most likely an engine bug.");
@@ -145,7 +147,7 @@ public:
 
 	virtual void ptrcall(Object *p_object, const void **p_args, void *r_ret) const override {
 #ifdef TOOLS_ENABLED
-		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
+		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Redot.", name));
 		ERR_FAIL_COND_MSG(p_object && p_object->is_extension_placeholder(), vformat("Cannot call GDExtension method bind '%s' on placeholder instance.", name));
 #endif
 		ERR_FAIL_COND_MSG(vararg, "Vararg methods don't have ptrcall support. This is most likely an engine bug.");
@@ -154,7 +156,7 @@ public:
 	}
 
 	virtual bool is_vararg() const override {
-		return false;
+		return vararg;
 	}
 
 #ifdef TOOLS_ENABLED
@@ -355,8 +357,8 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
 	StringName parent_class_name = *reinterpret_cast<const StringName *>(p_parent_class_name);
-	ERR_FAIL_COND_MSG(!String(class_name).is_valid_unicode_identifier(), "Attempt to register extension class '" + class_name + "', which is not a valid class identifier.");
-	ERR_FAIL_COND_MSG(ClassDB::class_exists(class_name), "Attempt to register extension class '" + class_name + "', which appears to be already registered.");
+	ERR_FAIL_COND_MSG(!String(class_name).is_valid_unicode_identifier(), vformat("Attempt to register extension class '%s', which is not a valid class identifier.", class_name));
+	ERR_FAIL_COND_MSG(ClassDB::class_exists(class_name), vformat("Attempt to register extension class '%s', which appears to be already registered.", class_name));
 
 	Extension *parent_extension = nullptr;
 
@@ -370,7 +372,7 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 			//inheriting from engine class
 		}
 	} else {
-		ERR_FAIL_MSG("Attempt to register an extension class '" + String(class_name) + "' using non-existing parent class '" + String(parent_class_name) + "'.");
+		ERR_FAIL_MSG(vformat("Attempt to register an extension class '%s' using non-existing parent class '%s'.", String(class_name), String(parent_class_name)));
 	}
 
 #ifdef TOOLS_ENABLED
@@ -379,10 +381,10 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 	if (self->is_reloading && self->extension_classes.has(class_name)) {
 		extension = &self->extension_classes[class_name];
 		if (!parent_extension && parent_class_name != extension->gdextension.parent_class_name) {
-			ERR_FAIL_MSG(vformat("GDExtension class '%s' cannot change parent type from '%s' to '%s' on hot reload. Restart Godot for this change to take effect.", class_name, extension->gdextension.parent_class_name, parent_class_name));
+			ERR_FAIL_MSG(vformat("GDExtension class '%s' cannot change parent type from '%s' to '%s' on hot reload. Restart Redot for this change to take effect.", class_name, extension->gdextension.parent_class_name, parent_class_name));
 		}
 		if (extension->gdextension.is_runtime != is_runtime) {
-			ERR_PRINT(vformat("GDExtension class '%s' cannot change to/from runtime class on hot reload. Restart Godot for this change to take effect.", class_name));
+			ERR_PRINT(vformat("GDExtension class '%s' cannot change to/from runtime class on hot reload. Restart Redot for this change to take effect.", class_name));
 			is_runtime = extension->gdextension.is_runtime;
 		}
 		extension->is_reloading = false;
@@ -463,7 +465,7 @@ void GDExtension::_register_extension_class_method(GDExtensionClassLibraryPtr p_
 
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
 	StringName method_name = *reinterpret_cast<const StringName *>(p_method_info->name);
-	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to register extension method '" + String(method_name) + "' for unexisting class '" + class_name + "'.");
+	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), vformat("Attempt to register extension method '%s' for unexisting class '%s'.", String(method_name), class_name));
 
 #ifdef TOOLS_ENABLED
 	Extension *extension = &self->extension_classes[class_name];
@@ -513,7 +515,7 @@ void GDExtension::_register_extension_class_integer_constant(GDExtensionClassLib
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
 	StringName enum_name = *reinterpret_cast<const StringName *>(p_enum_name);
 	StringName constant_name = *reinterpret_cast<const StringName *>(p_constant_name);
-	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to register extension constant '" + constant_name + "' for unexisting class '" + class_name + "'.");
+	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), vformat("Attempt to register extension constant '%s' for unexisting class '%s'.", constant_name, class_name));
 
 #ifdef TOOLS_ENABLED
 	// If the extension is still marked as reloading, that means it failed to register again.
@@ -537,7 +539,7 @@ void GDExtension::_register_extension_class_property_indexed(GDExtensionClassLib
 	StringName setter = *reinterpret_cast<const StringName *>(p_setter);
 	StringName getter = *reinterpret_cast<const StringName *>(p_getter);
 	String property_name = *reinterpret_cast<const StringName *>(p_info->name);
-	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to register extension class property '" + property_name + "' for unexisting class '" + class_name + "'.");
+	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), vformat("Attempt to register extension class property '%s' for unexisting class '%s'.", property_name, class_name));
 
 #ifdef TOOLS_ENABLED
 	// If the extension is still marked as reloading, that means it failed to register again.
@@ -558,7 +560,7 @@ void GDExtension::_register_extension_class_property_group(GDExtensionClassLibra
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
 	String group_name = *reinterpret_cast<const String *>(p_group_name);
 	String prefix = *reinterpret_cast<const String *>(p_prefix);
-	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to register extension class property group '" + group_name + "' for unexisting class '" + class_name + "'.");
+	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), vformat("Attempt to register extension class property group '%s' for unexisting class '%s'.", group_name, class_name));
 
 #ifdef TOOLS_ENABLED
 	// If the extension is still marked as reloading, that means it failed to register again.
@@ -577,7 +579,7 @@ void GDExtension::_register_extension_class_property_subgroup(GDExtensionClassLi
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
 	String subgroup_name = *reinterpret_cast<const String *>(p_subgroup_name);
 	String prefix = *reinterpret_cast<const String *>(p_prefix);
-	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to register extension class property subgroup '" + subgroup_name + "' for unexisting class '" + class_name + "'.");
+	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), vformat("Attempt to register extension class property subgroup '%s' for unexisting class '%s'.", subgroup_name, class_name));
 
 #ifdef TOOLS_ENABLED
 	// If the extension is still marked as reloading, that means it failed to register again.
@@ -595,7 +597,7 @@ void GDExtension::_register_extension_class_signal(GDExtensionClassLibraryPtr p_
 
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
 	StringName signal_name = *reinterpret_cast<const StringName *>(p_signal_name);
-	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to register extension class signal '" + signal_name + "' for unexisting class '" + class_name + "'.");
+	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), vformat("Attempt to register extension class signal '%s' for unexisting class '%s'.", signal_name, class_name));
 
 #ifdef TOOLS_ENABLED
 	// If the extension is still marked as reloading, that means it failed to register again.
@@ -618,7 +620,7 @@ void GDExtension::_unregister_extension_class(GDExtensionClassLibraryPtr p_libra
 	GDExtension *self = reinterpret_cast<GDExtension *>(p_library);
 
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
-	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to unregister unexisting extension class '" + class_name + "'.");
+	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), vformat("Attempt to unregister unexisting extension class '%s'.", class_name));
 
 	Extension *ext = &self->extension_classes[class_name];
 #ifdef TOOLS_ENABLED
@@ -626,7 +628,7 @@ void GDExtension::_unregister_extension_class(GDExtensionClassLibraryPtr p_libra
 		self->_clear_extension(ext);
 	}
 #endif
-	ERR_FAIL_COND_MSG(ext->gdextension.children.size(), "Attempt to unregister class '" + class_name + "' while other extension classes inherit from it.");
+	ERR_FAIL_COND_MSG(ext->gdextension.children.size(), vformat("Attempt to unregister class '%s' while other extension classes inherit from it.", class_name));
 
 #ifdef TOOLS_ENABLED
 	ClassDB::unregister_extension_class(class_name, !ext->is_reloading);
@@ -664,13 +666,13 @@ void GDExtension::_get_library_path(GDExtensionClassLibraryPtr p_library, GDExte
 HashMap<StringName, GDExtensionInterfaceFunctionPtr> GDExtension::gdextension_interface_functions;
 
 void GDExtension::register_interface_function(const StringName &p_function_name, GDExtensionInterfaceFunctionPtr p_function_pointer) {
-	ERR_FAIL_COND_MSG(gdextension_interface_functions.has(p_function_name), "Attempt to register interface function '" + p_function_name + "', which appears to be already registered.");
+	ERR_FAIL_COND_MSG(gdextension_interface_functions.has(p_function_name), vformat("Attempt to register interface function '%s', which appears to be already registered.", p_function_name));
 	gdextension_interface_functions.insert(p_function_name, p_function_pointer);
 }
 
 GDExtensionInterfaceFunctionPtr GDExtension::get_interface_function(const StringName &p_function_name) {
 	GDExtensionInterfaceFunctionPtr *function = gdextension_interface_functions.getptr(p_function_name);
-	ERR_FAIL_NULL_V_MSG(function, nullptr, "Attempt to get non-existent interface function: " + String(p_function_name) + ".");
+	ERR_FAIL_NULL_V_MSG(function, nullptr, vformat("Attempt to get non-existent interface function: '%s'.", String(p_function_name)));
 	return *function;
 }
 
@@ -680,8 +682,8 @@ Error GDExtension::open_library(const String &p_path, const Ref<GDExtensionLoade
 
 	Error err = loader->open_library(p_path);
 
-	ERR_FAIL_COND_V_MSG(err == ERR_FILE_NOT_FOUND, err, "GDExtension dynamic library not found: " + p_path);
-	ERR_FAIL_COND_V_MSG(err != OK, err, "Can't open GDExtension dynamic library: " + p_path);
+	ERR_FAIL_COND_V_MSG(err == ERR_FILE_NOT_FOUND, err, vformat("GDExtension dynamic library not found: '%s'.", p_path));
+	ERR_FAIL_COND_V_MSG(err != OK, err, vformat("Can't open GDExtension dynamic library: '%s'.", p_path));
 
 	err = loader->initialize(&gdextension_get_proc_address, this, &initialization);
 

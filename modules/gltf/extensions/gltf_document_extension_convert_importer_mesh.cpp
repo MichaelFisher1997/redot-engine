@@ -2,9 +2,11 @@
 /*  gltf_document_extension_convert_importer_mesh.cpp                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -63,6 +65,7 @@ Error GLTFDocumentExtensionConvertImporterMesh::import_post(Ref<GLTFState> p_sta
 				mesh_instance_node_3d->set_mesh(array_mesh);
 				mesh_instance_node_3d->set_skin(importer_mesh_3d->get_skin());
 				mesh_instance_node_3d->set_skeleton_path(importer_mesh_3d->get_skeleton_path());
+				mesh_instance_node_3d->set_visible(importer_mesh_3d->is_visible());
 				node->replace_by(mesh_instance_node_3d);
 				_copy_meta(importer_mesh_3d, mesh_instance_node_3d);
 				_copy_meta(mesh.ptr(), array_mesh.ptr());

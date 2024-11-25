@@ -4,7 +4,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from methods import get_compiler_version, print_error, print_warning, using_gcc
-from platform_methods import detect_arch
+from platform_methods import detect_arch, validate_arch
 
 if TYPE_CHECKING:
     from SCons.Script.SConscript import SConsEnvironment
@@ -33,7 +33,7 @@ def get_opts():
         EnumVariable("linker", "Linker program", "default", ("default", "bfd", "gold", "lld", "mold")),
         BoolVariable("use_llvm", "Use the LLVM compiler", False),
         BoolVariable("use_static_cpp", "Link libgcc and libstdc++ statically for better portability", True),
-        BoolVariable("use_coverage", "Test Godot coverage", False),
+        BoolVariable("use_coverage", "Test Redot coverage", False),
         BoolVariable("use_ubsan", "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)", False),
         BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
         BoolVariable("use_lsan", "Use LLVM/GCC compiler leak sanitizer (LSAN)", False),
@@ -74,12 +74,7 @@ def get_flags():
 def configure(env: "SConsEnvironment"):
     # Validate arch.
     supported_arches = ["x86_32", "x86_64", "arm32", "arm64", "rv64", "ppc32", "ppc64"]
-    if env["arch"] not in supported_arches:
-        print_error(
-            'Unsupported CPU architecture "%s" for Linux / *BSD. Supported architectures are: %s.'
-            % (env["arch"], ", ".join(supported_arches))
-        )
-        sys.exit(255)
+    validate_arch(env["arch"], get_name(), supported_arches)
 
     ## Build type
 
@@ -284,16 +279,18 @@ def configure(env: "SConsEnvironment"):
         env.ParseConfig("pkg-config libwebp --cflags --libs")
 
     if not env["builtin_mbedtls"]:
-        # mbedTLS does not provide a pkgconfig config yet. See https://github.com/ARMmbed/mbedtls/issues/228
-        env.Append(LIBS=["mbedtls", "mbedcrypto", "mbedx509"])
+        # mbedTLS only provides a pkgconfig file since 3.6.0, but we still support 2.28.x,
+        # so fallback to manually specifying LIBS if it fails.
+        if os.system("pkg-config --exists mbedtls") == 0:  # 0 means found
+            env.ParseConfig("pkg-config mbedtls mbedcrypto mbedx509 --cflags --libs")
+        else:
+            env.Append(LIBS=["mbedtls", "mbedcrypto", "mbedx509"])
 
     if not env["builtin_wslay"]:
         env.ParseConfig("pkg-config libwslay --cflags --libs")
 
     if not env["builtin_miniupnpc"]:
-        # No pkgconfig file so far, hardcode default paths.
-        env.Prepend(CPPPATH=["/usr/include/miniupnpc"])
-        env.Append(LIBS=["miniupnpc"])
+        env.ParseConfig("pkg-config miniupnpc --cflags --libs")
 
     # On Linux wchar_t should be 32-bits
     # 16-bit library shouldn't be required due to compiler optimizations

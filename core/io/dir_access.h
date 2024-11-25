@@ -2,9 +2,11 @@
 /*  dir_access.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -96,8 +98,8 @@ public:
 
 	virtual bool file_exists(String p_file) = 0;
 	virtual bool dir_exists(String p_dir) = 0;
-	virtual bool is_readable(String p_dir) { return true; };
-	virtual bool is_writable(String p_dir) { return true; };
+	virtual bool is_readable(String p_dir) { return true; }
+	virtual bool is_writable(String p_dir) { return true; }
 	static bool exists(const String &p_dir);
 	virtual uint64_t get_space_left() = 0;
 
@@ -116,10 +118,10 @@ public:
 		Ref<DirAccess> da = create(ACCESS_FILESYSTEM);
 		if (da->file_exists(p_path)) {
 			if (da->remove(p_path) != OK) {
-				ERR_FAIL_MSG("Cannot remove file or directory: " + p_path);
+				ERR_FAIL_MSG(vformat("Cannot remove file or directory: '%s'.", p_path));
 			}
 		} else {
-			ERR_FAIL_MSG("Cannot remove non-existent file or directory: " + p_path);
+			ERR_FAIL_MSG(vformat("Cannot remove non-existent file or directory: '%s'.", p_path));
 		}
 	}
 

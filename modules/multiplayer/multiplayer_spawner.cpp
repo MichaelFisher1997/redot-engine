@@ -2,9 +2,11 @@
 /*  multiplayer_spawner.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -97,7 +99,13 @@ PackedStringArray MultiplayerSpawner::get_configuration_warnings() const {
 
 void MultiplayerSpawner::add_spawnable_scene(const String &p_path) {
 	SpawnableScene sc;
-	sc.path = p_path;
+	if (p_path.begins_with("uid://")) {
+		sc.uid = p_path;
+		sc.path = ResourceUID::uid_to_path(p_path);
+	} else {
+		sc.uid = ResourceUID::path_to_uid(p_path);
+		sc.path = p_path;
+	}
 	if (Engine::get_singleton()->is_editor_hint()) {
 		ERR_FAIL_COND(!ResourceLoader::exists(p_path));
 	}
@@ -139,7 +147,7 @@ Vector<String> MultiplayerSpawner::_get_spawnable_scenes() const {
 	Vector<String> ss;
 	ss.resize(spawnable_scenes.size());
 	for (int i = 0; i < ss.size(); i++) {
-		ss.write[i] = spawnable_scenes[i].path;
+		ss.write[i] = spawnable_scenes[i].uid;
 	}
 	return ss;
 }

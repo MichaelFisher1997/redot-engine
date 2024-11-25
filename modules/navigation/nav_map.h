@@ -2,9 +2,11 @@
 /*  nav_map.h                                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -127,6 +129,14 @@ class NavMap : public NavRid {
 	int pm_obstacle_count = 0;
 
 	HashMap<NavRegion *, LocalVector<gd::Edge::Connection>> region_external_connections;
+
+	struct ConnectionPair {
+		gd::Edge::Connection connections[2];
+		int size = 0;
+	};
+
+	HashMap<gd::EdgeKey, ConnectionPair, gd::EdgeKey> connection_pairs_map;
+	LocalVector<gd::Edge::Connection> free_edges;
 
 public:
 	NavMap();

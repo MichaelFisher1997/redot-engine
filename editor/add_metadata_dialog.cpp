@@ -2,9 +2,11 @@
 /*  add_metadata_dialog.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -64,7 +66,6 @@ AddMetadataDialog::AddMetadataDialog() {
 }
 
 void AddMetadataDialog::_complete_init(const StringName &p_title) {
-	add_meta_name->grab_focus();
 	add_meta_name->set_text("");
 	validation_panel->update();
 
@@ -90,6 +91,7 @@ void AddMetadataDialog::open(const StringName p_title, List<StringName> &p_exist
 	this->_existing_metas = p_existing_metas;
 	_complete_init(p_title);
 	popup_centered();
+	add_meta_name->grab_focus();
 }
 
 StringName AddMetadataDialog::get_meta_name() {

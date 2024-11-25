@@ -2,9 +2,11 @@
 /*  editor_profiler.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -30,6 +32,7 @@
 
 #include "editor_profiler.h"
 
+#include "core/io/image.h"
 #include "core/os/os.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
@@ -389,10 +392,10 @@ void EditorProfiler::_update_frame() {
 
 void EditorProfiler::_update_button_text() {
 	if (activate->is_pressed()) {
-		activate->set_icon(get_editor_theme_icon(SNAME("Stop")));
+		activate->set_button_icon(get_editor_theme_icon(SNAME("Stop")));
 		activate->set_text(TTR("Stop"));
 	} else {
-		activate->set_icon(get_editor_theme_icon(SNAME("Play")));
+		activate->set_button_icon(get_editor_theme_icon(SNAME("Play")));
 		activate->set_text(TTR("Start"));
 	}
 }
@@ -427,8 +430,8 @@ void EditorProfiler::_notification(int p_what) {
 		case NOTIFICATION_LAYOUT_DIRECTION_CHANGED:
 		case NOTIFICATION_THEME_CHANGED:
 		case NOTIFICATION_TRANSLATION_CHANGED: {
-			activate->set_icon(get_editor_theme_icon(SNAME("Play")));
-			clear_button->set_icon(get_editor_theme_icon(SNAME("Clear")));
+			activate->set_button_icon(get_editor_theme_icon(SNAME("Play")));
+			clear_button->set_button_icon(get_editor_theme_icon(SNAME("Clear")));
 
 			theme_cache.seek_line_color = get_theme_color(SceneStringName(font_color), EditorStringName(Editor));
 			theme_cache.seek_line_color.a = 0.8;

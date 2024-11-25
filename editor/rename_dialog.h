@@ -2,9 +2,11 @@
 /*  rename_dialog.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -49,7 +51,7 @@ class TabContainer;
 class RenameDialog : public ConfirmationDialog {
 	GDCLASS(RenameDialog, ConfirmationDialog);
 
-	virtual void ok_pressed() override { rename(); };
+	virtual void ok_pressed() override { rename(); }
 	void _cancel_pressed() {}
 	void _features_toggled(bool pressed);
 	void _insert_text(const String &text);

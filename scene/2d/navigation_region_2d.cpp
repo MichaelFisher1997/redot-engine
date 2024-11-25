@@ -2,9 +2,11 @@
 /*  navigation_region_2d.cpp                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -142,7 +144,7 @@ RID NavigationRegion2D::get_region_rid() const {
 	return get_rid();
 }
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 NavigationRegion2D::_edit_get_rect() const {
 	return navigation_polygon.is_valid() ? navigation_polygon->_edit_get_rect() : Rect2();
 }
@@ -150,7 +152,7 @@ Rect2 NavigationRegion2D::_edit_get_rect() const {
 bool NavigationRegion2D::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
 	return navigation_polygon.is_valid() ? navigation_polygon->_edit_is_selected_on_click(p_point, p_tolerance) : false;
 }
-#endif
+#endif // DEBUG_ENABLED
 
 void NavigationRegion2D::_notification(int p_what) {
 	switch (p_what) {

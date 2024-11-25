@@ -27,6 +27,7 @@
 			<description>
 				Return [code]true[/code] if this plugin will customize scenes based on the platform and features used.
 				When enabled, [method _get_customization_configuration_hash] and [method _customize_scene] will be called and must be implemented.
+				[b]Note:[/b] [method _customize_scene] will only be called for scenes that have been modified since the last export.
 			</description>
 		</method>
 		<method name="_customize_resource" qualifiers="virtual">
@@ -34,9 +35,16 @@
 			<param index="0" name="resource" type="Resource" />
 			<param index="1" name="path" type="String" />
 			<description>
-				Customize a resource. If changes are made to it, return the same or a new resource. Otherwise, return [code]null[/code].
-				The [i]path[/i] argument is only used when customizing an actual file, otherwise this means that this resource is part of another one and it will be empty.
+				Customize a resource. If changes are made to it, return the same or a new resource. Otherwise, return [code]null[/code]. When a new resource is returned, [param resource] will be replaced by a copy of the new resource.
+				The [param path] argument is only used when customizing an actual file, otherwise this means that this resource is part of another one and it will be empty.
 				Implementing this method is required if [method _begin_customize_resources] returns [code]true[/code].
+				[b]Note:[/b] When customizing any of the following types and returning another resource, the other resource should not be skipped using [method skip] in [method _export_file]:
+				- [AtlasTexture]
+				- [CompressedCubemap]
+				- [CompressedCubemapArray]
+				- [CompressedTexture2D]
+				- [CompressedTexture2DArray]
+				- [CompressedTexture3D]
 			</description>
 		</method>
 		<method name="_customize_scene" qualifiers="virtual">
@@ -113,7 +121,7 @@
 			<param index="1" name="debug" type="bool" />
 			<description>
 				Virtual method to be overridden by the user. This is called to retrieve the local paths of the Android libraries archive (AAR) files provided by this plugin.
-				[b]Note:[/b] Relative paths [b]must[/b] be relative to Godot's [code]res://addons/[/code] directory. For example, an AAR file located under [code]res://addons/hello_world_plugin/HelloWorld.release.aar[/code] can be returned as an absolute path using [code]res://addons/hello_world_plugin/HelloWorld.release.aar[/code] or a relative path using [code]hello_world_plugin/HelloWorld.release.aar[/code].
+				[b]Note:[/b] Relative paths [b]must[/b] be relative to Redot's [code]res://addons/[/code] directory. For example, an AAR file located under [code]res://addons/hello_world_plugin/HelloWorld.release.aar[/code] can be returned as an absolute path using [code]res://addons/hello_world_plugin/HelloWorld.release.aar[/code] or a relative path using [code]hello_world_plugin/HelloWorld.release.aar[/code].
 				[b]Note:[/b] Only supported on Android and requires [member EditorExportPlatformAndroid.gradle_build/use_gradle_build] to be enabled.
 			</description>
 		</method>

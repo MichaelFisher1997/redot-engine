@@ -56,7 +56,7 @@
 				GD.Print(absolute.Size);     // Prints (20, 10, 5)
 				[/csharp]
 				[/codeblocks]
-				[b]Note:[/b] It's recommended to use this method when [member size] is negative, as most other methods in Godot assume that the [member size]'s components are greater than [code]0[/code].
+				[b]Note:[/b] It's recommended to use this method when [member size] is negative, as most other methods in Redot assume that the [member size]'s components are greater than [code]0[/code].
 			</description>
 		</method>
 		<method name="encloses" qualifiers="const">
@@ -326,13 +326,13 @@
 			<return type="bool" />
 			<param index="0" name="aabb" type="AABB" />
 			<description>
-				Returns [code]true[/code] if this bounding box and [param aabb] are approximately equal, by calling [method Vector2.is_equal_approx] on the [member position] and the [member size].
+				Returns [code]true[/code] if this bounding box and [param aabb] are approximately equal, by calling [method Vector3.is_equal_approx] on the [member position] and the [member size].
 			</description>
 		</method>
 		<method name="is_finite" qualifiers="const">
 			<return type="bool" />
 			<description>
-				Returns [code]true[/code] if this bounding box's values are finite, by calling [method Vector2.is_finite] on the [member position] and the [member size].
+				Returns [code]true[/code] if this bounding box's values are finite, by calling [method Vector3.is_finite] on the [member position] and the [member size].
 			</description>
 		</method>
 		<method name="merge" qualifiers="const">
@@ -352,7 +352,7 @@
 		</member>
 		<member name="size" type="Vector3" setter="" getter="" default="Vector3(0, 0, 0)">
 			The bounding box's width, height, and depth starting from [member position]. Setting this value also affects the [member end] point.
-			[b]Note:[/b] It's recommended setting the width, height, and depth to non-negative values. This is because most methods in Godot assume that the [member position] is the bottom-left-back corner, and the [member end] is the top-right-forward corner. To get an equivalent bounding box with non-negative size, use [method abs].
+			[b]Note:[/b] It's recommended setting the width, height, and depth to non-negative values. This is because most methods in Redot assume that the [member position] is the bottom-left-back corner, and the [member end] is the top-right-forward corner. To get an equivalent bounding box with non-negative size, use [method abs].
 		</member>
 	</members>
 	<operators>

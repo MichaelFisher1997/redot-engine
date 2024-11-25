@@ -2,9 +2,11 @@
 /*  button.h                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -100,6 +102,7 @@ private:
 
 		int h_separation = 0;
 		int icon_max_width = 0;
+		int line_spacing = 0;
 	} theme_cache;
 
 	void _shape(Ref<TextParagraph> p_paragraph = Ref<TextParagraph>(), String p_text = "");
@@ -137,8 +140,8 @@ public:
 	void set_language(const String &p_language);
 	String get_language() const;
 
-	void set_icon(const Ref<Texture2D> &p_icon);
-	Ref<Texture2D> get_icon() const;
+	void set_button_icon(const Ref<Texture2D> &p_icon);
+	Ref<Texture2D> get_button_icon() const;
 
 	void set_expand_icon(bool p_enabled);
 	bool is_expand_icon() const;

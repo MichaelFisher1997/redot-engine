@@ -2,9 +2,11 @@
 /*  gdscript_tokenizer_buffer.h                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -79,7 +81,7 @@ public:
 	virtual bool is_past_cursor() const override;
 	virtual void push_expression_indented_block() override; // For lambdas, or blocks inside expressions.
 	virtual void pop_expression_indented_block() override; // For lambdas, or blocks inside expressions.
-	virtual bool is_text() override { return false; };
+	virtual bool is_text() override { return false; }
 
 #ifdef TOOLS_ENABLED
 	virtual const HashMap<int, CommentData> &get_comments() const override {

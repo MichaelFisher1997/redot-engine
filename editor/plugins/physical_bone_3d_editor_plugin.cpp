@@ -2,9 +2,11 @@
 /*  physical_bone_3d_editor_plugin.cpp                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -60,7 +62,7 @@ PhysicalBone3DEditor::PhysicalBone3DEditor() {
 	button_transform_joint->set_text(TTR("Move Joint"));
 	// TODO: Rework this as a dedicated toolbar control so we can hook into theme changes and update it
 	// when the editor theme updates.
-	button_transform_joint->set_icon(EditorNode::get_singleton()->get_editor_theme()->get_icon(SNAME("PhysicalBone3D"), EditorStringName(EditorIcons)));
+	button_transform_joint->set_button_icon(EditorNode::get_singleton()->get_editor_theme()->get_icon(SNAME("PhysicalBone3D"), EditorStringName(EditorIcons)));
 	button_transform_joint->set_toggle_mode(true);
 	button_transform_joint->connect(SceneStringName(toggled), callable_mp(this, &PhysicalBone3DEditor::_on_toggle_button_transform_joint));
 

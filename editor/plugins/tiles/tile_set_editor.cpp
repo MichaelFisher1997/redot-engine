@@ -2,9 +2,11 @@
 /*  tile_set_editor.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -366,10 +368,10 @@ void TileSetEditor::_set_source_sort(int p_sort) {
 void TileSetEditor::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			sources_delete_button->set_icon(get_editor_theme_icon(SNAME("Remove")));
-			sources_add_button->set_icon(get_editor_theme_icon(SNAME("Add")));
-			source_sort_button->set_icon(get_editor_theme_icon(SNAME("Sort")));
-			sources_advanced_menu_button->set_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
+			sources_delete_button->set_button_icon(get_editor_theme_icon(SNAME("Remove")));
+			sources_add_button->set_button_icon(get_editor_theme_icon(SNAME("Add")));
+			source_sort_button->set_button_icon(get_editor_theme_icon(SNAME("Sort")));
+			sources_advanced_menu_button->set_button_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
 			missing_texture_texture = get_editor_theme_icon(SNAME("TileSet"));
 			expanded_area->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SceneStringName(panel), "Tree"));
 			_update_sources_list();

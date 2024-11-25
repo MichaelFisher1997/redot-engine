@@ -2,9 +2,11 @@
 /*  test_variant_utility.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -89,7 +91,7 @@ TEST_CASE("[VariantUtility] Type conversion") {
 
 		converted = VariantUtilityFunctions::type_convert(basis, Variant::Type::STRING);
 		CHECK(converted.get_type() == Variant::Type::STRING);
-		CHECK(converted == Variant("[X: (1.2, 0, 0), Y: (0, 3.4, 0), Z: (0, 0, 5.6)]"));
+		CHECK(converted == Variant("[X: (1.2, 0.0, 0.0), Y: (0.0, 3.4, 0.0), Z: (0.0, 0.0, 5.6)]"));
 	}
 
 	{

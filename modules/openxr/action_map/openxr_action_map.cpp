@@ -2,9 +2,11 @@
 /*  openxr_action_map.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -576,20 +578,15 @@ PackedStringArray OpenXRActionMap::get_top_level_paths(const Ref<OpenXRAction> p
 		const OpenXRInteractionProfileMetadata::InteractionProfile *profile = OpenXRInteractionProfileMetadata::get_singleton()->get_profile(ip->get_interaction_profile_path());
 
 		if (profile != nullptr) {
-			for (int j = 0; j < ip->get_binding_count(); j++) {
-				Ref<OpenXRIPBinding> binding = ip->get_binding(j);
-				if (binding->get_action() == p_action) {
-					PackedStringArray paths = binding->get_paths();
+			Vector<Ref<OpenXRIPBinding>> bindings = ip->get_bindings_for_action(p_action);
+			for (const Ref<OpenXRIPBinding> &binding : bindings) {
+				String binding_path = binding->get_binding_path();
+				const OpenXRInteractionProfileMetadata::IOPath *io_path = profile->get_io_path(binding_path);
+				if (io_path != nullptr) {
+					String top_path = io_path->top_level_path;
 
-					for (int k = 0; k < paths.size(); k++) {
-						const OpenXRInteractionProfileMetadata::IOPath *io_path = profile->get_io_path(paths[k]);
-						if (io_path != nullptr) {
-							String top_path = io_path->top_level_path;
-
-							if (!arr.has(top_path)) {
-								arr.push_back(top_path);
-							}
-						}
+					if (!arr.has(top_path)) {
+						arr.push_back(top_path);
 					}
 				}
 			}

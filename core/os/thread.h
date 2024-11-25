@@ -2,9 +2,11 @@
 /*  thread.h                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -41,6 +43,8 @@
 
 #include "core/templates/safe_refcount.h"
 #include "core/typedefs.h"
+
+#include <new>
 
 #ifdef MINGW_ENABLED
 #define MINGW_STDTHREAD_REDUNDANCY_WARNING
@@ -84,6 +88,20 @@ public:
 		void (*wrapper)(Thread::Callback, void *) = nullptr;
 		void (*term)() = nullptr;
 	};
+
+#if defined(__cpp_lib_hardware_interference_size) && !defined(ANDROID_ENABLED) // This would be OK with NDK >= 26.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winterference-size"
+#endif
+	static constexpr size_t CACHE_LINE_BYTES = std::hardware_destructive_interference_size;
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+#else
+	// At a negligible memory cost, we use a conservatively high value.
+	static constexpr size_t CACHE_LINE_BYTES = 128;
+#endif
 
 private:
 	friend class Main;
@@ -134,6 +152,8 @@ public:
 	typedef void (*Callback)(void *p_userdata);
 
 	typedef uint64_t ID;
+
+	static constexpr size_t CACHE_LINE_BYTES = sizeof(void *);
 
 	enum : ID {
 		UNASSIGNED_ID = 0,

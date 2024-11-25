@@ -2,9 +2,11 @@
 /*  enet_connection.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -102,7 +104,7 @@ Ref<ENetPacketPeer> ENetConnection::connect_to_host(const String &p_address, int
 #ifdef GODOT_ENET
 	enet_address_set_ip(&address, ip.get_ipv6(), 16);
 #else
-	ERR_FAIL_COND_V_MSG(!ip.is_ipv4(), out, "Connecting to an IPv6 server isn't supported when using vanilla ENet. Recompile Godot with the bundled ENet library.");
+	ERR_FAIL_COND_V_MSG(!ip.is_ipv4(), out, "Connecting to an IPv6 server isn't supported when using vanilla ENet. Recompile Redot with the bundled ENet library.");
 	address.host = *(uint32_t *)ip.get_ipv4();
 #endif
 	address.port = p_port;
@@ -113,7 +115,7 @@ Ref<ENetPacketPeer> ENetConnection::connect_to_host(const String &p_address, int
 	if (peer == nullptr) {
 		return nullptr;
 	}
-	out = Ref<ENetPacketPeer>(memnew(ENetPacketPeer(peer)));
+	out.instantiate(peer);
 	peers.push_back(out);
 	return out;
 }
@@ -363,7 +365,7 @@ void ENetConnection::socket_send(const String &p_address, int p_port, const Pack
 #ifdef GODOT_ENET
 	enet_address_set_ip(&address, ip.get_ipv6(), 16);
 #else
-	ERR_FAIL_COND_MSG(!ip.is_ipv4(), "Connecting to an IPv6 server isn't supported when using vanilla ENet. Recompile Godot with the bundled ENet library.");
+	ERR_FAIL_COND_MSG(!ip.is_ipv4(), "Connecting to an IPv6 server isn't supported when using vanilla ENet. Recompile Redot with the bundled ENet library.");
 	address.host = *(uint32_t *)ip.get_ipv4();
 #endif
 	address.port = p_port;

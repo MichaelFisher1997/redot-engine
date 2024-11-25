@@ -2,9 +2,11 @@
 /*  visible_on_screen_notifier_2d.cpp                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -30,7 +32,7 @@
 
 #include "visible_on_screen_notifier_2d.h"
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 VisibleOnScreenNotifier2D::_edit_get_rect() const {
 	return rect;
 }
@@ -38,7 +40,7 @@ Rect2 VisibleOnScreenNotifier2D::_edit_get_rect() const {
 bool VisibleOnScreenNotifier2D::_edit_use_rect() const {
 	return true;
 }
-#endif
+#endif // DEBUG_ENABLED
 
 void VisibleOnScreenNotifier2D::_visibility_enter() {
 	if (!is_inside_tree() || Engine::get_singleton()->is_editor_hint()) {

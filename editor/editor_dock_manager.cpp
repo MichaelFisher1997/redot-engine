@@ -2,9 +2,11 @@
 /*  editor_dock_manager.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -238,7 +240,7 @@ void EditorDockManager::_open_dock_in_window(Control *p_dock, bool p_show_window
 	Point2 dock_screen_pos = p_dock->get_screen_position();
 
 	WindowWrapper *wrapper = memnew(WindowWrapper);
-	wrapper->set_window_title(vformat(TTR("%s - Godot Engine"), all_docks[p_dock].title));
+	wrapper->set_window_title(vformat(TTR("%s - Redot Engine"), all_docks[p_dock].title));
 	wrapper->set_margins_enabled(true);
 
 	EditorNode::get_singleton()->get_gui_base()->add_child(wrapper);
@@ -852,21 +854,21 @@ void DockContextPopup::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
 			if (make_float_button) {
-				make_float_button->set_icon(get_editor_theme_icon(SNAME("MakeFloating")));
+				make_float_button->set_button_icon(get_editor_theme_icon(SNAME("MakeFloating")));
 			}
 			if (is_layout_rtl()) {
-				tab_move_left_button->set_icon(get_editor_theme_icon(SNAME("Forward")));
-				tab_move_right_button->set_icon(get_editor_theme_icon(SNAME("Back")));
+				tab_move_left_button->set_button_icon(get_editor_theme_icon(SNAME("Forward")));
+				tab_move_right_button->set_button_icon(get_editor_theme_icon(SNAME("Back")));
 				tab_move_left_button->set_tooltip_text(TTR("Move this dock right one tab."));
 				tab_move_right_button->set_tooltip_text(TTR("Move this dock left one tab."));
 			} else {
-				tab_move_left_button->set_icon(get_editor_theme_icon(SNAME("Back")));
-				tab_move_right_button->set_icon(get_editor_theme_icon(SNAME("Forward")));
+				tab_move_left_button->set_button_icon(get_editor_theme_icon(SNAME("Back")));
+				tab_move_right_button->set_button_icon(get_editor_theme_icon(SNAME("Forward")));
 				tab_move_left_button->set_tooltip_text(TTR("Move this dock left one tab."));
 				tab_move_right_button->set_tooltip_text(TTR("Move this dock right one tab."));
 			}
-			dock_to_bottom_button->set_icon(get_editor_theme_icon(SNAME("ControlAlignBottomWide")));
-			close_button->set_icon(get_editor_theme_icon(SNAME("Close")));
+			dock_to_bottom_button->set_button_icon(get_editor_theme_icon(SNAME("ControlAlignBottomWide")));
+			close_button->set_button_icon(get_editor_theme_icon(SNAME("Close")));
 		} break;
 	}
 }

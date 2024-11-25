@@ -2,9 +2,11 @@
 /*  particles_storage.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -247,7 +249,8 @@ private:
 		ParticleEmissionBuffer *emission_buffer = nullptr;
 		RID emission_storage_buffer;
 
-		RID unused_storage_buffer;
+		RID unused_emission_storage_buffer;
+		RID unused_trail_storage_buffer;
 
 		HashSet<RID> collisions;
 
@@ -265,7 +268,8 @@ private:
 
 	void _particles_process(Particles *p_particles, double p_delta);
 	void _particles_allocate_emission_buffer(Particles *particles);
-	void _particles_ensure_unused_buffer(Particles *particles);
+	void _particles_ensure_unused_emission_buffer(Particles *particles);
+	void _particles_ensure_unused_trail_buffer(Particles *particles);
 	void _particles_free_data(Particles *particles);
 	void _particles_update_buffers(Particles *particles);
 
@@ -509,7 +513,7 @@ public:
 
 	_FORCE_INLINE_ bool particles_has_collision(RID p_particles) {
 		Particles *particles = particles_owner.get_or_null(p_particles);
-		ERR_FAIL_NULL_V(particles, 0);
+		ERR_FAIL_NULL_V(particles, false);
 
 		return particles->has_collision_cache;
 	}

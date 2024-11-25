@@ -2,9 +2,11 @@
 /*  animation_blend_tree.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,6 +39,8 @@ class AnimationNodeAnimation : public AnimationRootNode {
 	GDCLASS(AnimationNodeAnimation, AnimationRootNode);
 
 	StringName animation;
+
+	bool advance_on_start = false;
 
 	bool use_custom_timeline = false;
 	double timeline_length = 1.0;
@@ -71,6 +75,9 @@ public:
 
 	void set_backward(bool p_backward);
 	bool is_backward() const;
+
+	void set_advance_on_start(bool p_advance_on_start);
+	bool is_advance_on_start() const;
 
 	void set_use_custom_timeline(bool p_use_custom_timeline);
 	bool is_using_custom_timeline() const;

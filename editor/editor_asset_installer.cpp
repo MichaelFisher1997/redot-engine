@@ -2,9 +2,11 @@
 /*  editor_asset_installer.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -130,14 +132,14 @@ void EditorAssetInstaller::open_asset(const String &p_path, bool p_autoskip_topl
 
 		// Create intermediate directories if they aren't reported by unzip.
 		// We are only interested in subfolders, so skip the root slash.
-		int separator = source_name.find("/", 1);
+		int separator = source_name.find_char('/', 1);
 		while (separator != -1) {
 			String dir_name = source_name.substr(0, separator + 1);
 			if (!dir_name.is_empty() && !asset_files.has(dir_name)) {
 				asset_files.insert(dir_name);
 			}
 
-			separator = source_name.find("/", separator + 1);
+			separator = source_name.find_char('/', separator + 1);
 		}
 
 		if (!source_name.is_empty() && !asset_files.has(source_name)) {
@@ -214,7 +216,7 @@ void EditorAssetInstaller::_rebuild_source_tree() {
 
 		TreeItem *parent_item;
 
-		int separator = path.rfind("/");
+		int separator = path.rfind_char('/');
 		if (separator == -1) {
 			parent_item = root;
 		} else {
@@ -313,7 +315,7 @@ void EditorAssetInstaller::_rebuild_destination_tree() {
 
 		TreeItem *parent_item;
 
-		int separator = path.rfind("/");
+		int separator = path.rfind_char('/');
 		if (separator == -1) {
 			parent_item = root;
 		} else {
@@ -411,9 +413,9 @@ void EditorAssetInstaller::_toggle_source_tree(bool p_visible, bool p_scroll_to_
 	show_source_files_button->set_pressed_no_signal(p_visible); // To keep in sync if triggered by something else.
 
 	if (p_visible) {
-		show_source_files_button->set_icon(get_editor_theme_icon(SNAME("Back")));
+		show_source_files_button->set_button_icon(get_editor_theme_icon(SNAME("Back")));
 	} else {
-		show_source_files_button->set_icon(get_editor_theme_icon(SNAME("Forward")));
+		show_source_files_button->set_button_icon(get_editor_theme_icon(SNAME("Forward")));
 	}
 
 	if (p_visible && p_scroll_to_error && first_file_conflict) {
@@ -597,9 +599,9 @@ void EditorAssetInstaller::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
 			if (show_source_files_button->is_pressed()) {
-				show_source_files_button->set_icon(get_editor_theme_icon(SNAME("Back")));
+				show_source_files_button->set_button_icon(get_editor_theme_icon(SNAME("Back")));
 			} else {
-				show_source_files_button->set_icon(get_editor_theme_icon(SNAME("Forward")));
+				show_source_files_button->set_button_icon(get_editor_theme_icon(SNAME("Forward")));
 			}
 			asset_conflicts_link->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
 

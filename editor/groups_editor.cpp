@@ -2,9 +2,11 @@
 /*  groups_editor.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -373,7 +375,7 @@ void GroupsEditor::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_THEME_CHANGED: {
 			filter->set_right_icon(get_editor_theme_icon("Search"));
-			add->set_icon(get_editor_theme_icon("Add"));
+			add->set_button_icon(get_editor_theme_icon("Add"));
 			_update_tree();
 		} break;
 		case NOTIFICATION_VISIBILITY_CHANGED: {

@@ -2,9 +2,11 @@
 /*  editor_object_selector.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -30,6 +32,7 @@
 
 #include "editor_object_selector.h"
 
+#include "editor/debugger/editor_debugger_inspector.h"
 #include "editor/editor_data.h"
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
@@ -131,6 +134,19 @@ void EditorObjectSelector::update_path() {
 		Ref<Texture2D> obj_icon;
 		if (Object::cast_to<MultiNodeEdit>(obj)) {
 			obj_icon = EditorNode::get_singleton()->get_class_icon(Object::cast_to<MultiNodeEdit>(obj)->get_edited_class_name());
+		} else if (Object::cast_to<EditorDebuggerRemoteObject>(obj)) {
+			String class_name;
+			Ref<Script> base_script = obj->get_script();
+			if (base_script.is_valid()) {
+				class_name = base_script->get_global_name();
+
+				if (class_name.is_empty()) {
+					// If there is no class_name in this script we just take the script path.
+					class_name = base_script->get_path();
+				}
+			}
+
+			obj_icon = EditorNode::get_singleton()->get_class_icon(class_name.is_empty() ? Object::cast_to<EditorDebuggerRemoteObject>(obj)->type_name : class_name);
 		} else {
 			obj_icon = EditorNode::get_singleton()->get_object_icon(obj);
 		}

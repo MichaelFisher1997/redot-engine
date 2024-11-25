@@ -2,9 +2,11 @@
 /*  input_map.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -54,6 +56,8 @@ public:
 		List<Ref<InputEvent>> inputs;
 	};
 
+	static constexpr float DEFAULT_DEADZONE = 0.2f;
+
 private:
 	static InputMap *singleton;
 
@@ -79,7 +83,7 @@ public:
 
 	bool has_action(const StringName &p_action) const;
 	List<StringName> get_actions() const;
-	void add_action(const StringName &p_action, float p_deadzone = 0.2);
+	void add_action(const StringName &p_action, float p_deadzone = DEFAULT_DEADZONE);
 	void erase_action(const StringName &p_action);
 
 	float action_get_deadzone(const StringName &p_action);

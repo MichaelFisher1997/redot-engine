@@ -2,9 +2,11 @@
 /*  joypad_windows.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -122,8 +124,9 @@ bool JoypadWindows::is_xinput_device(const GUID *p_guid) {
 			memcmp(p_guid, &IID_XOneSWirelessGamepad, sizeof(*p_guid)) == 0 ||
 			memcmp(p_guid, &IID_XOneSBluetoothGamepad, sizeof(*p_guid)) == 0 ||
 			memcmp(p_guid, &IID_XOneEliteWirelessGamepad, sizeof(*p_guid)) == 0 ||
-			memcmp(p_guid, &IID_XOneElite2WirelessGamepad, sizeof(*p_guid)) == 0)
+			memcmp(p_guid, &IID_XOneElite2WirelessGamepad, sizeof(*p_guid)) == 0) {
 		return true;
+	}
 
 	PRAWINPUTDEVICELIST dev_list = nullptr;
 	unsigned int dev_list_count = 0;

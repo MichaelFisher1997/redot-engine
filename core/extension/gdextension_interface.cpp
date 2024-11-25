@@ -2,9 +2,11 @@
 /*  gdextension_interface.cpp                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,6 +36,7 @@
 #include "core/extension/gdextension.h"
 #include "core/extension/gdextension_compat_hashes.h"
 #include "core/io/file_access.h"
+#include "core/io/image.h"
 #include "core/io/xml_parser.h"
 #include "core/object/class_db.h"
 #include "core/object/script_language_extension.h"
@@ -1525,7 +1528,7 @@ static GDExtensionMethodBindPtr gdextension_classdb_get_method_bind(GDExtensionC
 #endif
 
 	if (!mb && exists) {
-		ERR_PRINT("Method '" + classname + "." + methodname + "' has changed and no compatibility fallback has been provided. Please open an issue.");
+		ERR_PRINT(vformat("Method '%s.%s' has changed and no compatibility fallback has been provided. Please open an issue.", classname, methodname));
 		return nullptr;
 	}
 	ERR_FAIL_NULL_V(mb, nullptr);

@@ -2,9 +2,11 @@
 /*  PermissionsUtil.java                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -49,7 +51,6 @@ import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,6 +67,7 @@ public final class PermissionsUtil {
 	public static final int REQUEST_ALL_PERMISSION_REQ_CODE = 1001;
 	public static final int REQUEST_SINGLE_PERMISSION_REQ_CODE = 1002;
 	public static final int REQUEST_MANAGE_EXTERNAL_STORAGE_REQ_CODE = 2002;
+	public static final int REQUEST_INSTALL_PACKAGES_REQ_CODE = 3002;
 
 	private PermissionsUtil() {
 	}
@@ -105,10 +107,20 @@ public final class PermissionsUtil {
 							activity.startActivityForResult(intent, REQUEST_MANAGE_EXTERNAL_STORAGE_REQ_CODE);
 						}
 					}
+				} else if (permission.equals(Manifest.permission.REQUEST_INSTALL_PACKAGES)) {
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !activity.getPackageManager().canRequestPackageInstalls()) {
+						try {
+							Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+							intent.setData(Uri.parse(String.format("package:%s", activity.getPackageName())));
+							activity.startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_REQ_CODE);
+						} catch (Exception e) {
+							Log.e(TAG, "Unable to request permission " + Manifest.permission.REQUEST_INSTALL_PACKAGES);
+						}
+					}
 				} else {
 					PermissionInfo permissionInfo = getPermissionInfo(activity, permission);
 					int protectionLevel = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? permissionInfo.getProtection() : permissionInfo.protectionLevel;
-					if (protectionLevel == PermissionInfo.PROTECTION_DANGEROUS && ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+					if ((protectionLevel & PermissionInfo.PROTECTION_DANGEROUS) == PermissionInfo.PROTECTION_DANGEROUS && ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
 						Log.d(TAG, "Requesting permission " + permission);
 						requestedPermissions.add(permission);
 					}
@@ -174,7 +186,7 @@ public final class PermissionsUtil {
 				try {
 					PermissionInfo permissionInfo = getPermissionInfo(activity, permissionName);
 					int protectionLevel = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? permissionInfo.getProtection() : permissionInfo.protectionLevel;
-					if (protectionLevel == PermissionInfo.PROTECTION_DANGEROUS && ContextCompat.checkSelfPermission(activity, permissionName) != PackageManager.PERMISSION_GRANTED) {
+					if ((protectionLevel & PermissionInfo.PROTECTION_DANGEROUS) == PermissionInfo.PROTECTION_DANGEROUS && ContextCompat.checkSelfPermission(activity, permissionName) != PackageManager.PERMISSION_GRANTED) {
 						activity.requestPermissions(new String[] { permissionName }, REQUEST_SINGLE_PERMISSION_REQ_CODE);
 						return false;
 					}
@@ -215,7 +227,7 @@ public final class PermissionsUtil {
 		try {
 			manifestPermissions = getManifestPermissions(activity);
 		} catch (PackageManager.NameNotFoundException e) {
-			e.printStackTrace();
+			Log.e(TAG, "Unable to retrieve manifest permissions", e);
 			return false;
 		}
 
@@ -242,7 +254,7 @@ public final class PermissionsUtil {
 		try {
 			manifestPermissions = getManifestPermissions(context);
 		} catch (PackageManager.NameNotFoundException e) {
-			e.printStackTrace();
+			Log.e(TAG, "Unable to retrieve manifest permissions", e);
 			return new String[0];
 		}
 		if (manifestPermissions.isEmpty()) {
@@ -259,7 +271,7 @@ public final class PermissionsUtil {
 				} else {
 					PermissionInfo permissionInfo = getPermissionInfo(context, manifestPermission);
 					int protectionLevel = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? permissionInfo.getProtection() : permissionInfo.protectionLevel;
-					if (protectionLevel == PermissionInfo.PROTECTION_DANGEROUS && ContextCompat.checkSelfPermission(context, manifestPermission) == PackageManager.PERMISSION_GRANTED) {
+					if ((protectionLevel & PermissionInfo.PROTECTION_DANGEROUS) == PermissionInfo.PROTECTION_DANGEROUS && ContextCompat.checkSelfPermission(context, manifestPermission) == PackageManager.PERMISSION_GRANTED) {
 						grantedPermissions.add(manifestPermission);
 					}
 				}

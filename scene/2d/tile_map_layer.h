@@ -2,9 +2,11 @@
 /*  tile_map_layer.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -321,6 +323,7 @@ private:
 	bool _runtime_update_needs_all_cells_cleaned_up = false;
 	void _clear_runtime_update_tile_data();
 	void _clear_runtime_update_tile_data_for_cell(CellData &r_cell_data);
+	void _update_cells_callback(bool p_force_cleanup);
 
 	// Per-system methods.
 #ifdef DEBUG_ENABLED
@@ -462,6 +465,7 @@ public:
 	void notify_runtime_tile_data_update();
 	GDVIRTUAL1R(bool, _use_tile_data_runtime_update, Vector2i);
 	GDVIRTUAL2(_tile_data_runtime_update, Vector2i, TileData *);
+	GDVIRTUAL2(_update_cells, TypedArray<Vector2i>, bool);
 
 	// --- Shortcuts to methods defined in TileSet ---
 	Vector2i map_pattern(const Vector2i &p_position_in_tilemap, const Vector2i &p_coords_in_pattern, Ref<TileMapPattern> p_pattern);

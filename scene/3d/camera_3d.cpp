@@ -2,9 +2,11 @@
 /*  camera_3d.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -234,6 +236,7 @@ void Camera3D::_notification(int p_what) {
 			}
 		} break;
 
+		case NOTIFICATION_SUSPENDED:
 		case NOTIFICATION_PAUSED: {
 			if (is_physics_interpolated_and_enabled() && is_inside_tree() && is_visible_in_tree()) {
 				_physics_interpolation_ensure_transform_calculated(true);
@@ -377,7 +380,7 @@ void Camera3D::set_projection(ProjectionType p_mode) {
 
 RID Camera3D::get_camera() const {
 	return camera;
-};
+}
 
 void Camera3D::make_current() {
 	current = true;
@@ -423,7 +426,7 @@ bool Camera3D::is_current() const {
 Vector3 Camera3D::project_ray_normal(const Point2 &p_pos) const {
 	Vector3 ray = project_local_ray_normal(p_pos);
 	return get_camera_transform().basis.xform(ray).normalized();
-};
+}
 
 Vector3 Camera3D::project_local_ray_normal(const Point2 &p_pos) const {
 	ERR_FAIL_COND_V_MSG(!is_inside_tree(), Vector3(), "Camera is not inside scene.");
@@ -441,7 +444,7 @@ Vector3 Camera3D::project_local_ray_normal(const Point2 &p_pos) const {
 	}
 
 	return ray;
-};
+}
 
 Vector3 Camera3D::project_ray_origin(const Point2 &p_pos) const {
 	ERR_FAIL_COND_V_MSG(!is_inside_tree(), Vector3(), "Camera is not inside scene.");
@@ -470,7 +473,7 @@ Vector3 Camera3D::project_ray_origin(const Point2 &p_pos) const {
 	} else {
 		return get_camera_transform().origin;
 	};
-};
+}
 
 bool Camera3D::is_position_behind(const Vector3 &p_pos) const {
 	Transform3D t = get_global_transform();

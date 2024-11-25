@@ -2,9 +2,11 @@
 /*  particle_process_material_editor_plugin.cpp                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -346,7 +348,7 @@ float ParticleProcessMaterialMinMaxPropertyEditor::_get_max_spread() const {
 void ParticleProcessMaterialMinMaxPropertyEditor::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			toggle_mode_button->set_icon(get_editor_theme_icon(SNAME("Anchor")));
+			toggle_mode_button->set_button_icon(get_editor_theme_icon(SNAME("Anchor")));
 			range_slider_left_icon = get_editor_theme_icon(SNAME("RangeSliderLeft"));
 			range_slider_right_icon = get_editor_theme_icon(SNAME("RangeSliderRight"));
 

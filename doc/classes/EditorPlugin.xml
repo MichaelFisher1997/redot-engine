@@ -259,7 +259,7 @@
 		<method name="_get_plugin_name" qualifiers="virtual const">
 			<return type="String" />
 			<description>
-				Override this method in your plugin to provide the name of the plugin when displayed in the Godot editor.
+				Override this method in your plugin to provide the name of the plugin when displayed in the Redot editor.
 				For main screen plugins, this appears at the top of the screen, to the right of the "2D", "3D", "Script", and "AssetLib" buttons.
 			</description>
 		</method>
@@ -416,7 +416,7 @@
 			<param index="1" name="title" type="String" />
 			<param index="2" name="shortcut" type="Shortcut" default="null" />
 			<description>
-				Adds a control to the bottom panel (together with Output, Debug, Animation, etc). Returns a reference to the button added. It's up to you to hide/show the button when needed. When your plugin is deactivated, make sure to remove your custom control with [method remove_control_from_bottom_panel] and free it with [method Node.queue_free].
+				Adds a control to the bottom panel (together with Output, Debug, Animation, etc.). Returns a reference to the button added. It's up to you to hide/show the button when needed. When your plugin is deactivated, make sure to remove your custom control with [method remove_control_from_bottom_panel] and free it with [method Node.queue_free].
 				Optionally, you can specify a shortcut parameter. When pressed, this shortcut will toggle the bottom panel's visibility. See the default editor bottom panel shortcuts in the Editor Settings for inspiration. Per convention, they all use [kbd]Alt[/kbd] modifier.
 			</description>
 		</method>

@@ -2,9 +2,11 @@
 /*  editor_theme_manager.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -135,6 +137,7 @@ class EditorThemeManager {
 		Ref<StyleBoxFlat> button_style_hover;
 
 		Ref<StyleBoxFlat> popup_style;
+		Ref<StyleBoxFlat> popup_border_style;
 		Ref<StyleBoxFlat> window_style;
 		Ref<StyleBoxFlat> dialog_style;
 		Ref<StyleBoxFlat> panel_container_style;

@@ -2,9 +2,11 @@
 /*  animation.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -1048,7 +1050,7 @@ int Animation::find_track(const NodePath &p_path, const TrackType p_type) const 
 		}
 	};
 	return -1;
-};
+}
 
 Animation::TrackType Animation::get_cache_type(TrackType p_type) {
 	if (p_type == Animation::TYPE_BEZIER) {

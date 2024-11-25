@@ -2,9 +2,11 @@
 /*  navigation_mesh_source_geometry_data_3d.cpp                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -71,7 +73,7 @@ void NavigationMeshSourceGeometryData3D::append_arrays(const Vector<float> &p_ve
 bool NavigationMeshSourceGeometryData3D::has_data() {
 	RWLockRead read_lock(geometry_rwlock);
 	return vertices.size() && indices.size();
-};
+}
 
 void NavigationMeshSourceGeometryData3D::clear() {
 	RWLockWrite write_lock(geometry_rwlock);

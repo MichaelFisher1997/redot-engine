@@ -2,9 +2,11 @@
 /*  font.cpp                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -647,13 +649,13 @@ void FontFile::_convert_packed_8bit(Ref<Image> &p_source, int p_page, int p_sz) 
 			wa[ofs_dst + 1] = r[ofs_src + 3];
 		}
 	}
-	Ref<Image> img_r = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_r));
+	Ref<Image> img_r = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_r));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 0, img_r);
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 1, img_g);
-	Ref<Image> img_b = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_b));
+	Ref<Image> img_b = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_b));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 2, img_b);
-	Ref<Image> img_a = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_a));
+	Ref<Image> img_a = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_a));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 3, img_a);
 }
 
@@ -738,22 +740,22 @@ void FontFile::_convert_packed_4bit(Ref<Image> &p_source, int p_page, int p_sz) 
 			}
 		}
 	}
-	Ref<Image> img_r = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_r));
+	Ref<Image> img_r = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_r));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 0, img_r);
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 1, img_g);
-	Ref<Image> img_b = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_b));
+	Ref<Image> img_b = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_b));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 2, img_b);
-	Ref<Image> img_a = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_a));
+	Ref<Image> img_a = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_a));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 3, img_a);
 
-	Ref<Image> img_ro = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_ro));
+	Ref<Image> img_ro = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_ro));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 0, img_ro);
-	Ref<Image> img_go = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_go));
+	Ref<Image> img_go = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_go));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 1, img_go);
-	Ref<Image> img_bo = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_bo));
+	Ref<Image> img_bo = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_bo));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 2, img_bo);
-	Ref<Image> img_ao = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_ao));
+	Ref<Image> img_ao = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_ao));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 3, img_ao);
 }
 
@@ -806,10 +808,10 @@ void FontFile::_convert_rgba_4bit(Ref<Image> &p_source, int p_page, int p_sz) {
 			}
 		}
 	}
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_RGBA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_RGBA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page, img_g);
 
-	Ref<Image> img_o = memnew(Image(w, h, 0, Image::FORMAT_RGBA8, imgdata_o));
+	Ref<Image> img_o = memnew(Image(w, h, false, Image::FORMAT_RGBA8, imgdata_o));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page, img_o);
 }
 
@@ -838,7 +840,7 @@ void FontFile::_convert_mono_8bit(Ref<Image> &p_source, int p_page, int p_ch, in
 			wg[ofs_dst + 1] = r[ofs_src + p_ch];
 		}
 	}
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, p_ol), p_page, img_g);
 }
 
@@ -878,10 +880,10 @@ void FontFile::_convert_mono_4bit(Ref<Image> &p_source, int p_page, int p_ch, in
 			}
 		}
 	}
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page, img_g);
 
-	Ref<Image> img_o = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_o));
+	Ref<Image> img_o = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_o));
 	set_texture_image(0, Vector2i(p_sz, p_ol), p_page, img_o);
 }
 
@@ -1734,7 +1736,7 @@ Error FontFile::_load_bitmap_font(const String &p_path, List<String> *r_image_fi
 		while (true) {
 			String line = f->get_line();
 
-			int delimiter = line.find(" ");
+			int delimiter = line.find_char(' ');
 			String type = line.substr(0, delimiter);
 			int pos = delimiter + 1;
 			HashMap<String, String> keys;
@@ -1744,7 +1746,7 @@ Error FontFile::_load_bitmap_font(const String &p_path, List<String> *r_image_fi
 			}
 
 			while (pos < line.size()) {
-				int eq = line.find("=", pos);
+				int eq = line.find_char('=', pos);
 				if (eq == -1) {
 					break;
 				}
@@ -1752,14 +1754,14 @@ Error FontFile::_load_bitmap_font(const String &p_path, List<String> *r_image_fi
 				int end = -1;
 				String value;
 				if (line[eq + 1] == '"') {
-					end = line.find("\"", eq + 2);
+					end = line.find_char('"', eq + 2);
 					if (end == -1) {
 						break;
 					}
 					value = line.substr(eq + 2, end - 1 - eq - 1);
 					pos = end + 1;
 				} else {
-					end = line.find(" ", eq + 1);
+					end = line.find_char(' ', eq + 1);
 					if (end == -1) {
 						end = line.size();
 					}

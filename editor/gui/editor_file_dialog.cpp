@@ -2,9 +2,11 @@
 /*  editor_file_dialog.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -65,7 +67,7 @@ void EditorFileDialog::_native_popup() {
 	} else if (access == ACCESS_USERDATA) {
 		root = OS::get_singleton()->get_user_data_dir();
 	}
-	DisplayServer::get_singleton()->file_dialog_with_options_show(get_title(), ProjectSettings::get_singleton()->globalize_path(dir->get_text()), root, file->get_text().get_file(), show_hidden_files, DisplayServer::FileDialogMode(mode), filters, _get_options(), callable_mp(this, &EditorFileDialog::_native_dialog_cb));
+	DisplayServer::get_singleton()->file_dialog_with_options_show(get_translated_title(), ProjectSettings::get_singleton()->globalize_path(dir->get_text()), root, file->get_text().get_file(), show_hidden_files, DisplayServer::FileDialogMode(mode), processed_filters, _get_options(), callable_mp(this, &EditorFileDialog::_native_dialog_cb));
 }
 
 void EditorFileDialog::popup(const Rect2i &p_rect) {
@@ -156,7 +158,7 @@ void EditorFileDialog::popup_file_dialog() {
 }
 
 void EditorFileDialog::_focus_file_text() {
-	int lp = file->get_text().rfind(".");
+	int lp = file->get_text().rfind_char('.');
 	if (lp != -1) {
 		file->select(0, lp);
 		file->grab_focus();
@@ -350,7 +352,7 @@ void EditorFileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 
 void EditorFileDialog::set_enable_multiple_selection(bool p_enable) {
 	item_list->set_select_mode(p_enable ? ItemList::SELECT_MULTI : ItemList::SELECT_SINGLE);
-};
+}
 
 Vector<String> EditorFileDialog::get_selected_files() const {
 	Vector<String> list;
@@ -360,7 +362,7 @@ Vector<String> EditorFileDialog::get_selected_files() const {
 		}
 	}
 	return list;
-};
+}
 
 void EditorFileDialog::update_dir() {
 	if (drives->is_visible()) {
@@ -752,7 +754,7 @@ void EditorFileDialog::_item_list_item_rmb_clicked(int p_item, const Vector2 &p_
 	// Allow specific actions only on one item.
 	bool single_item_selected = item_list->get_selected_items().size() == 1;
 
-	// Disallow deleting the .import folder, Godot kills a cat if you do and it is possibly a senseless novice action.
+	// Disallow deleting the .import folder
 	bool allow_delete = true;
 	for (int i = 0; i < item_list->get_item_count(); i++) {
 		if (!item_list->is_selected(i)) {
@@ -1148,37 +1150,54 @@ void EditorFileDialog::_filter_selected(int) {
 
 void EditorFileDialog::update_filters() {
 	filter->clear();
+	processed_filters.clear();
 
 	if (filters.size() > 1) {
 		String all_filters;
+		String all_filters_full;
 
 		const int max_filters = 5;
 
 		for (int i = 0; i < MIN(max_filters, filters.size()); i++) {
-			String flt = filters[i].get_slice(";", 0).strip_edges();
+			String flt = filters[i].get_slicec(';', 0).strip_edges();
 			if (i > 0) {
 				all_filters += ", ";
 			}
 			all_filters += flt;
+		}
+		for (int i = 0; i < filters.size(); i++) {
+			String flt = filters[i].get_slicec(';', 0).strip_edges();
+			if (i > 0) {
+				all_filters_full += ",";
+			}
+			all_filters_full += flt;
 		}
 
 		if (max_filters < filters.size()) {
 			all_filters += ", ...";
 		}
 
-		filter->add_item(TTR("All Recognized") + " (" + all_filters + ")");
+		String f = TTR("All Recognized") + " (" + all_filters + ")";
+		filter->add_item(f);
+		processed_filters.push_back(all_filters_full + ";" + f);
 	}
 	for (int i = 0; i < filters.size(); i++) {
-		String flt = filters[i].get_slice(";", 0).strip_edges();
+		String flt = filters[i].get_slicec(';', 0).strip_edges();
 		String desc = filters[i].get_slice(";", 1).strip_edges();
 		if (desc.length()) {
-			filter->add_item(desc + " (" + flt + ")");
+			String f = desc + " (" + flt + ")";
+			filter->add_item(f);
+			processed_filters.push_back(flt + ";" + f);
 		} else {
-			filter->add_item("(" + flt + ")");
+			String f = "(" + flt + ")";
+			filter->add_item(f);
+			processed_filters.push_back(flt + ";" + f);
 		}
 	}
 
-	filter->add_item(TTR("All Files (*)"));
+	String f = TTR("All Files (*)");
+	filter->add_item(f);
+	processed_filters.push_back("*.*;" + f);
 }
 
 void EditorFileDialog::clear_filters() {
@@ -1246,7 +1265,7 @@ void EditorFileDialog::set_current_path(const String &p_path) {
 	if (!p_path.size()) {
 		return;
 	}
-	int pos = MAX(p_path.rfind("/"), p_path.rfind("\\"));
+	int pos = MAX(p_path.rfind_char('/'), p_path.rfind_char('\\'));
 	if (pos == -1) {
 		set_current_file(p_path);
 	} else {
@@ -1354,6 +1373,13 @@ EditorFileDialog::Access EditorFileDialog::get_access() const {
 
 void EditorFileDialog::_make_dir_confirm() {
 	const String stripped_dirname = makedirname->get_text().strip_edges();
+
+	if (stripped_dirname.is_empty()) {
+		error_dialog->set_text(TTR("The path specified is invalid."));
+		error_dialog->popup_centered(Size2(250, 50) * EDSCALE);
+		makedirname->set_text(""); // Reset label.
+		return;
+	}
 
 	if (dir_access->dir_exists(stripped_dirname)) {
 		error_dialog->set_text(TTR("Could not create folder. File with that name already exists."));
@@ -1476,29 +1502,29 @@ void EditorFileDialog::_update_drives(bool p_select) {
 void EditorFileDialog::_update_icons() {
 	// Update icons.
 
-	mode_thumbnails->set_icon(theme_cache.mode_thumbnails);
-	mode_list->set_icon(theme_cache.mode_list);
+	mode_thumbnails->set_button_icon(theme_cache.mode_thumbnails);
+	mode_list->set_button_icon(theme_cache.mode_list);
 
 	if (is_layout_rtl()) {
-		dir_prev->set_icon(theme_cache.forward_folder);
-		dir_next->set_icon(theme_cache.back_folder);
+		dir_prev->set_button_icon(theme_cache.forward_folder);
+		dir_next->set_button_icon(theme_cache.back_folder);
 	} else {
-		dir_prev->set_icon(theme_cache.back_folder);
-		dir_next->set_icon(theme_cache.forward_folder);
+		dir_prev->set_button_icon(theme_cache.back_folder);
+		dir_next->set_button_icon(theme_cache.forward_folder);
 	}
-	dir_up->set_icon(theme_cache.parent_folder);
+	dir_up->set_button_icon(theme_cache.parent_folder);
 
-	refresh->set_icon(theme_cache.reload);
-	favorite->set_icon(theme_cache.favorite);
-	show_hidden->set_icon(theme_cache.toggle_hidden);
-	makedir->set_icon(theme_cache.create_folder);
+	refresh->set_button_icon(theme_cache.reload);
+	favorite->set_button_icon(theme_cache.favorite);
+	show_hidden->set_button_icon(theme_cache.toggle_hidden);
+	makedir->set_button_icon(theme_cache.create_folder);
 
 	filter_box->set_right_icon(theme_cache.filter_box);
-	file_sort_button->set_icon(theme_cache.file_sort_button);
+	file_sort_button->set_button_icon(theme_cache.file_sort_button);
 	filter_box->set_clear_button_enabled(true);
 
-	fav_up->set_icon(theme_cache.favorites_up);
-	fav_down->set_icon(theme_cache.favorites_down);
+	fav_up->set_button_icon(theme_cache.favorites_up);
+	fav_down->set_button_icon(theme_cache.favorites_down);
 }
 
 void EditorFileDialog::_favorite_selected(int p_idx) {
@@ -1638,6 +1664,7 @@ void EditorFileDialog::_update_favorites() {
 
 	for (int i = 0; i < favorited_paths.size(); i++) {
 		favorites->add_item(favorited_names[i], theme_cache.folder);
+		favorites->set_item_tooltip(-1, favorited_paths[i]);
 		favorites->set_item_metadata(-1, favorited_paths[i]);
 		favorites->set_item_icon_modulate(-1, get_dir_icon_color(favorited_paths[i]));
 
@@ -1719,6 +1746,7 @@ void EditorFileDialog::_update_recent() {
 
 	for (int i = 0; i < recentd_paths.size(); i++) {
 		recent->add_item(recentd_names[i], theme_cache.folder);
+		recent->set_item_tooltip(-1, recentd_paths[i]);
 		recent->set_item_metadata(-1, recentd_paths[i]);
 		recent->set_item_icon_modulate(-1, get_dir_icon_color(recentd_paths[i]));
 	}

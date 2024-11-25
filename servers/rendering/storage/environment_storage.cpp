@@ -2,9 +2,11 @@
 /*  environment_storage.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -187,6 +189,18 @@ RS::EnvironmentReflectionSource RendererEnvironmentStorage::environment_get_refl
 	Environment *env = environment_owner.get_or_null(p_env);
 	ERR_FAIL_NULL_V(env, RS::ENV_REFLECTION_SOURCE_BG);
 	return env->reflection_source;
+}
+
+void RendererEnvironmentStorage::environment_set_camera_feed_id(RID p_env, int p_camera_feed_id) {
+	Environment *env = environment_owner.get_or_null(p_env);
+	ERR_FAIL_NULL(env);
+	env->camera_feed_id = p_camera_feed_id;
+}
+
+int RendererEnvironmentStorage::environment_get_camera_feed_id(RID p_env) const {
+	Environment *env = environment_owner.get_or_null(p_env);
+	ERR_FAIL_NULL_V(env, -1);
+	return env->camera_feed_id;
 }
 
 // Tonemap

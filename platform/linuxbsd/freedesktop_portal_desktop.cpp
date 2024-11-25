@@ -2,9 +2,11 @@
 /*  freedesktop_portal_desktop.cpp                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -394,7 +396,7 @@ Error FreeDesktopPortalDesktop::file_dialog_show(DisplayServer::WindowID p_windo
 				} else {
 					if (flt == "*.*") {
 						filter_exts.push_back("*");
-						filter_names.push_back(RTR("All Files"));
+						filter_names.push_back(RTR("All Files") + " (*)");
 					} else {
 						filter_exts.push_back(flt);
 						filter_names.push_back(flt);
@@ -405,7 +407,7 @@ Error FreeDesktopPortalDesktop::file_dialog_show(DisplayServer::WindowID p_windo
 	}
 	if (filter_names.is_empty()) {
 		filter_exts.push_back("*");
-		filter_names.push_back(RTR("All Files"));
+		filter_names.push_back(RTR("All Files") + " (*)");
 	}
 
 	DBusError err;

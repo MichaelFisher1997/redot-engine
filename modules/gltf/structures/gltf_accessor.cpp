@@ -2,9 +2,11 @@
 /*  gltf_accessor.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,6 +40,19 @@ void GLTFAccessor::_bind_methods() {
 	BIND_ENUM_CONSTANT(TYPE_MAT2);
 	BIND_ENUM_CONSTANT(TYPE_MAT3);
 	BIND_ENUM_CONSTANT(TYPE_MAT4);
+
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_NONE);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_SIGNED_BYTE);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_UNSIGNED_BYTE);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_SIGNED_SHORT);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_UNSIGNED_SHORT);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_SIGNED_INT);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_UNSIGNED_INT);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_SINGLE_FLOAT);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_DOUBLE_FLOAT);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_HALF_FLOAT);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_SIGNED_LONG);
+	BIND_ENUM_CONSTANT(COMPONENT_TYPE_UNSIGNED_LONG);
 
 	ClassDB::bind_method(D_METHOD("get_buffer_view"), &GLTFAccessor::get_buffer_view);
 	ClassDB::bind_method(D_METHOD("set_buffer_view", "buffer_view"), &GLTFAccessor::set_buffer_view);
@@ -108,7 +123,7 @@ int GLTFAccessor::get_component_type() {
 }
 
 void GLTFAccessor::set_component_type(int p_component_type) {
-	component_type = p_component_type;
+	component_type = (GLTFComponentType)p_component_type;
 }
 
 bool GLTFAccessor::get_normalized() {
@@ -188,7 +203,7 @@ int GLTFAccessor::get_sparse_indices_component_type() {
 }
 
 void GLTFAccessor::set_sparse_indices_component_type(int p_sparse_indices_component_type) {
-	sparse_indices_component_type = p_sparse_indices_component_type;
+	sparse_indices_component_type = (GLTFComponentType)p_sparse_indices_component_type;
 }
 
 int GLTFAccessor::get_sparse_values_buffer_view() {

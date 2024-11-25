@@ -2,9 +2,11 @@
 /*  editor_help_search.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -151,7 +153,7 @@ void EditorHelpSearch::_update_results() {
 			search_flags |= SEARCH_SHOW_HIERARCHY;
 		}
 
-		search = Ref<Runner>(memnew(Runner(results_tree, results_tree, &tree_cache, term, search_flags)));
+		search.instantiate(results_tree, results_tree, &tree_cache, term, search_flags);
 
 		// Clear old search flags to force rebuild on short term.
 		old_search_flags = 0;
@@ -162,7 +164,7 @@ void EditorHelpSearch::_update_results() {
 		hierarchy_button->set_disabled(true);
 
 		// Always show hierarchy for short searches.
-		search = Ref<Runner>(memnew(Runner(results_tree, results_tree, &tree_cache, term, search_flags | SEARCH_SHOW_HIERARCHY)));
+		search.instantiate(results_tree, results_tree, &tree_cache, term, search_flags | SEARCH_SHOW_HIERARCHY);
 
 		old_search_flags = search_flags;
 		set_process(true);
@@ -244,8 +246,8 @@ void EditorHelpSearch::_notification(int p_what) {
 			search_box->set_right_icon(get_editor_theme_icon(SNAME("Search")));
 			search_box->add_theme_icon_override("right_icon", get_editor_theme_icon(SNAME("Search")));
 
-			case_sensitive_button->set_icon(get_editor_theme_icon(SNAME("MatchCase")));
-			hierarchy_button->set_icon(get_editor_theme_icon(SNAME("ClassList")));
+			case_sensitive_button->set_button_icon(get_editor_theme_icon(SNAME("MatchCase")));
+			hierarchy_button->set_button_icon(get_editor_theme_icon(SNAME("ClassList")));
 
 			if (is_visible()) {
 				_update_results();
@@ -1166,7 +1168,7 @@ TreeItem *EditorHelpSearch::Runner::_create_class_item(TreeItem *p_parent, const
 	if (p_matching_keyword.is_empty()) {
 		item->set_text(0, p_doc->name);
 	} else {
-		item->set_text(0, p_doc->name + "      - " + TTR(vformat("Matches the \"%s\" keyword.", p_matching_keyword)));
+		item->set_text(0, p_doc->name + "      - " + vformat(TTR("Matches the \"%s\" keyword."), p_matching_keyword));
 	}
 
 	if (!term.is_empty()) {
@@ -1272,7 +1274,7 @@ TreeItem *EditorHelpSearch::Runner::_create_member_item(TreeItem *p_parent, cons
 		text = p_class_name + "." + p_text;
 	}
 	if (!p_matching_keyword.is_empty()) {
-		text += "      - " + TTR(vformat("Matches the \"%s\" keyword.", p_matching_keyword));
+		text += "      - " + vformat(TTR("Matches the \"%s\" keyword."), p_matching_keyword);
 	}
 	item->set_text(0, text);
 

@@ -2,9 +2,11 @@
 /*  touch_screen_button.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -185,6 +187,7 @@ void TouchScreenButton::_notification(int p_what) {
 			}
 		} break;
 
+		case NOTIFICATION_SUSPENDED:
 		case NOTIFICATION_PAUSED: {
 			if (is_pressed()) {
 				_release();
@@ -329,7 +332,7 @@ void TouchScreenButton::_release(bool p_exiting_tree) {
 	}
 }
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 TouchScreenButton::_edit_get_rect() const {
 	if (texture_normal.is_null()) {
 		return CanvasItem::_edit_get_rect();
@@ -341,7 +344,7 @@ Rect2 TouchScreenButton::_edit_get_rect() const {
 bool TouchScreenButton::_edit_use_rect() const {
 	return !texture_normal.is_null();
 }
-#endif
+#endif // DEBUG_ENABLED
 
 Rect2 TouchScreenButton::get_anchorable_rect() const {
 	if (texture_normal.is_null()) {
@@ -429,6 +432,6 @@ void TouchScreenButton::_bind_methods() {
 }
 
 TouchScreenButton::TouchScreenButton() {
-	unit_rect = Ref<RectangleShape2D>(memnew(RectangleShape2D));
+	unit_rect.instantiate();
 	unit_rect->set_size(Vector2(1, 1));
 }

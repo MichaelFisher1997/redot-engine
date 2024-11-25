@@ -2,9 +2,11 @@
 /*  GodotLib.java                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -223,6 +225,16 @@ public class GodotLib {
 	 * Invoked on the theme light/dark mode change.
 	 */
 	public static native void onNightModeChanged();
+
+	/**
+	 * Invoked on the input dialog submitted.
+	 */
+	public static native void inputDialogCallback(String p_text);
+
+	/**
+	 * Invoked on the file picker closed.
+	 */
+	public static native void filePickerCallback(boolean p_ok, String[] p_selected_paths);
 
 	/**
 	 * Invoked on the GL thread to configure the height of the virtual keyboard.

@@ -2,9 +2,11 @@
 /*  rendering_device_binds.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,7 +33,10 @@
 #include "rendering_device_binds.h"
 
 Error RDShaderFile::parse_versions_from_text(const String &p_text, const String p_defines, OpenIncludeFunction p_include_func, void *p_include_func_userdata) {
-	ERR_FAIL_NULL_V(RenderingDevice::get_singleton(), ERR_UNAVAILABLE);
+	ERR_FAIL_NULL_V_MSG(
+			RenderingDevice::get_singleton(),
+			ERR_UNAVAILABLE,
+			"Cannot import custom .glsl shaders when running without a RenderingDevice. This can happen if you are using the headless more or the Compatibility backend.");
 
 	Vector<String> lines = p_text.split("\n");
 

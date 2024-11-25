@@ -2,9 +2,11 @@
 /*  project_export.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -100,15 +102,15 @@ void ProjectExportDialog::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			duplicate_preset->set_icon(presets->get_editor_theme_icon(SNAME("Duplicate")));
-			delete_preset->set_icon(presets->get_editor_theme_icon(SNAME("Remove")));
-			patch_add_btn->set_icon(get_editor_theme_icon(SNAME("Add")));
+			duplicate_preset->set_button_icon(presets->get_editor_theme_icon(SNAME("Duplicate")));
+			delete_preset->set_button_icon(presets->get_editor_theme_icon(SNAME("Remove")));
+			patch_add_btn->set_button_icon(get_editor_theme_icon(SNAME("Add")));
 		} break;
 
 		case NOTIFICATION_READY: {
-			duplicate_preset->set_icon(presets->get_editor_theme_icon(SNAME("Duplicate")));
-			delete_preset->set_icon(presets->get_editor_theme_icon(SNAME("Remove")));
-			patch_add_btn->set_icon(get_editor_theme_icon(SNAME("Add")));
+			duplicate_preset->set_button_icon(presets->get_editor_theme_icon(SNAME("Duplicate")));
+			delete_preset->set_button_icon(presets->get_editor_theme_icon(SNAME("Remove")));
+			patch_add_btn->set_button_icon(get_editor_theme_icon(SNAME("Add")));
 			connect(SceneStringName(confirmed), callable_mp(this, &ProjectExportDialog::_export_pck_zip));
 			_update_export_all();
 		} break;
@@ -382,10 +384,16 @@ void ProjectExportDialog::_edit_preset(int p_index) {
 	bool enc_pck_mode = current->get_enc_pck();
 	enc_pck->set_pressed(enc_pck_mode);
 
+	uint64_t seed = current->get_seed();
+	if (!updating_seed) {
+		seed_input->set_text(itos(seed));
+	}
+
 	enc_directory->set_disabled(!enc_pck_mode);
 	enc_in_filters->set_editable(enc_pck_mode);
 	enc_ex_filters->set_editable(enc_pck_mode);
 	script_key->set_editable(enc_pck_mode);
+	seed_input->set_editable(enc_pck_mode);
 
 	bool enc_directory_mode = current->get_enc_directory();
 	enc_directory->set_pressed(enc_directory_mode);
@@ -589,6 +597,21 @@ void ProjectExportDialog::_enc_pck_changed(bool p_pressed) {
 	script_key->set_editable(p_pressed);
 
 	_update_current_preset();
+}
+
+void ProjectExportDialog::_seed_input_changed(const String &p_text) {
+	if (updating) {
+		return;
+	}
+
+	Ref<EditorExportPreset> current = get_current_preset();
+	ERR_FAIL_COND(current.is_null());
+
+	current->set_seed(seed_input->get_text().to_int());
+
+	updating_seed = true;
+	_update_current_preset();
+	updating_seed = false;
 }
 
 void ProjectExportDialog::_enc_directory_changed(bool p_pressed) {
@@ -1185,6 +1208,9 @@ void ProjectExportDialog::_export_pck_zip_selected(const String &p_path) {
 	bool export_debug = fd_option.get(TTR("Export With Debug"), true);
 	bool export_as_patch = fd_option.get(TTR("Export As Patch"), true);
 
+	EditorSettings::get_singleton()->set_project_metadata("export_options", "export_debug", export_debug);
+	EditorSettings::get_singleton()->set_project_metadata("export_options", "export_as_patch", export_as_patch);
+
 	if (p_path.ends_with(".zip")) {
 		if (export_as_patch) {
 			platform->export_zip_patch(current, export_debug, p_path);
@@ -1283,6 +1309,8 @@ void ProjectExportDialog::_export_project_to_path(const String &p_path) {
 	current->update_value_overrides();
 	Dictionary fd_option = export_project->get_selected_options();
 	bool export_debug = fd_option.get(TTR("Export With Debug"), true);
+
+	EditorSettings::get_singleton()->set_project_metadata("export_options", "export_debug", export_debug);
 
 	Error err = platform->export_project(current, export_debug, current->get_export_path(), 0);
 	result_dialog_log->clear();
@@ -1551,7 +1579,7 @@ ProjectExportDialog::ProjectExportDialog() {
 	patch_vb->add_margin_child(TTR("Base Packs:"), patches, true);
 
 	patch_dialog = memnew(EditorFileDialog);
-	patch_dialog->add_filter("*.pck", TTR("Godot Project Pack"));
+	patch_dialog->add_filter("*.pck", TTR("Redot Project Pack"));
 	patch_dialog->set_access(EditorFileDialog::ACCESS_FILESYSTEM);
 	patch_dialog->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_FILE);
 	patch_dialog->connect("file_selected", callable_mp(this, &ProjectExportDialog::_patch_file_selected));
@@ -1623,6 +1651,10 @@ ProjectExportDialog::ProjectExportDialog() {
 	sec_vb->add_child(script_key_error);
 	sections->add_child(sec_scroll_container);
 
+	seed_input = memnew(LineEdit);
+	seed_input->connect(SceneStringName(text_changed), callable_mp(this, &ProjectExportDialog::_seed_input_changed));
+	sec_vb->add_margin_child(TTR("Initialization vector seed"), seed_input);
+
 	Label *sec_info = memnew(Label);
 	sec_info->set_text(TTR("Note: Encryption key needs to be stored in the binary,\nyou need to build the export templates from source."));
 	sec_vb->add_child(sec_info);
@@ -1670,11 +1702,11 @@ ProjectExportDialog::ProjectExportDialog() {
 
 	set_cancel_button_text(TTR("Close"));
 	set_ok_button_text(TTR("Export PCK/ZIP..."));
-	get_ok_button()->set_tooltip_text(TTR("Export the project resources as a PCK or ZIP package. This is not a playable build, only the project data without a Godot executable."));
+	get_ok_button()->set_tooltip_text(TTR("Export the project resources as a PCK or ZIP package. This is not a playable build, only the project data without a Redot executable."));
 	get_ok_button()->set_disabled(true);
 
 	export_button = add_button(TTR("Export Project..."), !DisplayServer::get_singleton()->get_swap_cancel_ok(), "export");
-	export_button->set_tooltip_text(TTR("Export the project as a playable build (Godot executable and project data) for the selected preset."));
+	export_button->set_tooltip_text(TTR("Export the project as a playable build (Redot executable and project data) for the selected preset."));
 	export_button->connect(SceneStringName(pressed), callable_mp(this, &ProjectExportDialog::_export_project));
 	// Disable initially before we select a valid preset
 	export_button->set_disabled(true);
@@ -1694,7 +1726,7 @@ ProjectExportDialog::ProjectExportDialog() {
 
 	export_pck_zip = memnew(EditorFileDialog);
 	export_pck_zip->add_filter("*.zip", TTR("ZIP File"));
-	export_pck_zip->add_filter("*.pck", TTR("Godot Project Pack"));
+	export_pck_zip->add_filter("*.pck", TTR("Redot Project Pack"));
 	export_pck_zip->set_access(EditorFileDialog::ACCESS_FILESYSTEM);
 	export_pck_zip->set_file_mode(EditorFileDialog::FILE_MODE_SAVE_FILE);
 	add_child(export_pck_zip);
@@ -1749,9 +1781,9 @@ ProjectExportDialog::ProjectExportDialog() {
 	export_project->connect("file_selected", callable_mp(this, &ProjectExportDialog::_export_project_to_path));
 	export_project->get_line_edit()->connect(SceneStringName(text_changed), callable_mp(this, &ProjectExportDialog::_validate_export_path));
 
-	export_project->add_option(TTR("Export With Debug"), Vector<String>(), true);
-	export_pck_zip->add_option(TTR("Export With Debug"), Vector<String>(), true);
-	export_pck_zip->add_option(TTR("Export As Patch"), Vector<String>(), true);
+	export_project->add_option(TTR("Export With Debug"), Vector<String>(), EditorSettings::get_singleton()->get_project_metadata("export_options", "export_debug", true));
+	export_pck_zip->add_option(TTR("Export With Debug"), Vector<String>(), EditorSettings::get_singleton()->get_project_metadata("export_options", "export_debug", true));
+	export_pck_zip->add_option(TTR("Export As Patch"), Vector<String>(), EditorSettings::get_singleton()->get_project_metadata("export_options", "export_as_patch", true));
 
 	set_hide_on_ok(false);
 

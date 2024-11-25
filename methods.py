@@ -1,5 +1,7 @@
+import atexit
 import contextlib
 import glob
+import math
 import os
 import re
 import subprocess
@@ -8,9 +10,9 @@ from collections import OrderedDict
 from enum import Enum
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-from typing import Generator, List, Optional, Union
+from typing import Generator, List, Optional, Union, cast
 
-# Get the "Godot" folder name ahead of time
+# Get the "Redot" folder name ahead of time
 base_folder_path = str(os.path.abspath(Path(__file__).parent)) + "/"
 base_folder_only = os.path.basename(os.path.normpath(base_folder_path))
 # Listing all the folders we have converted
@@ -73,21 +75,13 @@ def print_error(*values: object) -> None:
 
 def add_source_files_orig(self, sources, files, allow_gen=False):
     # Convert string to list of absolute paths (including expanding wildcard)
-    if isinstance(files, (str, bytes)):
-        # Keep SCons project-absolute path as they are (no wildcard support)
-        if files.startswith("#"):
-            if "*" in files:
-                print_error("Wildcards can't be expanded in SCons project-absolute path: '{}'".format(files))
-                return
-            files = [files]
-        else:
-            # Exclude .gen.cpp files from globbing, to avoid including obsolete ones.
-            # They should instead be added manually.
-            skip_gen_cpp = "*" in files
-            dir_path = self.Dir(".").abspath
-            files = sorted(glob.glob(dir_path + "/" + files))
-            if skip_gen_cpp and not allow_gen:
-                files = [f for f in files if not f.endswith(".gen.cpp")]
+    if isinstance(files, str):
+        # Exclude .gen.cpp files from globbing, to avoid including obsolete ones.
+        # They should instead be added manually.
+        skip_gen_cpp = "*" in files
+        files = self.Glob(files)
+        if skip_gen_cpp and not allow_gen:
+            files = [f for f in files if not str(f).endswith(".gen.cpp")]
 
     # Add each path as compiled Object following environment (self) configuration
     for path in files:
@@ -98,35 +92,6 @@ def add_source_files_orig(self, sources, files, allow_gen=False):
         sources.append(obj)
 
 
-# The section name is used for checking
-# the hash table to see whether the folder
-# is included in the SCU build.
-# It will be something like "core/math".
-def _find_scu_section_name(subdir):
-    section_path = os.path.abspath(subdir) + "/"
-
-    folders = []
-    folder = ""
-
-    for i in range(8):
-        folder = os.path.dirname(section_path)
-        folder = os.path.basename(folder)
-        if folder == base_folder_only:
-            break
-        folders += [folder]
-        section_path += "../"
-        section_path = os.path.abspath(section_path) + "/"
-
-    section_name = ""
-    for n in range(len(folders)):
-        # section_name += folders[len(folders) - n - 1] + " "
-        section_name += folders[len(folders) - n - 1]
-        if n != (len(folders) - 1):
-            section_name += "/"
-
-    return section_name
-
-
 def add_source_files_scu(self, sources, files, allow_gen=False):
     if self["scu_build"] and isinstance(files, str):
         if "*." not in files:
@@ -135,10 +100,8 @@ def add_source_files_scu(self, sources, files, allow_gen=False):
         # If the files are in a subdirectory, we want to create the scu gen
         # files inside this subdirectory.
         subdir = os.path.dirname(files)
-        if subdir != "":
-            subdir += "/"
-
-        section_name = _find_scu_section_name(subdir)
+        subdir = subdir if subdir == "" else subdir + "/"
+        section_name = self.Dir(subdir).tpath
         # if the section name is in the hash table?
         # i.e. is it part of the SCU build?
         global _scu_folders
@@ -210,18 +173,30 @@ def get_version_info(module_version_string="", silent=False):
         "minor": int(version.minor),
         "patch": int(version.patch),
         "status": str(version.status),
+        "status_version": int(version.status_version if version.status != "stable" else 0),
         "build": str(build_name),
         "module_config": str(version.module_config) + module_version_string,
         "website": str(version.website),
         "docs_branch": str(version.docs),
+        "godot_major": str(version.godot_major),
+        "godot_minor": str(version.godot_minor),
+        "godot_patch": str(version.godot_patch),
+        "godot_status": str(version.godot_status),
     }
 
     # For dev snapshots (alpha, beta, RC, etc.) we do not commit status change to Git,
     # so this define provides a way to override it without having to modify the source.
     if os.getenv("GODOT_VERSION_STATUS") is not None:
-        version_info["status"] = str(os.getenv("GODOT_VERSION_STATUS"))
+        version_status_str = str(os.getenv("GODOT_VERSION_STATUS"))
+        if "." in version_status_str:
+            version_status_str = version_status_str.split(".")
+            version_info["status_version"] = int(version_status_str[1])
+            version_status_str = version_status_str[0]
+        version_info["status"] = version_status_str
         if not silent:
-            print(f"Using version status '{version_info['status']}', overriding the original '{version.status}'.")
+            print(
+                f"Using version status '{version_info['status']}.{version_info['status_version']}', overriding the original '{version.status}.{version.status_version}'."
+            )
 
     # Parse Git hash if we're in a Git repo.
     githash = ""
@@ -277,34 +252,6 @@ def get_version_info(module_version_string="", silent=False):
     return version_info
 
 
-def parse_cg_file(fname, uniforms, sizes, conditionals):
-    with open(fname, "r", encoding="utf-8") as fs:
-        line = fs.readline()
-
-        while line:
-            if re.match(r"^\s*uniform", line):
-                res = re.match(r"uniform ([\d\w]*) ([\d\w]*)")
-                type = res.groups(1)
-                name = res.groups(2)
-
-                uniforms.append(name)
-
-                if type.find("texobj") != -1:
-                    sizes.append(1)
-                else:
-                    t = re.match(r"float(\d)x(\d)", type)
-                    if t:
-                        sizes.append(int(t.groups(1)) * int(t.groups(2)))
-                    else:
-                        t = re.match(r"float(\d)", type)
-                        sizes.append(int(t.groups(1)))
-
-                if line.find("[branch]") != -1:
-                    conditionals.append(name)
-
-            line = fs.readline()
-
-
 def get_cmdline_bool(option, default):
     """We use `ARGUMENTS.get()` to check if options were manually overridden on the command line,
     and SCons' _text2bool helper to convert them to booleans, otherwise they're handled as strings.
@@ -348,7 +295,7 @@ def detect_modules(search_path, recursive=False):
         version_path = os.path.join(path, "version.py")
         if os.path.exists(version_path):
             with open(version_path, "r", encoding="utf-8") as f:
-                if 'short_name = "godot"' in f.read():
+                if 'short_name = "redot"' in f.read():
                     return True
         return False
 
@@ -404,10 +351,6 @@ def convert_custom_modules_path(path):
     return path
 
 
-def disable_module(self):
-    self.disabled_modules.append(self.current_module)
-
-
 def module_add_dependencies(self, module, dependencies, optional=False):
     """
     Adds dependencies for a given module.
@@ -428,19 +371,21 @@ def module_check_dependencies(self, module):
     Meant to be used in module `can_build` methods.
     Returns a boolean (True if dependencies are satisfied).
     """
-    missing_deps = []
+    missing_deps = set()
     required_deps = self.module_dependencies[module][0] if module in self.module_dependencies else []
     for dep in required_deps:
         opt = "module_{}_enabled".format(dep)
-        if opt not in self or not self[opt]:
-            missing_deps.append(dep)
+        if opt not in self or not self[opt] or not module_check_dependencies(self, dep):
+            missing_deps.add(dep)
 
-    if missing_deps != []:
-        print_warning(
-            "Disabling '{}' module as the following dependencies are not satisfied: {}".format(
-                module, ", ".join(missing_deps)
+    if missing_deps:
+        if module not in self.disabled_modules:
+            print_warning(
+                "Disabling '{}' module as the following dependencies are not satisfied: {}".format(
+                    module, ", ".join(missing_deps)
+                )
             )
-        )
+            self.disabled_modules.add(module)
         return False
     else:
         return True
@@ -478,8 +423,7 @@ def use_windows_spawn_fix(self, platform=None):
             "shell": False,
             "env": env,
         }
-        if sys.version_info >= (3, 7, 0):
-            popen_args["text"] = True
+        popen_args["text"] = True
         proc = subprocess.Popen(cmdline, **popen_args)
         _, err = proc.communicate()
         rv = proc.wait()
@@ -558,47 +502,14 @@ def detect_visual_c_compiler_version(tools_env):
     # "x86"           Native 32 bit compiler
     # "x86_amd64"     32 bit Cross Compiler for 64 bit
 
-    # There are other architectures, but Godot does not support them currently, so this function does not detect arm/amd64_arm
+    # There are other architectures, but Redot does not support them currently, so this function does not detect arm/amd64_arm
     # and similar architectures/compilers
 
     # Set chosen compiler to "not detected"
     vc_chosen_compiler_index = -1
     vc_chosen_compiler_str = ""
 
-    # Start with Pre VS 2017 checks which uses VCINSTALLDIR:
-    if "VCINSTALLDIR" in tools_env:
-        # print("Checking VCINSTALLDIR")
-
-        # find() works with -1 so big ifs below are needed... the simplest solution, in fact
-        # First test if amd64 and amd64_x86 compilers are present in the path
-        vc_amd64_compiler_detection_index = tools_env["PATH"].find(tools_env["VCINSTALLDIR"] + "BIN\\amd64;")
-        if vc_amd64_compiler_detection_index > -1:
-            vc_chosen_compiler_index = vc_amd64_compiler_detection_index
-            vc_chosen_compiler_str = "amd64"
-
-        vc_amd64_x86_compiler_detection_index = tools_env["PATH"].find(tools_env["VCINSTALLDIR"] + "BIN\\amd64_x86;")
-        if vc_amd64_x86_compiler_detection_index > -1 and (
-            vc_chosen_compiler_index == -1 or vc_chosen_compiler_index > vc_amd64_x86_compiler_detection_index
-        ):
-            vc_chosen_compiler_index = vc_amd64_x86_compiler_detection_index
-            vc_chosen_compiler_str = "amd64_x86"
-
-        # Now check the 32 bit compilers
-        vc_x86_compiler_detection_index = tools_env["PATH"].find(tools_env["VCINSTALLDIR"] + "BIN;")
-        if vc_x86_compiler_detection_index > -1 and (
-            vc_chosen_compiler_index == -1 or vc_chosen_compiler_index > vc_x86_compiler_detection_index
-        ):
-            vc_chosen_compiler_index = vc_x86_compiler_detection_index
-            vc_chosen_compiler_str = "x86"
-
-        vc_x86_amd64_compiler_detection_index = tools_env["PATH"].find(tools_env["VCINSTALLDIR"] + "BIN\\x86_amd64;")
-        if vc_x86_amd64_compiler_detection_index > -1 and (
-            vc_chosen_compiler_index == -1 or vc_chosen_compiler_index > vc_x86_amd64_compiler_detection_index
-        ):
-            vc_chosen_compiler_index = vc_x86_amd64_compiler_detection_index
-            vc_chosen_compiler_str = "x86_amd64"
-
-    # and for VS 2017 and newer we check VCTOOLSINSTALLDIR:
+    # VS 2017 and newer should set VCTOOLSINSTALLDIR
     if "VCTOOLSINSTALLDIR" in tools_env:
         # Newer versions have a different path available
         vc_amd64_compiler_detection_index = (
@@ -695,23 +606,6 @@ def glob_recursive(pattern, node="."):
     return results
 
 
-def add_to_vs_project(env, sources):
-    for x in sources:
-        fname = env.File(x).path if isinstance(x, str) else env.File(x)[0].path
-        pieces = fname.split(".")
-        if len(pieces) > 0:
-            basename = pieces[0]
-            basename = basename.replace("\\\\", "/")
-            if os.path.isfile(basename + ".h"):
-                env.vs_incs += [basename + ".h"]
-            elif os.path.isfile(basename + ".hpp"):
-                env.vs_incs += [basename + ".hpp"]
-            if os.path.isfile(basename + ".c"):
-                env.vs_srcs += [basename + ".c"]
-            elif os.path.isfile(basename + ".cpp"):
-                env.vs_srcs += [basename + ".cpp"]
-
-
 def precious_program(env, program, sources, **args):
     program = env.ProgramOriginal(program, sources, **args)
     env.Precious(program)
@@ -772,7 +666,9 @@ def detect_darwin_sdk_path(platform, env):
             raise
 
 
-def is_vanilla_clang(env):
+def is_apple_clang(env):
+    if env["platform"] not in ["macos", "ios"]:
+        return False
     if not using_clang(env):
         return False
     try:
@@ -780,7 +676,7 @@ def is_vanilla_clang(env):
     except (subprocess.CalledProcessError, OSError):
         print_warning("Couldn't parse CXX environment variable to infer compiler version.")
         return False
-    return not version.startswith("Apple")
+    return version.startswith("Apple")
 
 
 def get_compiler_version(env):
@@ -904,159 +800,160 @@ def using_emcc(env):
 
 
 def show_progress(env):
-    if env["ninja"]:
-        # Has its own progress/tracking tool that clashes with ours
+    # Progress reporting is not available in non-TTY environments since it messes with the output
+    # (for example, when writing to a file). Ninja has its own progress/tracking tool that clashes
+    # with ours.
+    if not env["progress"] or not sys.stdout.isatty() or env["ninja"]:
         return
 
-    import sys
+    NODE_COUNT_FILENAME = f"{base_folder_path}.scons_node_count"
 
-    from SCons.Script import AlwaysBuild, Command, Progress
-
-    screen = sys.stdout
-    # Progress reporting is not available in non-TTY environments since it
-    # messes with the output (for example, when writing to a file)
-    show_progress = env["progress"] and sys.stdout.isatty()
-    node_count = 0
-    node_count_max = 0
-    node_count_interval = 1
-    node_count_fname = str(env.Dir("#")) + "/.scons_node_count"
-
-    import math
-
-    class cache_progress:
-        # The default is 1 GB cache
-        def __init__(self, path=None, limit=pow(1024, 3)):
-            self.path = path
-            self.limit = limit
-            if env["verbose"] and path is not None:
-                screen.write(
-                    "Current cache limit is {} (used: {})\n".format(
-                        self.convert_size(limit), self.convert_size(self.get_size(path))
-                    )
-                )
+    class ShowProgress:
+        def __init__(self):
+            self.count = 0
+            self.max = 0
+            try:
+                with open(NODE_COUNT_FILENAME, "r", encoding="utf-8") as f:
+                    self.max = int(f.readline())
+            except OSError:
+                pass
+            if self.max == 0:
+                print("NOTE: Performing initial build, progress percentage unavailable!")
 
         def __call__(self, node, *args, **kw):
-            nonlocal node_count, node_count_max, node_count_interval, node_count_fname, show_progress
-            if show_progress:
-                # Print the progress percentage
-                node_count += node_count_interval
-                if node_count_max > 0 and node_count <= node_count_max:
-                    screen.write("\r[%3d%%] " % (node_count * 100 / node_count_max))
-                    screen.flush()
-                elif node_count_max > 0 and node_count > node_count_max:
-                    screen.write("\r[100%] ")
-                    screen.flush()
-                else:
-                    screen.write("\r[Initial build] ")
-                    screen.flush()
+            self.count += 1
+            if self.max != 0:
+                percent = int(min(self.count * 100 / self.max, 100))
+                sys.stdout.write(f"\r[{percent:3d}%] ")
+                sys.stdout.flush()
 
-        def convert_size(self, size_bytes):
-            if size_bytes == 0:
-                return "0 bytes"
-            size_name = ("bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-            i = int(math.floor(math.log(size_bytes, 1024)))
-            p = math.pow(1024, i)
-            s = round(size_bytes / p, 2)
-            return "%s %s" % (int(s) if i == 0 else s, size_name[i])
+    from SCons.Script import Progress
 
-        def get_size(self, start_path="."):
-            total_size = 0
-            for dirpath, dirnames, filenames in os.walk(start_path):
-                for f in filenames:
-                    fp = os.path.join(dirpath, f)
-                    total_size += os.path.getsize(fp)
-            return total_size
+    progressor = ShowProgress()
+    Progress(progressor)
 
     def progress_finish(target, source, env):
-        nonlocal node_count, progressor
         try:
-            with open(node_count_fname, "w", encoding="utf-8", newline="\n") as f:
-                f.write("%d\n" % node_count)
-        except Exception:
+            with open(NODE_COUNT_FILENAME, "w", encoding="utf-8", newline="\n") as f:
+                f.write(f"{progressor.count}\n")
+        except OSError:
             pass
 
-    try:
-        with open(node_count_fname, "r", encoding="utf-8") as f:
-            node_count_max = int(f.readline())
-    except Exception:
-        pass
-
-    cache_directory = os.environ.get("SCONS_CACHE")
-    # Simple cache pruning, attached to SCons' progress callback. Trim the
-    # cache directory to a size not larger than cache_limit.
-    cache_limit = float(os.getenv("SCONS_CACHE_LIMIT", 1024)) * 1024 * 1024
-    progressor = cache_progress(cache_directory, cache_limit)
-    Progress(progressor, interval=node_count_interval)
-
-    progress_finish_command = Command("progress_finish", [], progress_finish)
-    AlwaysBuild(progress_finish_command)
+    env.AlwaysBuild(
+        env.CommandNoCache(
+            "progress_finish", [], env.Action(progress_finish, "Building node count database .scons_node_count")
+        )
+    )
 
 
-def clean_cache(env):
-    import atexit
-    import time
+def convert_size(size_bytes: int) -> str:
+    if size_bytes == 0:
+        return "0 bytes"
+    SIZE_NAMES = ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+    index = math.floor(math.log(size_bytes, 1024))
+    power = math.pow(1024, index)
+    size = round(size_bytes / power, 2)
+    return f"{size} {SIZE_NAMES[index]}"
 
-    class cache_clean:
-        def __init__(self, path=None, limit=pow(1024, 3)):
-            self.path = path
-            self.limit = limit
 
-        def clean(self):
-            self.delete(self.file_list())
+def get_size(start_path: str = ".") -> int:
+    total_size = 0
+    for dirpath, _, filenames in os.walk(start_path):
+        for file in filenames:
+            path = os.path.join(dirpath, file)
+            total_size += os.path.getsize(path)
+    return total_size
 
-        def delete(self, files):
-            if len(files) == 0:
-                return
-            if env["verbose"]:
-                # Utter something
-                print("Purging %d %s from cache..." % (len(files), "files" if len(files) > 1 else "file"))
-            [os.remove(f) for f in files]
 
-        def file_list(self):
-            if self.path is None:
-                # Nothing to do
-                return []
-            # Gather a list of (filename, (size, atime)) within the
-            # cache directory
-            file_stat = [(x, os.stat(x)[6:8]) for x in glob.glob(os.path.join(self.path, "*", "*"))]
-            if file_stat == []:
-                # Nothing to do
-                return []
-            # Weight the cache files by size (assumed to be roughly
-            # proportional to the recompilation time) times an exponential
-            # decay since the ctime, and return a list with the entries
-            # (filename, size, weight).
-            current_time = time.time()
-            file_stat = [(x[0], x[1][0], (current_time - x[1][1])) for x in file_stat]
-            # Sort by the most recently accessed files (most sensible to keep) first
-            file_stat.sort(key=lambda x: x[2])
-            # Search for the first entry where the storage limit is
-            # reached
-            sum, mark = 0, None
-            for i, x in enumerate(file_stat):
-                sum += x[1]
-                if sum > self.limit:
-                    mark = i
-                    break
-            if mark is None:
-                return []
-            else:
-                return [x[0] for x in file_stat[mark:]]
+def clean_cache(cache_path: str, cache_limit: int, verbose: bool):
+    files = glob.glob(os.path.join(cache_path, "*", "*"))
+    if not files:
+        return
 
-    def cache_finally():
-        nonlocal cleaner
+    # Remove all text files, store binary files in list of (filename, size, atime).
+    purge = []
+    texts = []
+    stats = []
+    for file in files:
+        # Failing a utf-8 decode is the easiest way to determine if a file is binary.
         try:
-            cleaner.clean()
-        except Exception:
-            pass
+            with open(file, encoding="utf-8") as out:
+                out.read(1024)
+        except UnicodeDecodeError:
+            stats.append((file, *os.stat(file)[6:8]))
+        except OSError:
+            print_error(f'Failed to access cache file "{file}"; skipping.')
+        else:
+            texts.append(file)
 
-    cache_directory = os.environ.get("SCONS_CACHE")
-    # Simple cache pruning, attached to SCons' progress callback. Trim the
-    # cache directory to a size not larger than cache_limit.
-    cache_limit = float(os.getenv("SCONS_CACHE_LIMIT", 1024)) * 1024 * 1024
-    cleaner = cache_clean(cache_directory, cache_limit)
+    if texts:
+        count = len(texts)
+        for file in texts:
+            try:
+                os.remove(file)
+            except OSError:
+                print_error(f'Failed to remove cache file "{file}"; skipping.')
+                count -= 1
+        if verbose:
+            print("Purging %d text %s from cache..." % (count, "files" if count > 1 else "file"))
 
-    atexit.register(cache_finally)
+    if cache_limit:
+        # Sort by most recent access (most sensible to keep) first. Search for the first entry where
+        # the cache limit is reached.
+        stats.sort(key=lambda x: x[2], reverse=True)
+        sum = 0
+        for index, stat in enumerate(stats):
+            sum += stat[1]
+            if sum > cache_limit:
+                purge.extend([x[0] for x in stats[index:]])
+                break
+
+    if purge:
+        count = len(purge)
+        for file in purge:
+            try:
+                os.remove(file)
+            except OSError:
+                print_error(f'Failed to remove cache file "{file}"; skipping.')
+                count -= 1
+        if verbose:
+            print("Purging %d %s from cache..." % (count, "files" if count > 1 else "file"))
+
+
+def prepare_cache(env) -> None:
+    if env.GetOption("clean"):
+        return
+
+    cache_path = ""
+    if env["cache_path"]:
+        cache_path = cast(str, env["cache_path"])
+    elif os.environ.get("SCONS_CACHE"):
+        print_warning("Environment variable `SCONS_CACHE` is deprecated; use `cache_path` argument instead.")
+        cache_path = cast(str, os.environ.get("SCONS_CACHE"))
+
+    if not cache_path:
+        return
+
+    env.CacheDir(cache_path)
+    print(f'SCons cache enabled... (path: "{cache_path}")')
+
+    if env["cache_limit"]:
+        cache_limit = float(env["cache_limit"])
+    elif os.environ.get("SCONS_CACHE_LIMIT"):
+        print_warning("Environment variable `SCONS_CACHE_LIMIT` is deprecated; use `cache_limit` argument instead.")
+        cache_limit = float(os.getenv("SCONS_CACHE_LIMIT", "0")) / 1024  # Old method used MiB, convert to GiB
+
+    # Convert GiB to bytes; treat negative numbers as 0 (unlimited).
+    cache_limit = max(0, int(cache_limit * 1024 * 1024 * 1024))
+    if env["verbose"]:
+        print(
+            "Current cache limit is {} (used: {})".format(
+                convert_size(cache_limit) if cache_limit else "∞",
+                convert_size(get_size(cache_path)),
+            )
+        )
+
+    atexit.register(clean_cache, cache_path, cache_limit, env["verbose"])
 
 
 def dump(env):
@@ -1089,7 +986,7 @@ def dump(env):
 #
 # To generate AND build from the command line:
 #   scons vsproj=yes vsproj_gen_only=no
-def generate_vs_project(env, original_args, project_name="godot"):
+def generate_vs_project(env, original_args, project_name="redot"):
     # Augmented glob_recursive that also fills the dirs argument with traversed directories that have content.
     def glob_recursive_2(pattern, dirs, node="."):
         from SCons import Node
@@ -1214,9 +1111,7 @@ def generate_vs_project(env, original_args, project_name="godot"):
     import json
 
     md5 = hashlib.md5(
-        json.dumps(headers + headers_dirs + sources + sources_dirs + others + others_dirs, sort_keys=True).encode(
-            "utf-8"
-        )
+        json.dumps(sorted(headers + headers_dirs + sources + sources_dirs + others + others_dirs)).encode("utf-8")
     ).hexdigest()
 
     if os.path.exists(f"{project_name}.vcxproj.filters"):
@@ -1371,7 +1266,7 @@ def generate_vs_project(env, original_args, project_name="godot"):
                 vsconf = f'{target}|{a["platform"]}'
                 break
 
-        condition = "'$(GodotConfiguration)|$(GodotPlatform)'=='" + vsconf + "'"
+        condition = "'$(RedotConfiguration)|$(RedotPlatform)'=='" + vsconf + "'"
         itemlist = {}
         for item in activeItems:
             key = os.path.dirname(item).replace("\\", "_")
@@ -1384,7 +1279,7 @@ def generate_vs_project(env, original_args, project_name="godot"):
             properties.append(
                 "<ActiveProjectItemList_%s>;%s;</ActiveProjectItemList_%s>" % (x, ";".join(itemlist[x]), x)
             )
-        output = f'bin\\godot{env["PROGSUFFIX"]}'
+        output = f'bin\\redot{env["PROGSUFFIX"]}'
 
         with open("misc/msvs/props.template", "r", encoding="utf-8") as file:
             props_template = file.read()
@@ -1477,43 +1372,43 @@ def generate_vs_project(env, original_args, project_name="godot"):
     section1 = []
     section2 = []
     for conf in confs:
-        godot_platform = conf["platform"]
+        redot_platform = conf["platform"]
         for p in conf["arches"]:
             sln_plat = p["platform"]
             proj_plat = sln_plat
-            godot_arch = p["architecture"]
+            redot_arch = p["architecture"]
 
             # Redirect editor configurations for non-Windows platforms to the Windows one, so the solution has all the permutations
             # and VS doesn't complain about missing project configurations.
             # These configurations are disabled, so they show up but won't build.
-            if godot_platform != "windows":
+            if redot_platform != "windows":
                 section1 += [f"editor|{sln_plat} = editor|{proj_plat}"]
                 section2 += [
                     f"{{{proj_uuid}}}.editor|{proj_plat}.ActiveCfg = editor|{proj_plat}",
                 ]
 
             for t in conf["targets"]:
-                godot_target = t
+                redot_target = t
 
                 # Windows x86 is a special little flower that requires a project platform == Win32 but a solution platform == x86.
-                if godot_platform == "windows" and godot_target == "editor" and godot_arch == "x86_32":
+                if redot_platform == "windows" and redot_target == "editor" and redot_arch == "x86_32":
                     sln_plat = "x86"
 
                 configurations += [
-                    f'<ProjectConfiguration Include="{godot_target}|{proj_plat}">',
-                    f"  <Configuration>{godot_target}</Configuration>",
+                    f'<ProjectConfiguration Include="{redot_target}|{proj_plat}">',
+                    f"  <Configuration>{redot_target}</Configuration>",
                     f"  <Platform>{proj_plat}</Platform>",
                     "</ProjectConfiguration>",
                 ]
 
                 properties += [
-                    f"<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='{godot_target}|{proj_plat}'\">",
-                    f"  <GodotConfiguration>{godot_target}</GodotConfiguration>",
-                    f"  <GodotPlatform>{proj_plat}</GodotPlatform>",
+                    f"<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='{redot_target}|{proj_plat}'\">",
+                    f"  <RedotConfiguration>{redot_target}</RedotConfiguration>",
+                    f"  <RedotPlatform>{proj_plat}</RedotPlatform>",
                     "</PropertyGroup>",
                 ]
 
-                if godot_platform != "windows":
+                if redot_platform != "windows":
                     configurations += [
                         f'<ProjectConfiguration Include="editor|{proj_plat}">',
                         "  <Configuration>editor</Configuration>",
@@ -1523,21 +1418,21 @@ def generate_vs_project(env, original_args, project_name="godot"):
 
                     properties += [
                         f"<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='editor|{proj_plat}'\">",
-                        "  <GodotConfiguration>editor</GodotConfiguration>",
-                        f"  <GodotPlatform>{proj_plat}</GodotPlatform>",
+                        "  <RedotConfiguration>editor</RedotConfiguration>",
+                        f"  <RedotPlatform>{proj_plat}</RedotPlatform>",
                         "</PropertyGroup>",
                     ]
 
-                p = f"{project_name}.{godot_platform}.{godot_target}.{godot_arch}.generated.props"
+                p = f"{project_name}.{redot_platform}.{redot_target}.{redot_arch}.generated.props"
                 imports += [
                     f'<Import Project="$(MSBuildProjectDirectory)\\{p}" Condition="Exists(\'$(MSBuildProjectDirectory)\\{p}\')"/>'
                 ]
 
-                section1 += [f"{godot_target}|{sln_plat} = {godot_target}|{sln_plat}"]
+                section1 += [f"{redot_target}|{sln_plat} = {redot_target}|{sln_plat}"]
 
                 section2 += [
-                    f"{{{proj_uuid}}}.{godot_target}|{sln_plat}.ActiveCfg = {godot_target}|{proj_plat}",
-                    f"{{{proj_uuid}}}.{godot_target}|{sln_plat}.Build.0 = {godot_target}|{proj_plat}",
+                    f"{{{proj_uuid}}}.{redot_target}|{sln_plat}.ActiveCfg = {redot_target}|{proj_plat}",
+                    f"{{{proj_uuid}}}.{redot_target}|{sln_plat}.Build.0 = {redot_target}|{proj_plat}",
                 ]
 
     # Add an extra import for a local user props file at the end, so users can add more overrides.
@@ -1582,9 +1477,11 @@ def generate_copyright_header(filename: str) -> str:
 /*  %s*/
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                                (see REDOT_AUTHORS.md). */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */

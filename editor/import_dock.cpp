@@ -2,9 +2,11 @@
 /*  import_dock.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -790,22 +792,13 @@ ImportDock::ImportDock() {
 	import->set_text(TTR("Reimport"));
 	import->set_disabled(true);
 	import->connect(SceneStringName(pressed), callable_mp(this, &ImportDock::_reimport_pressed));
-	if (!DisplayServer::get_singleton()->get_swap_cancel_ok()) {
-		advanced_spacer = hb->add_spacer();
-		advanced = memnew(Button);
-		advanced->set_text(TTR("Advanced..."));
-		hb->add_child(advanced);
-	}
+	advanced_spacer = hb->add_spacer();
+	advanced = memnew(Button);
+	advanced->set_text(TTR("Advanced..."));
+	hb->add_child(advanced);
 	hb->add_spacer();
 	hb->add_child(import);
 	hb->add_spacer();
-
-	if (DisplayServer::get_singleton()->get_swap_cancel_ok()) {
-		advanced = memnew(Button);
-		advanced->set_text(TTR("Advanced..."));
-		hb->add_child(advanced);
-		advanced_spacer = hb->add_spacer();
-	}
 
 	advanced->hide();
 	advanced_spacer->hide();

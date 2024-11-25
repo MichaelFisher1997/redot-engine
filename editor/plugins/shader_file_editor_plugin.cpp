@@ -2,9 +2,11 @@
 /*  shader_file_editor_plugin.cpp                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -63,7 +65,7 @@ void ShaderFileEditor::_version_selected(int p_option) {
 
 	for (int i = 0; i < RD::SHADER_STAGE_MAX; i++) {
 		if (bytecode->get_stage_bytecode(RD::ShaderStage(i)).is_empty() && bytecode->get_stage_compile_error(RD::ShaderStage(i)) == String()) {
-			stages[i]->set_icon(Ref<Texture2D>());
+			stages[i]->set_button_icon(Ref<Texture2D>());
 			continue;
 		}
 
@@ -73,7 +75,7 @@ void ShaderFileEditor::_version_selected(int p_option) {
 		} else {
 			icon = get_editor_theme_icon(SNAME("ImportCheck"));
 		}
-		stages[i]->set_icon(icon);
+		stages[i]->set_button_icon(icon);
 
 		if (first_found == -1) {
 			first_found = i;

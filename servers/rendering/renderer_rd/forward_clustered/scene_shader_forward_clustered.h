@@ -2,9 +2,11 @@
 /*  scene_shader_forward_clustered.h                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -108,16 +110,26 @@ public:
 				uint32_t projector_use_mipmaps : 1;
 				uint32_t use_depth_fog : 1;
 				uint32_t use_lightmap_bicubic_filter : 1;
-				uint32_t soft_shadow_samples : 4;
-				uint32_t penumbra_shadow_samples : 4;
-				uint32_t directional_soft_shadow_samples : 4;
-				uint32_t directional_penumbra_shadow_samples : 4;
+				uint32_t soft_shadow_samples : 6;
+				uint32_t penumbra_shadow_samples : 6;
+				uint32_t directional_soft_shadow_samples : 6;
+				uint32_t directional_penumbra_shadow_samples : 6;
 			};
 
 			uint32_t packed_0;
 		};
 
-		uint32_t packed_1;
+		union {
+			struct {
+				uint32_t multimesh : 1;
+				uint32_t multimesh_format_2d : 1;
+				uint32_t multimesh_has_color : 1;
+				uint32_t multimesh_has_custom_data : 1;
+			};
+
+			uint32_t packed_1;
+		};
+
 		uint32_t packed_2;
 	};
 
@@ -263,7 +275,7 @@ public:
 
 		_FORCE_INLINE_ bool uses_shared_shadow_material() const {
 			bool backface_culling = cull_mode == CULL_BACK;
-			return !uses_particle_trails && !writes_modelview_or_projection && !uses_vertex && !uses_position && !uses_discard && !uses_depth_prepass_alpha && !uses_alpha_clip && !uses_alpha_antialiasing && backface_culling && !uses_point_size && !uses_world_coordinates;
+			return !uses_particle_trails && !writes_modelview_or_projection && !uses_vertex && !uses_position && !uses_discard && !uses_depth_prepass_alpha && !uses_alpha_clip && !uses_alpha_antialiasing && backface_culling && !uses_point_size && !uses_world_coordinates && !wireframe;
 		}
 
 		virtual void set_code(const String &p_Code);

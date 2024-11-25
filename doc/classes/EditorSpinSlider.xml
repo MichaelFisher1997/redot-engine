@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="EditorSpinSlider" inherits="Range" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
 	<brief_description>
-		Godot editor's control for editing numeric values.
+		Redot editor's control for editing numeric values.
 	</brief_description>
 	<description>
 		This [Control] node is used in the editor's Inspector dock to allow editing of numeric values. Can be used with [EditorInspectorPlugin] to recreate the same behavior.
@@ -38,6 +38,11 @@
 		<signal name="ungrabbed">
 			<description>
 				Emitted when the spinner/slider is ungrabbed.
+			</description>
+		</signal>
+		<signal name="updown_pressed">
+			<description>
+				Emitted when the updown button is pressed.
 			</description>
 		</signal>
 		<signal name="value_focus_entered">

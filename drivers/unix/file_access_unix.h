@@ -2,9 +2,11 @@
 /*  file_access_unix.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -50,6 +52,10 @@ class FileAccessUnix : public FileAccess {
 	String path_src;
 
 	void _close();
+
+#if defined(TOOLS_ENABLED)
+	String get_real_path() const; // Returns the resolved real path for the current open file.
+#endif
 
 public:
 	static CloseNotificationFunc close_notification_func;

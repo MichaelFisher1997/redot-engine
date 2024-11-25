@@ -2,9 +2,11 @@
 /*  camera_linux.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -161,7 +163,7 @@ bool CameraLinux::_can_query_format(int p_file_descriptor, int p_type) {
 
 CameraLinux::CameraLinux() {
 	camera_thread.start(CameraLinux::camera_thread_func, this);
-};
+}
 
 CameraLinux::~CameraLinux() {
 	exit_flag.set();

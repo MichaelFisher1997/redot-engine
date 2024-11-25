@@ -2,9 +2,11 @@
 /*  script_language.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -112,7 +114,7 @@ class Script : public Resource {
 	OBJ_SAVE_TYPE(Script);
 
 protected:
-	// Scripts are reloaded via the Script Editor when edited in Godot,
+	// Scripts are reloaded via the Script Editor when edited in Redot,
 	// the LSP server when edited in a connected external editor, or
 	// through EditorFileSystem::_update_script_documentation when updated directly on disk.
 	virtual bool editor_can_reload_from_file() override { return false; }
@@ -446,8 +448,8 @@ public:
 	virtual Variant::Type get_property_type(const StringName &p_name, bool *r_is_valid = nullptr) const override;
 	virtual void validate_property(PropertyInfo &p_property) const override {}
 
-	virtual bool property_can_revert(const StringName &p_name) const override { return false; };
-	virtual bool property_get_revert(const StringName &p_name, Variant &r_ret) const override { return false; };
+	virtual bool property_can_revert(const StringName &p_name) const override { return false; }
+	virtual bool property_get_revert(const StringName &p_name, Variant &r_ret) const override { return false; }
 
 	virtual void get_method_list(List<MethodInfo> *p_list) const override;
 	virtual bool has_method(const StringName &p_method) const override;

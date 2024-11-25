@@ -2,9 +2,11 @@
 /*  editor_preview_plugins.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,6 +34,7 @@
 
 #include "core/config/project_settings.h"
 #include "core/io/file_access_memory.h"
+#include "core/io/image.h"
 #include "core/io/resource_loader.h"
 #include "core/object/script_language.h"
 #include "core/os/os.h"
@@ -112,9 +115,13 @@ Ref<Texture2D> EditorTexturePreviewPlugin::generate(const Ref<Resource> &p_from,
 			return Ref<Texture2D>();
 		}
 
-		const int mid_depth = (tex_3d->get_depth() - 1) / 2;
-
 		Vector<Ref<Image>> data = tex_3d->get_data();
+		if (data.size() != tex_3d->get_depth()) {
+			return Ref<Texture2D>();
+		}
+
+		// Use the middle slice for the thumbnail.
+		const int mid_depth = (tex_3d->get_depth() - 1) / 2;
 		if (!data.is_empty() && data[mid_depth].is_valid()) {
 			img = data[mid_depth]->duplicate();
 		}
@@ -124,6 +131,7 @@ Ref<Texture2D> EditorTexturePreviewPlugin::generate(const Ref<Resource> &p_from,
 			return Ref<Texture2D>();
 		}
 
+		// Use the middle slice for the thumbnail.
 		const int mid_layer = (tex_lyr->get_layers() - 1) / 2;
 
 		Ref<Image> data = tex_lyr->get_layer_data(mid_layer);

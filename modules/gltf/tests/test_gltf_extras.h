@@ -2,9 +2,11 @@
 /*  test_gltf_extras.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -91,7 +93,7 @@ static Node *_gltf_export_then_import(Node *p_root, String &p_tempfilebase) {
 	options["gltf/naming_version"] = 1;
 
 	// Process gltf file, note that this generates `.scn` resource from the 2nd argument.
-	err = import_scene->import(p_tempfilebase + ".gltf", p_tempfilebase, options, nullptr, nullptr, nullptr);
+	err = import_scene->import(0, p_tempfilebase + ".gltf", p_tempfilebase, options, nullptr, nullptr, nullptr);
 	CHECK_MESSAGE(err == OK, "GLTF import failed.");
 	ResourceImporterScene::remove_scene_importer(import_gltf);
 

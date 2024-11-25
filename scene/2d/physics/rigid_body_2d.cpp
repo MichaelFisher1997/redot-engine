@@ -2,9 +2,11 @@
 /*  rigid_body_2d.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -641,7 +643,7 @@ void RigidBody2D::_notification(int p_what) {
 PackedStringArray RigidBody2D::get_configuration_warnings() const {
 	Transform2D t = get_transform();
 
-	PackedStringArray warnings = CollisionObject2D::get_configuration_warnings();
+	PackedStringArray warnings = PhysicsBody2D::get_configuration_warnings();
 
 	if (ABS(t.columns[0].length() - 1.0) > 0.05 || ABS(t.columns[1].length() - 1.0) > 0.05) {
 		warnings.push_back(RTR("Size changes to RigidBody2D will be overridden by the physics engine when running.\nChange the size in children collision shapes instead."));

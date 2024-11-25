@@ -2,9 +2,11 @@
 /*  code_completion.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -116,7 +118,7 @@ PackedStringArray get_code_completion(CompletionKind p_kind, const String &p_scr
 					continue;
 				}
 
-				String name = prop.name.substr(prop.name.find("/") + 1, prop.name.length());
+				String name = prop.name.substr(prop.name.find_char('/') + 1, prop.name.length());
 				suggestions.push_back(quoted(name));
 			}
 		} break;

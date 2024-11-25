@@ -2,9 +2,11 @@
 /*  project_dialog.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -490,7 +492,7 @@ void ProjectDialog::ok_pressed() {
 	if (!is_folder_empty) {
 		ConfirmationDialog *cd = memnew(ConfirmationDialog);
 		cd->set_title(TTR("Warning: This folder is not empty"));
-		cd->set_text(TTR("You are about to create a Godot project in a non-empty folder.\nThe entire contents of this folder will be imported as project resources!\n\nAre you sure you wish to continue?"));
+		cd->set_text(TTR("You are about to create a Redot project in a non-empty folder.\nThe entire contents of this folder will be imported as project resources!\n\nAre you sure you wish to continue?"));
 		cd->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectDialog::_nonempty_confirmation_ok_pressed));
 		get_parent()->add_child(cd);
 		cd->popup_centered();
@@ -552,6 +554,21 @@ void ProjectDialog::ok_pressed() {
 		fa_icon->store_string(get_default_project_icon());
 
 		EditorVCSInterface::create_vcs_metadata_files(EditorVCSInterface::VCSMetadata(vcs_metadata_selection->get_selected()), path);
+
+		// Ensures external editors and IDEs use UTF-8 encoding.
+		const String editor_config_path = path.path_join(".editorconfig");
+		Ref<FileAccess> f = FileAccess::open(editor_config_path, FileAccess::WRITE);
+		if (f.is_null()) {
+			// .editorconfig isn't so critical.
+			ERR_PRINT("Couldn't create .editorconfig in project path.");
+		} else {
+			f->store_line("root = true");
+			f->store_line("");
+			f->store_line("[*]");
+			f->store_line("charset = utf-8");
+			f->close();
+			FileAccess::set_hidden_attribute(editor_config_path, true);
+		}
 	}
 
 	// Two cases for importing a ZIP.
@@ -810,9 +827,9 @@ void ProjectDialog::show_dialog(bool p_reset_name) {
 void ProjectDialog::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			create_dir->set_icon(get_editor_theme_icon(SNAME("FolderCreate")));
-			project_browse->set_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
-			install_browse->set_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
+			create_dir->set_button_icon(get_editor_theme_icon(SNAME("FolderCreate")));
+			project_browse->set_button_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
+			install_browse->set_button_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
 		} break;
 		case NOTIFICATION_READY: {
 			fdialog_project = memnew(EditorFileDialog);

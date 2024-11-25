@@ -2,9 +2,11 @@
 /*  net_socket.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -76,6 +78,8 @@ public:
 	virtual void set_reuse_address_enabled(bool p_enabled) = 0;
 	virtual Error join_multicast_group(const IPAddress &p_multi_address, const String &p_if_name) = 0;
 	virtual Error leave_multicast_group(const IPAddress &p_multi_address, const String &p_if_name) = 0;
+
+	virtual ~NetSocket() {}
 };
 
 #endif // NET_SOCKET_H

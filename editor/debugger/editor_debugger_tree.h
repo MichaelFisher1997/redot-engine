@@ -2,9 +2,11 @@
 /*  editor_debugger_tree.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -49,6 +51,8 @@ private:
 	ObjectID inspected_object_id;
 	int debugger_id = 0;
 	bool updating_scene_tree = false;
+	bool scrolling_to_item = false;
+	bool selection_uncollapse_all = false;
 	HashSet<ObjectID> unfold_cache;
 	PopupMenu *item_menu = nullptr;
 	EditorFileDialog *file_dialog = nullptr;
@@ -78,6 +82,7 @@ public:
 	ObjectID get_selected_object();
 	int get_current_debugger(); // Would love to have one tree for every debugger.
 	void update_scene_tree(const SceneDebuggerTree *p_tree, int p_debugger);
+	void select_node(ObjectID p_id);
 	EditorDebuggerTree();
 };
 

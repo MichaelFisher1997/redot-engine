@@ -2,9 +2,11 @@
 /*  engine.cpp                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,8 +36,10 @@
 #include "core/config/project_settings.h"
 #include "core/donors.gen.h"
 #include "core/license.gen.h"
+#include "core/redot_authors.gen.h"
 #include "core/variant/typed_array.h"
 #include "core/version.h"
+#include "servers/rendering/rendering_device.h"
 
 void Engine::set_physics_ticks_per_second(int p_ips) {
 	ERR_FAIL_COND_MSG(p_ips <= 0, "Engine iterations per second must be greater than 0.");
@@ -68,6 +72,11 @@ double Engine::get_physics_jitter_fix() const {
 
 void Engine::set_max_fps(int p_fps) {
 	_max_fps = p_fps > 0 ? p_fps : 0;
+
+	RenderingDevice *rd = RenderingDevice::get_singleton();
+	if (rd) {
+		rd->_set_max_fps(_max_fps);
+	}
 }
 
 int Engine::get_max_fps() const {
@@ -110,6 +119,10 @@ void Engine::set_time_scale(double p_scale) {
 }
 
 double Engine::get_time_scale() const {
+	return freeze_time_scale ? 0 : _time_scale;
+}
+
+double Engine::get_unfrozen_time_scale() const {
 	return _time_scale;
 }
 
@@ -121,6 +134,7 @@ Dictionary Engine::get_version_info() const {
 	dict["hex"] = VERSION_HEX;
 	dict["status"] = VERSION_STATUS;
 	dict["build"] = VERSION_BUILD;
+	dict["status_version"] = VERSION_STATUS_VERSION;
 
 	String hash = String(VERSION_HASH);
 	dict["hash"] = hash.is_empty() ? String("unknown") : hash;
@@ -131,7 +145,32 @@ Dictionary Engine::get_version_info() const {
 	if ((int)dict["patch"] != 0) {
 		stringver += "." + String(dict["patch"]);
 	}
-	stringver += "-" + String(dict["status"]) + " (" + String(dict["build"]) + ")";
+	stringver += "-" + String(dict["status"]);
+
+	if ((int)dict["status_version"] != 0) {
+		stringver += "." + String(dict["status_version"]);
+	}
+
+	stringver += " (" + String(dict["build"]) + ")";
+	dict["string"] = stringver;
+
+	return dict;
+}
+
+Dictionary Engine::get_godot_compatible_version_info() const {
+	Dictionary dict;
+	dict["major"] = GODOT_VERSION_MAJOR;
+	dict["minor"] = GODOT_VERSION_MINOR;
+	dict["patch"] = GODOT_VERSION_PATCH;
+	dict["hex"] = GODOT_VERSION_HEX;
+	dict["status"] = GODOT_VERSION_STATUS;
+
+	String stringver = String(dict["major"]) + "." + String(dict["minor"]);
+	if ((int)dict["patch"] != 0) {
+		stringver += "." + String(dict["patch"]);
+	}
+	// stringver += "-" + String(dict["status"]) + " (" + String(dict["build"]) + ")"; TODO: add godot automated build identification?
+	stringver += "-" + String(dict["status"]);
 	dict["string"] = stringver;
 
 	return dict;
@@ -154,6 +193,17 @@ static Array array_from_info_count(const char *const *info_list, int info_count)
 }
 
 Dictionary Engine::get_author_info() const {
+	Dictionary dict;
+
+	dict["lead_developers"] = array_from_info(REDOT_AUTHORS_LEAD_DEVELOPERS);
+	dict["project_managers"] = array_from_info(REDOT_AUTHORS_PROJECT_MANAGERS);
+	dict["founders"] = array_from_info(REDOT_AUTHORS_FOUNDERS);
+	dict["developers"] = array_from_info(REDOT_AUTHORS_DEVELOPERS);
+
+	return dict;
+}
+
+Dictionary Engine::get_godot_author_info() const {
 	Dictionary dict;
 
 	dict["lead_developers"] = array_from_info(AUTHORS_LEAD_DEVELOPERS);
@@ -187,6 +237,19 @@ TypedArray<Dictionary> Engine::get_copyright_info() const {
 }
 
 Dictionary Engine::get_donor_info() const {
+	Dictionary donors;
+	donors["patrons"] = Array();
+	donors["platinum_sponsors"] = Array();
+	donors["gold_sponsors"] = Array();
+	donors["silver_sponsors"] = Array();
+	donors["diamond_members"] = Array();
+	donors["titanium_members"] = Array();
+	donors["platinum_members"] = Array();
+	donors["gold_members"] = Array();
+	return donors;
+}
+
+Dictionary Engine::get_godot_donor_info() const {
 	Dictionary donors;
 	donors["patrons"] = array_from_info(DONORS_PATRONS);
 	donors["platinum_sponsors"] = array_from_info(DONORS_SPONSORS_PLATINUM);
@@ -266,6 +329,12 @@ bool Engine::is_generate_spirv_debug_info_enabled() const {
 bool Engine::is_extra_gpu_memory_tracking_enabled() const {
 	return extra_gpu_memory_tracking;
 }
+
+#if defined(DEBUG_ENABLED) || defined(DEV_ENABLED)
+bool Engine::is_accurate_breadcrumbs_enabled() const {
+	return accurate_breadcrumbs;
+}
+#endif
 
 void Engine::set_print_to_stdout(bool p_enabled) {
 	CoreGlobals::print_line_enabled = p_enabled;
@@ -390,6 +459,10 @@ Engine *Engine::get_singleton() {
 bool Engine::notify_frame_server_synced() {
 	frame_server_synced = true;
 	return server_syncs > SERVER_SYNC_FRAME_COUNT_WARNING;
+}
+
+void Engine::set_freeze_time_scale(bool p_frozen) {
+	freeze_time_scale = p_frozen;
 }
 
 Engine::Engine() {

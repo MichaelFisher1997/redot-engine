@@ -2,9 +2,11 @@
 /*  dependency_editor.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -471,7 +473,7 @@ void DependencyRemoveDialog::_find_localization_remaps_of_removed_files(Vector<R
 			for (int j = 0; j < remap_keys.size(); j++) {
 				PackedStringArray remapped_files = remaps[remap_keys[j]];
 				for (int k = 0; k < remapped_files.size(); k++) {
-					int splitter_pos = remapped_files[k].rfind(":");
+					int splitter_pos = remapped_files[k].rfind_char(':');
 					String res_path = remapped_files[k].substr(0, splitter_pos);
 					if (res_path == path) {
 						String locale_name = remapped_files[k].substr(splitter_pos + 1);

@@ -2,9 +2,11 @@
 /*  input.h                                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -103,6 +105,11 @@ private:
 	Vector2 mouse_pos;
 	int64_t mouse_window = 0;
 	bool legacy_just_pressed_behavior = false;
+	bool disable_input = false;
+
+	MouseMode mouse_mode = MOUSE_MODE_VISIBLE;
+	bool mouse_mode_override_enabled = false;
+	MouseMode mouse_mode_override = MOUSE_MODE_VISIBLE;
 
 	struct ActionState {
 		uint64_t pressed_physics_frame = UINT64_MAX;
@@ -279,6 +286,8 @@ protected:
 public:
 	void set_mouse_mode(MouseMode p_mode);
 	MouseMode get_mouse_mode() const;
+	void set_mouse_mode_override_enabled(bool p_enabled);
+	void set_mouse_mode_override(MouseMode p_mode);
 
 #ifdef TOOLS_ENABLED
 	void get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const override;
@@ -379,6 +388,9 @@ public:
 	void release_pressed_events();
 
 	void set_event_dispatch_function(EventDispatchFunc p_function);
+
+	void set_disable_input(bool p_disable);
+	bool is_input_disabled() const;
 
 	Input();
 	~Input();

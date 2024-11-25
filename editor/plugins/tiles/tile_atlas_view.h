@@ -2,9 +2,11 @@
 /*  tile_atlas_view.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -135,8 +137,8 @@ public:
 	void set_padding(Side p_side, int p_padding);
 
 	// Left side.
-	void set_texture_grid_visible(bool p_visible) { base_tiles_texture_grid->set_visible(p_visible); };
-	void set_tile_shape_grid_visible(bool p_visible) { base_tiles_shape_grid->set_visible(p_visible); };
+	void set_texture_grid_visible(bool p_visible) { base_tiles_texture_grid->set_visible(p_visible); }
+	void set_tile_shape_grid_visible(bool p_visible) { base_tiles_shape_grid->set_visible(p_visible); }
 
 	Vector2i get_atlas_tile_coords_at_pos(const Vector2 p_pos, bool p_clamp = false) const;
 
@@ -148,7 +150,7 @@ public:
 		}
 		p_control->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
 		p_control->set_mouse_filter(Control::MOUSE_FILTER_PASS);
-	};
+	}
 
 	// Right side.
 	Vector3i get_alternative_tile_at_pos(const Vector2 p_pos) const;
@@ -162,7 +164,7 @@ public:
 		}
 		p_control->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
 		p_control->set_mouse_filter(Control::MOUSE_FILTER_PASS);
-	};
+	}
 
 	// Redraw everything.
 	void queue_redraw();

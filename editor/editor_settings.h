@@ -2,9 +2,11 @@
 /*  editor_settings.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -102,6 +104,7 @@ private:
 	HashMap<String, List<Ref<InputEvent>>> builtin_action_overrides;
 
 	Vector<String> favorites;
+	HashMap<String, PackedStringArray> favorite_properties;
 	Vector<String> recent_dirs;
 
 	bool save_changed_setting = true;
@@ -176,6 +179,8 @@ public:
 
 	void set_favorites(const Vector<String> &p_favorites);
 	Vector<String> get_favorites() const;
+	void set_favorite_properties(const HashMap<String, PackedStringArray> &p_favorite_properties);
+	HashMap<String, PackedStringArray> get_favorite_properties() const;
 	void set_recent_dirs(const Vector<String> &p_recent_dirs);
 	Vector<String> get_recent_dirs() const;
 	void load_favorites_and_recent_dirs();

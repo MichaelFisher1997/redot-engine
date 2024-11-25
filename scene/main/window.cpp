@@ -2,9 +2,11 @@
 /*  window.cpp                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,10 +33,8 @@
 #include "window.h"
 
 #include "core/config/project_settings.h"
-#include "core/debugger/engine_debugger.h"
 #include "core/input/shortcut.h"
 #include "core/string/translation_server.h"
-#include "core/variant/variant_parser.h"
 #include "scene/gui/control.h"
 #include "scene/theme/theme_db.h"
 #include "scene/theme/theme_owner.h"
@@ -303,6 +303,11 @@ void Window::set_title(const String &p_title) {
 String Window::get_title() const {
 	ERR_READ_THREAD_GUARD_V(String());
 	return title;
+}
+
+String Window::get_translated_title() const {
+	ERR_READ_THREAD_GUARD_V(String());
+	return tr_title;
 }
 
 void Window::_settings_changed() {
@@ -1631,35 +1636,6 @@ bool Window::_can_consume_input_events() const {
 
 void Window::_window_input(const Ref<InputEvent> &p_ev) {
 	ERR_MAIN_THREAD_GUARD;
-	if (EngineDebugger::is_active()) {
-		// Quit from game window using the stop shortcut (F8 by default).
-		// The custom shortcut is provided via environment variable when running from the editor.
-		if (debugger_stop_shortcut.is_null()) {
-			String shortcut_str = OS::get_singleton()->get_environment("__GODOT_EDITOR_STOP_SHORTCUT__");
-			if (!shortcut_str.is_empty()) {
-				Variant shortcut_var;
-
-				VariantParser::StreamString ss;
-				ss.s = shortcut_str;
-
-				String errs;
-				int line;
-				VariantParser::parse(&ss, shortcut_var, errs, line);
-				debugger_stop_shortcut = shortcut_var;
-			}
-
-			if (debugger_stop_shortcut.is_null()) {
-				// Define a default shortcut if it wasn't provided or is invalid.
-				debugger_stop_shortcut.instantiate();
-				debugger_stop_shortcut->set_events({ (Variant)InputEventKey::create_reference(Key::F8) });
-			}
-		}
-
-		Ref<InputEventKey> k = p_ev;
-		if (k.is_valid() && k->is_pressed() && !k->is_echo() && debugger_stop_shortcut->matches_event(k)) {
-			EngineDebugger::get_singleton()->send_message("request_quit", Array());
-		}
-	}
 
 	if (exclusive_child != nullptr) {
 		if (!is_embedding_subwindows()) { // Not embedding, no need for event.
@@ -2635,7 +2611,7 @@ void Window::set_unparent_when_invisible(bool p_unparent) {
 
 void Window::set_layout_direction(Window::LayoutDirection p_direction) {
 	ERR_MAIN_THREAD_GUARD;
-	ERR_FAIL_INDEX((int)p_direction, 4);
+	ERR_FAIL_INDEX(p_direction, LAYOUT_DIRECTION_MAX);
 
 	layout_dir = p_direction;
 	propagate_notification(Control::NOTIFICATION_LAYOUT_DIRECTION_CHANGED);
@@ -2700,11 +2676,18 @@ bool Window::is_layout_rtl() const {
 			String locale = TranslationServer::get_singleton()->get_tool_locale();
 			return TS->is_locale_right_to_left(locale);
 		}
-	} else if (layout_dir == LAYOUT_DIRECTION_LOCALE) {
+	} else if (layout_dir == LAYOUT_DIRECTION_APPLICATION_LOCALE) {
 		if (GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
 			return true;
 		} else {
 			String locale = TranslationServer::get_singleton()->get_tool_locale();
+			return TS->is_locale_right_to_left(locale);
+		}
+	} else if (layout_dir == LAYOUT_DIRECTION_SYSTEM_LOCALE) {
+		if (GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
+			return true;
+		} else {
+			String locale = OS::get_singleton()->get_locale();
 			return TS->is_locale_right_to_left(locale);
 		}
 	} else {
@@ -3001,6 +2984,7 @@ void Window::_bind_methods() {
 	ADD_PROPERTYI(PropertyInfo(Variant::BOOL, "popup_window"), "set_flag", "get_flag", FLAG_POPUP);
 	ADD_PROPERTYI(PropertyInfo(Variant::BOOL, "extend_to_title"), "set_flag", "get_flag", FLAG_EXTEND_TO_TITLE);
 	ADD_PROPERTYI(PropertyInfo(Variant::BOOL, "mouse_passthrough"), "set_flag", "get_flag", FLAG_MOUSE_PASSTHROUGH);
+	ADD_PROPERTYI(PropertyInfo(Variant::BOOL, "sharp_corners"), "set_flag", "get_flag", FLAG_SHARP_CORNERS);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_native"), "set_force_native", "get_force_native");
 
 	ADD_GROUP("Limits", "");
@@ -3054,6 +3038,7 @@ void Window::_bind_methods() {
 	BIND_ENUM_CONSTANT(FLAG_POPUP);
 	BIND_ENUM_CONSTANT(FLAG_EXTEND_TO_TITLE);
 	BIND_ENUM_CONSTANT(FLAG_MOUSE_PASSTHROUGH);
+	BIND_ENUM_CONSTANT(FLAG_SHARP_CORNERS);
 	BIND_ENUM_CONSTANT(FLAG_MAX);
 
 	BIND_ENUM_CONSTANT(CONTENT_SCALE_MODE_DISABLED);
@@ -3070,9 +3055,14 @@ void Window::_bind_methods() {
 	BIND_ENUM_CONSTANT(CONTENT_SCALE_STRETCH_INTEGER);
 
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_INHERITED);
-	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LOCALE);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_APPLICATION_LOCALE);
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LTR);
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_RTL);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_SYSTEM_LOCALE);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_MAX);
+#ifndef DISABLE_DEPRECATED
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LOCALE);
+#endif // DISABLE_DEPRECATED
 
 	BIND_ENUM_CONSTANT(WINDOW_INITIAL_POSITION_ABSOLUTE);
 	BIND_ENUM_CONSTANT(WINDOW_INITIAL_POSITION_CENTER_PRIMARY_SCREEN);

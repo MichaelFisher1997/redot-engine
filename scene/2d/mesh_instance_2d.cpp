@@ -2,9 +2,11 @@
 /*  mesh_instance_2d.cpp                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -54,7 +56,20 @@ void MeshInstance2D::_bind_methods() {
 }
 
 void MeshInstance2D::set_mesh(const Ref<Mesh> &p_mesh) {
+	if (mesh == p_mesh) {
+		return;
+	}
+
+	if (mesh.is_valid()) {
+		mesh->disconnect_changed(callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw));
+	}
+
 	mesh = p_mesh;
+
+	if (mesh.is_valid()) {
+		mesh->connect_changed(callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw));
+	}
+
 	queue_redraw();
 }
 
@@ -75,7 +90,7 @@ Ref<Texture2D> MeshInstance2D::get_texture() const {
 	return texture;
 }
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 MeshInstance2D::_edit_get_rect() const {
 	if (mesh.is_valid()) {
 		AABB aabb = mesh->get_aabb();
@@ -88,7 +103,7 @@ Rect2 MeshInstance2D::_edit_get_rect() const {
 bool MeshInstance2D::_edit_use_rect() const {
 	return mesh.is_valid();
 }
-#endif
+#endif // DEBUG_ENABLED
 
 MeshInstance2D::MeshInstance2D() {
 }

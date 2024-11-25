@@ -2,9 +2,11 @@
 /*  root_motion_editor_plugin.cpp                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -169,13 +171,13 @@ void EditorPropertyRootMotion::update_property() {
 	NodePath p = get_edited_property_value();
 	assign->set_tooltip_text(p);
 	if (p == NodePath()) {
-		assign->set_icon(Ref<Texture2D>());
+		assign->set_button_icon(Ref<Texture2D>());
 		assign->set_text(TTR("Assign..."));
 		assign->set_flat(false);
 		return;
 	}
 
-	assign->set_icon(Ref<Texture2D>());
+	assign->set_button_icon(Ref<Texture2D>());
 	assign->set_text(p);
 }
 
@@ -188,7 +190,7 @@ void EditorPropertyRootMotion::_notification(int p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
 			Ref<Texture2D> t = get_editor_theme_icon(SNAME("Clear"));
-			clear->set_icon(t);
+			clear->set_button_icon(t);
 		} break;
 	}
 }

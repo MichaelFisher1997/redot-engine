@@ -2,9 +2,11 @@
 /*  label.h                                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -91,11 +93,16 @@ private:
 		int font_shadow_outline_size;
 	} theme_cache;
 
+	void _ensure_shaped() const;
 	void _update_visible();
 	void _shape();
 	void _invalidate();
 
 protected:
+	RID get_line_rid(int p_line) const;
+	Rect2 get_line_rect(int p_line) const;
+	void get_layout_data(Vector2 &r_offset, int &r_line_limit, int &r_line_spacing) const;
+
 	void _notification(int p_what);
 	static void _bind_methods();
 #ifndef DISABLE_DEPRECATED

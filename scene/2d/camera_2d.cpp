@@ -2,9 +2,11 @@
 /*  camera_2d.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -115,11 +117,11 @@ void Camera2D::set_zoom(const Vector2 &p_zoom) {
 	Point2 old_smoothed_camera_pos = smoothed_camera_pos;
 	_update_scroll();
 	smoothed_camera_pos = old_smoothed_camera_pos;
-};
+}
 
 Vector2 Camera2D::get_zoom() const {
 	return zoom;
-};
+}
 
 Transform2D Camera2D::get_camera_transform() {
 	if (!get_tree()) {
@@ -302,6 +304,7 @@ void Camera2D::_notification(int p_what) {
 			_interpolation_data.xform_prev = _interpolation_data.xform_curr;
 		} break;
 
+		case NOTIFICATION_SUSPENDED:
 		case NOTIFICATION_PAUSED: {
 			if (is_physics_interpolated_and_enabled()) {
 				_update_scroll();

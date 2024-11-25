@@ -2,9 +2,11 @@
 /*  shader_gles3.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -166,6 +168,10 @@ void ShaderGLES3::_build_variant_code(StringBuilder &builder, uint32_t p_variant
 		builder.append("#define USE_GLES_OVER_GL\n");
 	} else {
 		builder.append("#version 300 es\n");
+	}
+
+	if (GLES3::Config::get_singleton()->polyfill_half2float) {
+		builder.append("#define USE_HALF2FLOAT\n");
 	}
 
 	for (int i = 0; i < specialization_count; i++) {

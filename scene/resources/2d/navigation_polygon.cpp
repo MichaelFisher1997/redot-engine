@@ -2,9 +2,11 @@
 /*  navigation_polygon.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -36,7 +38,7 @@
 
 #include "thirdparty/misc/polypartition.h"
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 NavigationPolygon::_edit_get_rect() const {
 	RWLockRead read_lock(rwlock);
 	if (rect_cache_dirty) {
@@ -79,7 +81,7 @@ bool NavigationPolygon::_edit_is_selected_on_click(const Point2 &p_point, double
 	}
 	return false;
 }
-#endif
+#endif // DEBUG_ENABLED
 
 void NavigationPolygon::set_vertices(const Vector<Vector2> &p_vertices) {
 	RWLockWrite write_lock(rwlock);

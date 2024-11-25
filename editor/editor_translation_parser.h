@@ -2,9 +2,11 @@
 /*  editor_translation_parser.h                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -43,10 +45,12 @@ protected:
 	static void _bind_methods();
 
 	GDVIRTUAL3(_parse_file, String, TypedArray<String>, TypedArray<Array>)
+	GDVIRTUAL2(_get_comments, TypedArray<String>, TypedArray<String>)
 	GDVIRTUAL0RC(Vector<String>, _get_recognized_extensions)
 
 public:
 	virtual Error parse_file(const String &p_path, Vector<String> *r_ids, Vector<Vector<String>> *r_ids_ctx_plural);
+	virtual void get_comments(Vector<String> *r_ids_comment, Vector<String> *r_ids_ctx_plural_comment);
 	virtual void get_recognized_extensions(List<String> *r_extensions) const;
 };
 

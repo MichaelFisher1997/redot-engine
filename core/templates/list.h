@@ -2,9 +2,11 @@
 /*  list.h                                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -224,7 +226,7 @@ private:
 		Element *last = nullptr;
 		int size_cache = 0;
 
-		bool erase(const Element *p_I) {
+		bool erase(Element *p_I) {
 			ERR_FAIL_NULL_V(p_I, false);
 			ERR_FAIL_COND_V(p_I->data != this, false);
 
@@ -244,7 +246,7 @@ private:
 				p_I->next_ptr->prev_ptr = p_I->prev_ptr;
 			}
 
-			memdelete_allocator<Element, A>(const_cast<Element *>(p_I));
+			memdelete_allocator<Element, A>(p_I);
 			size_cache--;
 
 			return true;
@@ -430,7 +432,7 @@ public:
 	/**
 	 * erase an element in the list, by iterator pointing to it. Return true if it was found/erased.
 	 */
-	bool erase(const Element *p_I) {
+	bool erase(Element *p_I) {
 		if (_data && p_I) {
 			bool ret = _data->erase(p_I);
 

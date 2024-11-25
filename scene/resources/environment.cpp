@@ -2,9 +2,11 @@
 /*  environment.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -130,10 +132,7 @@ int Environment::get_canvas_max_layer() const {
 
 void Environment::set_camera_feed_id(int p_id) {
 	bg_camera_feed_id = p_id;
-// FIXME: Disabled during Vulkan refactoring, should be ported.
-#if 0
-	RS::get_singleton()->environment_set_camera_feed_id(environment, camera_feed_id);
-#endif
+	RS::get_singleton()->environment_set_camera_feed_id(environment, bg_camera_feed_id);
 }
 
 int Environment::get_camera_feed_id() const {

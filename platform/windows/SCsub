@@ -24,6 +24,7 @@ common_win = [
     "gl_manager_windows_angle.cpp",
     "wgl_detect_version.cpp",
     "rendering_context_driver_vulkan_windows.cpp",
+    "drop_target_windows.cpp",
 ]
 
 if env.msvc:
@@ -56,8 +57,11 @@ env.Depends(res_obj, "#core/version_generated.gen.h")
 env.add_source_files(sources, common_win)
 sources += res_obj
 
-prog = env.add_program("#bin/godot", sources, PROGSUFFIX=env["PROGSUFFIX"])
+prog = env.add_program("#bin/redot", sources, PROGSUFFIX=env["PROGSUFFIX"])
 arrange_program_clean(prog)
+
+if env.msvc:
+    env.Depends(prog, "godot.natvis")
 
 # Build console wrapper app.
 if env["windows_subsystem"] == "gui":
@@ -74,20 +78,10 @@ if env["windows_subsystem"] == "gui":
         env_wrap.Append(LINKFLAGS=["-Wl,--subsystem,console"])
         env_wrap.Append(LIBS=["version"])
 
-    prog_wrap = env_wrap.add_program("#bin/godot", common_win_wrap + res_wrap_obj, PROGSUFFIX=env["PROGSUFFIX_WRAP"])
+    prog_wrap = env_wrap.add_program("#bin/redot", common_win_wrap + res_wrap_obj, PROGSUFFIX=env["PROGSUFFIX_WRAP"])
     arrange_program_clean(prog_wrap)
     env_wrap.Depends(prog_wrap, prog)
     sources += common_win_wrap + res_wrap_obj
-
-# Microsoft Visual Studio Project Generation
-if env["vsproj"]:
-    env.vs_srcs += ["platform/windows/" + res_file]
-    env.vs_srcs += ["platform/windows/godot.natvis"]
-    for x in common_win:
-        env.vs_srcs += ["platform/windows/" + str(x)]
-    if env["windows_subsystem"] == "gui":
-        for x in common_win_wrap:
-            env.vs_srcs += ["platform/windows/" + str(x)]
 
 if env["d3d12"]:
     dxc_target_aliases = {

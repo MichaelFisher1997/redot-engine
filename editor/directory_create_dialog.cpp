@@ -2,9 +2,11 @@
 /*  directory_create_dialog.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -142,7 +144,7 @@ void DirectoryCreateDialog::config(const String &p_base_dir, const Callable &p_a
 	validation_panel->update();
 
 	if (p_mode == MODE_FILE) {
-		int extension_pos = p_default_name.rfind(".");
+		int extension_pos = p_default_name.rfind_char('.');
 		if (extension_pos > -1) {
 			dir_path->select(0, extension_pos);
 			return;

@@ -2,9 +2,11 @@
 /*  fbx_importer_manager.cpp                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -40,7 +42,7 @@
 void FBXImporterManager::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			fbx_path_browse->set_icon(get_editor_theme_icon(SNAME("FileBrowse")));
+			fbx_path_browse->set_button_icon(get_editor_theme_icon(SNAME("FileBrowse")));
 		} break;
 
 		case NOTIFICATION_READY: {
@@ -143,6 +145,7 @@ FBXImporterManager::FBXImporterManager() {
 	vb->add_child(memnew(Label(TTR("FBX2glTF is required for importing FBX files if using FBX2glTF.\nAlternatively, you can use ufbx by disabling FBX2glTF.\nPlease download the necessary tool and provide a valid path to the binary:"))));
 	LinkButton *lb = memnew(LinkButton);
 	lb->set_text(TTR("Click this link to download FBX2glTF"));
+	// TODO: Update https://godotengine.org/fbx-import if/when it exists
 	lb->set_uri("https://godotengine.org/fbx-import");
 	vb->add_child(lb);
 

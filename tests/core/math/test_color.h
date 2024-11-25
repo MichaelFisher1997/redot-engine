@@ -2,9 +2,11 @@
 /*  test_color.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -140,7 +142,7 @@ TEST_CASE("[Color] Conversion methods") {
 			cyan.to_rgba64() == 0x0000'ffff'ffff'ffff,
 			"The returned 64-bit BGR number should match the expected value.");
 	CHECK_MESSAGE(
-			String(cyan) == "(0, 1, 1, 1)",
+			String(cyan) == "(0.0, 1.0, 1.0, 1.0)",
 			"The string representation should match the expected value.");
 }
 

@@ -2,9 +2,11 @@
 /*  callable.h                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -111,8 +113,9 @@ public:
 	CallableCustom *get_custom() const;
 	int get_argument_count(bool *r_is_valid = nullptr) const;
 	int get_bound_arguments_count() const;
-	void get_bound_arguments_ref(Vector<Variant> &r_arguments, int &r_argcount) const; // Internal engine use, the exposed one is below.
+	void get_bound_arguments_ref(Vector<Variant> &r_arguments) const; // Internal engine use, the exposed one is below.
 	Array get_bound_arguments() const;
+	int get_unbound_arguments_count() const;
 
 	uint32_t hash() const;
 
@@ -158,7 +161,8 @@ public:
 	virtual const Callable *get_base_comparator() const;
 	virtual int get_argument_count(bool &r_is_valid) const;
 	virtual int get_bound_arguments_count() const;
-	virtual void get_bound_arguments(Vector<Variant> &r_arguments, int &r_argcount) const;
+	virtual void get_bound_arguments(Vector<Variant> &r_arguments) const;
+	virtual int get_unbound_arguments_count() const;
 
 	CallableCustom();
 	virtual ~CallableCustom() {}

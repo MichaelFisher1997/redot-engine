@@ -2,9 +2,11 @@
 /*  color_mode.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -41,9 +43,9 @@ public:
 
 	virtual String get_name() const = 0;
 
-	virtual int get_slider_count() const { return 3; };
+	virtual int get_slider_count() const { return 3; }
 	virtual float get_slider_step() const = 0;
-	virtual float get_spinbox_arrow_step() const { return get_slider_step(); };
+	virtual float get_spinbox_arrow_step() const { return get_slider_step(); }
 	virtual String get_slider_label(int idx) const = 0;
 	virtual float get_slider_max(int idx) const = 0;
 	virtual float get_slider_value(int idx) const = 0;

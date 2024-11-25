@@ -2,9 +2,11 @@
 /*  stream_peer.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -223,13 +225,13 @@ void StreamPeer::put_var(const Variant &p_variant, bool p_full_objects) {
 }
 
 uint8_t StreamPeer::get_u8() {
-	uint8_t buf[1];
+	uint8_t buf[1] = {};
 	get_data(buf, 1);
 	return buf[0];
 }
 
 int8_t StreamPeer::get_8() {
-	uint8_t buf[1];
+	uint8_t buf[1] = {};
 	get_data(buf, 1);
 	return buf[0];
 }

@@ -222,7 +222,7 @@ namespace Godot.SourceGenerators
 
                 source.Append("    /// <summary>\n")
                     .Append("    /// Get the signal information for all the signals declared in this class.\n")
-                    .Append("    /// This method is used by Godot to register the available signals in the editor.\n")
+                    .Append("    /// This method is used by Redot to register the available signals in the editor.\n")
                     .Append("    /// Do not call this method.\n")
                     .Append("    /// </summary>\n");
 
@@ -282,7 +282,7 @@ namespace Godot.SourceGenerators
                     .Append(" -= value;\n")
                     .Append("}\n");
 
-                // Generate On{EventName} method to raise the event
+                // Generate EmitSignal{EventName} method to raise the event
 
                 var invokeMethodSymbol = signalDelegate.InvokeMethodData.Method;
                 int paramCount = invokeMethodSymbol.Parameters.Length;
@@ -291,11 +291,11 @@ namespace Godot.SourceGenerators
                     "private" :
                     "protected";
 
-                source.Append($"    {raiseMethodModifiers} void On{signalName}(");
+                source.Append($"    {raiseMethodModifiers} void EmitSignal{signalName}(");
                 for (int i = 0; i < paramCount; i++)
                 {
                     var paramSymbol = invokeMethodSymbol.Parameters[i];
-                    source.Append($"{paramSymbol.Type.FullQualifiedNameIncludeGlobal()} {paramSymbol.Name}");
+                    source.Append($"{paramSymbol.Type.FullQualifiedNameIncludeGlobal()} @{paramSymbol.Name}");
                     if (i < paramCount - 1)
                     {
                         source.Append(", ");
@@ -310,11 +310,11 @@ namespace Godot.SourceGenerators
                     if (paramSymbol.Type.TypeKind == TypeKind.Enum)
                     {
                         var underlyingType = ((INamedTypeSymbol)paramSymbol.Type).EnumUnderlyingType;
-                        source.Append($", ({underlyingType.FullQualifiedNameIncludeGlobal()}){paramSymbol.Name}");
+                        source.Append($", ({underlyingType.FullQualifiedNameIncludeGlobal()})@{paramSymbol.Name}");
                         continue;
                     }
 
-                    source.Append($", {paramSymbol.Name}");
+                    source.Append($", @{paramSymbol.Name}");
                 }
                 source.Append(");\n");
                 source.Append("    }\n");

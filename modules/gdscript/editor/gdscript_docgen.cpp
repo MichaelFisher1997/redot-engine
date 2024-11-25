@@ -2,9 +2,11 @@
 /*  gdscript_docgen.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -140,7 +142,7 @@ void GDScriptDocGen::_doctype_from_gdtype(const GDType &p_gdtype, String &r_type
 			r_enum = String(p_gdtype.native_type).replace("::", ".");
 			if (r_enum.begins_with("res://")) {
 				r_enum = r_enum.trim_prefix("res://");
-				int dot_pos = r_enum.rfind(".");
+				int dot_pos = r_enum.rfind_char('.');
 				if (dot_pos >= 0) {
 					r_enum = r_enum.left(dot_pos).quote() + r_enum.substr(dot_pos);
 				}
@@ -217,7 +219,7 @@ String GDScriptDocGen::_docvalue_from_variant(const Variant &p_variant, int p_re
 
 				List<Variant> keys;
 				dict.get_key_list(&keys);
-				keys.sort();
+				keys.sort_custom<StringLikeVariantOrder>();
 
 				for (List<Variant>::Element *E = keys.front(); E; E = E->next()) {
 					if (E->prev()) {

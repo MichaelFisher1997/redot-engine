@@ -2,9 +2,11 @@
 /*  light_occluder_2d_editor_plugin.cpp                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,8 +37,8 @@
 
 Ref<OccluderPolygon2D> LightOccluder2DEditor::_ensure_occluder() const {
 	Ref<OccluderPolygon2D> occluder = node->get_occluder_polygon();
-	if (!occluder.is_valid()) {
-		occluder = Ref<OccluderPolygon2D>(memnew(OccluderPolygon2D));
+	if (occluder.is_null()) {
+		occluder.instantiate();
 		node->set_occluder_polygon(occluder);
 	}
 	return occluder;

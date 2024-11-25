@@ -2,9 +2,11 @@
 /*  audio_stream_wav.cpp                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -624,7 +626,7 @@ Error AudioStreamWAV::save_to_wav(const String &p_path) {
 	}
 
 	String file_path = p_path;
-	if (!(file_path.substr(file_path.length() - 4, 4) == ".wav")) {
+	if (file_path.substr(file_path.length() - 4, 4).to_lower() != ".wav") {
 		file_path += ".wav";
 	}
 

@@ -2,9 +2,11 @@
 /*  resource_uid.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,6 +36,7 @@
 #include "core/crypto/crypto_core.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
+#include "core/io/resource_loader.h"
 
 // These constants are off by 1, causing the 'z' and '9' characters never to be used.
 // This cannot be fixed without breaking compatibility; see GH-83843.
@@ -137,6 +140,21 @@ void ResourceUID::remove_id(ID p_id) {
 	MutexLock l(mutex);
 	ERR_FAIL_COND(!unique_ids.has(p_id));
 	unique_ids.erase(p_id);
+}
+
+String ResourceUID::uid_to_path(const String &p_uid) {
+	return singleton->get_id_path(singleton->text_to_id(p_uid));
+}
+
+String ResourceUID::path_to_uid(const String &p_path) {
+	return singleton->id_to_text(ResourceLoader::get_resource_uid(p_path));
+}
+
+String ResourceUID::ensure_path(const String &p_uid_or_path) {
+	if (p_uid_or_path.begins_with("uid://")) {
+		return uid_to_path(p_uid_or_path);
+	}
+	return p_uid_or_path;
 }
 
 Error ResourceUID::save_to_cache() {

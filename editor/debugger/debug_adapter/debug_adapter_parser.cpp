@@ -2,9 +2,11 @@
 /*  debug_adapter_parser.cpp                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -147,7 +149,7 @@ Dictionary DebugAdapterParser::req_initialize(const Dictionary &p_params) const 
 		for (List<String>::Element *E = breakpoints.front(); E; E = E->next()) {
 			String breakpoint = E->get();
 
-			String path = breakpoint.left(breakpoint.find(":", 6)); // Skip initial part of path, aka "res://"
+			String path = breakpoint.left(breakpoint.find_char(':', 6)); // Skip initial part of path, aka "res://"
 			int line = breakpoint.substr(path.size()).to_int();
 
 			DebugAdapterProtocol::get_singleton()->on_debug_breakpoint_toggled(path, line, true);
@@ -304,7 +306,7 @@ Dictionary DebugAdapterParser::req_threads(const Dictionary &p_params) const {
 	Array arr;
 	DAP::Thread thread;
 
-	thread.id = 1; // Hardcoded because Godot only supports debugging one thread at the moment
+	thread.id = 1; // Hardcoded because Redot only supports debugging one thread at the moment
 	thread.name = "Main";
 	arr.push_back(thread.to_json());
 	body["threads"] = arr;

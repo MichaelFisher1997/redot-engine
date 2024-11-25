@@ -2,9 +2,11 @@
 /*  path_3d_editor_plugin.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -120,7 +122,7 @@ class Path3DEditorPlugin : public EditorPlugin {
 	Button *curve_edit_curve = nullptr;
 	Button *curve_edit_tilt = nullptr;
 	Button *curve_del = nullptr;
-	Button *curve_close = nullptr;
+	Button *curve_closed = nullptr;
 	Button *curve_clear_points = nullptr;
 	MenuButton *handle_menu = nullptr;
 
@@ -144,7 +146,7 @@ class Path3DEditorPlugin : public EditorPlugin {
 	void _update_toolbar();
 
 	void _mode_changed(int p_mode);
-	void _close_curve();
+	void _toggle_closed_curve();
 	void _handle_option_pressed(int p_option);
 	bool handle_clicked = false;
 	bool mirror_handle_angle = true;

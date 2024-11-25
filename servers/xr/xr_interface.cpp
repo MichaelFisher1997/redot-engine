@@ -2,9 +2,11 @@
 /*  xr_interface.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -108,7 +110,7 @@ void XRInterface::_bind_methods() {
 	BIND_ENUM_CONSTANT(XR_ENV_BLEND_MODE_OPAQUE);
 	BIND_ENUM_CONSTANT(XR_ENV_BLEND_MODE_ADDITIVE);
 	BIND_ENUM_CONSTANT(XR_ENV_BLEND_MODE_ALPHA_BLEND);
-};
+}
 
 bool XRInterface::is_primary() {
 	XRServer *xr_server = XRServer::get_singleton();
@@ -155,7 +157,7 @@ PackedVector3Array XRInterface::get_play_area() const {
 	// Note implementation is responsible for applying our reference frame and world scale to the raw data.
 	// `play_area_changed` should be emitted if play area data is available and either the reference frame or world scale changes.
 	return PackedVector3Array();
-};
+}
 
 /** these will only be implemented on AR interfaces, so we want dummies for VR **/
 bool XRInterface::get_anchor_detection_is_enabled() const {

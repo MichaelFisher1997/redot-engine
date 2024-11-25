@@ -2,9 +2,11 @@
 /*  scroll_container.cpp                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -461,7 +463,7 @@ void ScrollContainer::update_scrollbars() {
 
 void ScrollContainer::_scroll_moved(float) {
 	queue_sort();
-};
+}
 
 void ScrollContainer::set_h_scroll(int p_pos) {
 	h_scroll->set_value(p_pos);
@@ -625,7 +627,7 @@ void ScrollContainer::_bind_methods() {
 	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_STYLEBOX, ScrollContainer, panel_style, "panel");
 
 	GLOBAL_DEF("gui/common/default_scroll_deadzone", 0);
-};
+}
 
 ScrollContainer::ScrollContainer() {
 	h_scroll = memnew(HScrollBar);
@@ -641,4 +643,4 @@ ScrollContainer::ScrollContainer() {
 	deadzone = GLOBAL_GET("gui/common/default_scroll_deadzone");
 
 	set_clip_contents(true);
-};
+}

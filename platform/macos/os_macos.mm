@@ -2,9 +2,11 @@
 /*  os_macos.mm                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -65,6 +67,15 @@ void OS_MacOS::initialize() {
 	crash_handler.initialize();
 
 	initialize_core();
+}
+
+String OS_MacOS::get_model_name() const {
+	char buffer[256];
+	size_t buffer_len = 256;
+	if (sysctlbyname("hw.model", &buffer, &buffer_len, nullptr, 0) == 0 && buffer_len != 0) {
+		return String::utf8(buffer, buffer_len);
+	}
+	return OS_Unix::get_model_name();
 }
 
 String OS_MacOS::get_processor_name() const {

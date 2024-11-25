@@ -2,9 +2,11 @@
 /*  color_picker.h                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -130,7 +132,6 @@ private:
 	Popup *picker_window = nullptr;
 	// Legacy color picking.
 	TextureRect *picker_texture_rect = nullptr;
-	Panel *picker_preview = nullptr;
 	Label *picker_preview_label = nullptr;
 	Ref<StyleBoxFlat> picker_preview_style_box;
 	Color picker_color;
@@ -240,6 +241,7 @@ private:
 		Ref<Texture2D> sample_revert;
 		Ref<Texture2D> overbright_indicator;
 		Ref<Texture2D> picker_cursor;
+		Ref<Texture2D> wheel_picker_cursor;
 		Ref<Texture2D> color_hue;
 		Ref<Texture2D> color_okhsl_hue;
 

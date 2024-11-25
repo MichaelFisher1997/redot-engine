@@ -2,9 +2,11 @@
 /*  parallax_background_editor_plugin.cpp                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -119,7 +121,7 @@ void ParallaxBackgroundEditorPlugin::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
 			menu->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &ParallaxBackgroundEditorPlugin::_menu_callback));
-			menu->set_icon(menu->get_editor_theme_icon(SNAME("ParallaxBackground")));
+			menu->set_button_icon(menu->get_editor_theme_icon(SNAME("ParallaxBackground")));
 		} break;
 	}
 }

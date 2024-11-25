@@ -2,9 +2,11 @@
 /*  translation_server.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -46,9 +48,11 @@ class TranslationServer : public Object {
 	Ref<TranslationDomain> doc_domain;
 	HashMap<StringName, Ref<TranslationDomain>> custom_domains;
 
+	mutable HashMap<String, int> locale_compare_cache;
+
 	bool enabled = true;
 
-	static TranslationServer *singleton;
+	static inline TranslationServer *singleton = nullptr;
 	bool _load_translations(const String &p_from);
 	String _standardize_locale(const String &p_locale, bool p_add_defaults) const;
 
@@ -61,6 +65,24 @@ class TranslationServer : public Object {
 		HashSet<String> supported_countries;
 	};
 	static Vector<LocaleScriptInfo> locale_script_info;
+
+	struct Locale {
+		String language;
+		String script;
+		String country;
+		String variant;
+
+		bool operator==(const Locale &p_locale) const {
+			return (p_locale.language == language) &&
+					(p_locale.script == script) &&
+					(p_locale.country == country) &&
+					(p_locale.variant == variant);
+		}
+
+		operator String() const;
+
+		Locale(const TranslationServer &p_server, const String &p_locale, bool p_add_defaults);
+	};
 
 	static HashMap<String, String> language_map;
 	static HashMap<String, String> script_map;

@@ -2,9 +2,11 @@
 /*  scene_tree_editor.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -199,6 +201,7 @@ class SceneTreeDialog : public ConfirmationDialog {
 	LineEdit *filter = nullptr;
 	CheckButton *show_all_nodes = nullptr;
 	LocalVector<TextureRect *> valid_type_icons;
+	HBoxContainer *allowed_types_hbox = nullptr;
 
 	void _select();
 	void _cancel();
@@ -208,6 +211,7 @@ class SceneTreeDialog : public ConfirmationDialog {
 	void _show_all_nodes_changed(bool p_button_pressed);
 
 protected:
+	void _update_valid_type_icons();
 	void _notification(int p_what);
 	static void _bind_methods();
 

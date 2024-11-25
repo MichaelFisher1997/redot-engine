@@ -2,9 +2,11 @@
 /*  geometry_2d.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,7 +37,8 @@
 #define STB_RECT_PACK_IMPLEMENTATION
 #include "thirdparty/misc/stb_rect_pack.h"
 
-#define PRECISION 5 // Based on CMP_EPSILON.
+const int clipper_precision = 5; // Based on CMP_EPSILON.
+const double clipper_scale = Math::pow(10.0, clipper_precision);
 
 Vector<Vector<Vector2>> Geometry2D::decompose_polygon_in_convex(const Vector<Point2> &polygon) {
 	Vector<Vector<Vector2>> decomp;
@@ -75,7 +78,7 @@ struct _AtlasWorkRect {
 	Size2i s;
 	Point2i p;
 	int idx = 0;
-	_FORCE_INLINE_ bool operator<(const _AtlasWorkRect &p_r) const { return s.width > p_r.s.width; };
+	_FORCE_INLINE_ bool operator<(const _AtlasWorkRect &p_r) const { return s.width > p_r.s.width; }
 };
 
 struct _AtlasWorkRectResult {
@@ -224,7 +227,7 @@ Vector<Vector<Point2>> Geometry2D::_polypaths_do_operation(PolyBooleanOperation 
 		path_b[i] = PointD(p_polypath_b[i].x, p_polypath_b[i].y);
 	}
 
-	ClipperD clp(PRECISION); // Scale points up internally to attain the desired precision.
+	ClipperD clp(clipper_precision); // Scale points up internally to attain the desired precision.
 	clp.PreserveCollinear(false); // Remove redundant vertices.
 	if (is_a_open) {
 		clp.AddOpenSubject({ path_a });
@@ -298,9 +301,10 @@ Vector<Vector<Point2>> Geometry2D::_polypath_offset(const Vector<Point2> &p_poly
 	}
 
 	// Inflate/deflate.
-	PathsD paths = InflatePaths({ polypath }, p_delta, jt, et, 2.0, PRECISION, 0.0);
-	// Here the miter_limit = 2.0 and arc_tolerance = 0.0 are Clipper2 defaults,
-	// and the PRECISION is used to scale points up internally, to attain the desired precision.
+	PathsD paths = InflatePaths({ polypath }, p_delta, jt, et, 2.0, clipper_precision, 0.25 * clipper_scale);
+	// Here the points are scaled up internally and
+	// the arc_tolerance is scaled accordingly
+	// to attain the desired precision.
 
 	Vector<Vector<Point2>> polypaths;
 	for (PathsD::size_type i = 0; i < paths.size(); ++i) {

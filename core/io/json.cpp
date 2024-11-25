@@ -2,9 +2,11 @@
 /*  json.cpp                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -121,7 +123,7 @@ String JSON::_stringify(const Variant &p_var, const String &p_indent, int p_cur_
 			d.get_key_list(&keys);
 
 			if (p_sort_keys) {
-				keys.sort();
+				keys.sort_custom<StringLikeVariantOrder>();
 			}
 
 			bool first_key = true;
@@ -1022,7 +1024,7 @@ Variant JSON::to_native(const Variant &p_json, bool p_allow_classes, bool p_allo
 		case Variant::DICTIONARY: {
 			Dictionary d = p_json;
 			if (d.has(GDTYPE)) {
-				// Specific Godot Variant types serialized to JSON.
+				// Specific Redot Variant types serialized to JSON.
 				String type = d[GDTYPE];
 				if (type == Variant::get_type_name(Variant::VECTOR2)) {
 					ERR_FAIL_COND_V(!d.has(VALUES), Variant());
@@ -1402,7 +1404,7 @@ Error ResourceFormatSaverJSON::save(const Ref<Resource> &p_resource, const Strin
 	Error err;
 	Ref<FileAccess> file = FileAccess::open(p_path, FileAccess::WRITE, &err);
 
-	ERR_FAIL_COND_V_MSG(err, err, "Cannot save json '" + p_path + "'.");
+	ERR_FAIL_COND_V_MSG(err, err, vformat("Cannot save json '%s'.", p_path));
 
 	file->store_string(source);
 	if (file->get_error() != OK && file->get_error() != ERR_FILE_EOF) {

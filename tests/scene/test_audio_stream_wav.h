@@ -2,9 +2,11 @@
 /*  test_audio_stream_wav.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -162,7 +164,7 @@ void run_test(String file_name, AudioStreamWAV::Format data_format, bool stereo,
 		// Compressed streams can't be saved, disable compression.
 		options_map["compress/mode"] = 0;
 
-		REQUIRE(wav_importer->import(save_path, save_path, options_map, nullptr) == OK);
+		REQUIRE(wav_importer->import(0, save_path, save_path, options_map, nullptr) == OK);
 
 		String load_path = save_path + "." + wav_importer->get_save_extension();
 		Ref<AudioStreamWAV> loaded_stream = ResourceLoader::load(load_path, "AudioStreamWAV", ResourceFormatImporter::CACHE_MODE_IGNORE, &error);

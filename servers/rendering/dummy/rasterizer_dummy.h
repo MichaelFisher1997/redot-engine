@@ -2,9 +2,11 @@
 /*  rasterizer_dummy.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -66,14 +68,14 @@ protected:
 	RasterizerSceneDummy scene;
 
 public:
-	RendererUtilities *get_utilities() override { return &utilities; };
-	RendererLightStorage *get_light_storage() override { return &light_storage; };
-	RendererMaterialStorage *get_material_storage() override { return &material_storage; };
-	RendererMeshStorage *get_mesh_storage() override { return &mesh_storage; };
-	RendererParticlesStorage *get_particles_storage() override { return &particles_storage; };
-	RendererTextureStorage *get_texture_storage() override { return &texture_storage; };
-	RendererGI *get_gi() override { return &gi; };
-	RendererFog *get_fog() override { return &fog; };
+	RendererUtilities *get_utilities() override { return &utilities; }
+	RendererLightStorage *get_light_storage() override { return &light_storage; }
+	RendererMaterialStorage *get_material_storage() override { return &material_storage; }
+	RendererMeshStorage *get_mesh_storage() override { return &mesh_storage; }
+	RendererParticlesStorage *get_particles_storage() override { return &particles_storage; }
+	RendererTextureStorage *get_texture_storage() override { return &texture_storage; }
+	RendererGI *get_gi() override { return &gi; }
+	RendererFog *get_fog() override { return &fog; }
 	RendererCanvasRender *get_canvas() override { return &canvas; }
 	RendererSceneRender *get_scene() override { return &scene; }
 

@@ -2,9 +2,11 @@
 /*  syntax_highlighter.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -205,7 +207,7 @@ Dictionary CodeHighlighter::_get_line_syntax_highlighting_impl(int p_line) {
 						if (end_key_length == 0 || color_regions[c].line_only || from + end_key_length > line_length) {
 							if (from + end_key_length > line_length && (color_regions[in_region].start_key == "\"" || color_regions[in_region].start_key == "\'")) {
 								// If it's key length and there is a '\', dont skip to highlight esc chars.
-								if (str.find("\\", from) >= 0) {
+								if (str.find_char('\\', from) >= 0) {
 									break;
 								}
 							}
@@ -242,7 +244,7 @@ Dictionary CodeHighlighter::_get_line_syntax_highlighting_impl(int p_line) {
 					for (; from < line_length; from++) {
 						if (line_length - from < end_key_length) {
 							// Don't break if '\' to highlight esc chars.
-							if (!is_string || str.find("\\", from) < 0) {
+							if (!is_string || str.find_char('\\', from) < 0) {
 								break;
 							}
 						}

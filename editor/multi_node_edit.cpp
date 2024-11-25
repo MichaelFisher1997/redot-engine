@@ -2,9 +2,11 @@
 /*  multi_node_edit.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -186,25 +188,9 @@ bool MultiNodeEdit::_property_can_revert(const StringName &p_name) const {
 	}
 
 	if (ClassDB::has_property(get_edited_class_name(), p_name)) {
-		StringName class_name;
 		for (const NodePath &E : nodes) {
 			Node *node = es->get_node_or_null(E);
-			if (!node) {
-				continue;
-			}
-
-			class_name = node->get_class_name();
-		}
-
-		Variant default_value = ClassDB::class_get_default_property_value(class_name, p_name);
-		for (const NodePath &E : nodes) {
-			Node *node = es->get_node_or_null(E);
-			if (!node) {
-				continue;
-			}
-
-			if (node->get(p_name) != default_value) {
-				// A node that doesn't have the default value has been found, so show the revert button.
+			if (node) {
 				return true;
 			}
 		}

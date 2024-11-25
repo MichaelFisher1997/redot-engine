@@ -2,9 +2,11 @@
 /*  texture_button.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -340,11 +342,11 @@ Ref<BitMap> TextureButton::get_click_mask() const {
 
 Ref<Texture2D> TextureButton::get_texture_focused() const {
 	return focused;
-};
+}
 
 void TextureButton::set_texture_focused(const Ref<Texture2D> &p_focused) {
 	focused = p_focused;
-};
+}
 
 void TextureButton::_set_texture(Ref<Texture2D> *p_destination, const Ref<Texture2D> &p_texture) {
 	DEV_ASSERT(p_destination);

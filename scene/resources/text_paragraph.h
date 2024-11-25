@@ -2,9 +2,11 @@
 /*  text_paragraph.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -51,6 +53,7 @@ private:
 
 	bool lines_dirty = true;
 
+	float line_spacing = 0.0;
 	float width = -1.0;
 	int max_lines_visible = -1;
 
@@ -122,6 +125,9 @@ public:
 	void set_max_lines_visible(int p_lines);
 	int get_max_lines_visible() const;
 
+	void set_line_spacing(float p_spacing);
+	float get_line_spacing() const;
+
 	Size2 get_non_wrapped_size() const;
 
 	Size2 get_size() const;
@@ -152,7 +158,9 @@ public:
 
 	int hit_test(const Point2 &p_coords) const;
 
-	Mutex &get_mutex() const { return _thread_safe_; };
+	bool is_dirty();
+
+	Mutex &get_mutex() const { return _thread_safe_; }
 
 	TextParagraph(const String &p_text, const Ref<Font> &p_font, int p_font_size, const String &p_language = "", float p_width = -1.f, TextServer::Direction p_direction = TextServer::DIRECTION_AUTO, TextServer::Orientation p_orientation = TextServer::ORIENTATION_HORIZONTAL);
 	TextParagraph();

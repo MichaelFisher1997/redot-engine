@@ -2,9 +2,11 @@
 /*  image_loader.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -82,15 +84,16 @@ void ImageFormatLoaderExtension::_bind_methods() {
 
 Error ImageLoader::load_image(const String &p_file, Ref<Image> p_image, Ref<FileAccess> p_custom, BitField<ImageFormatLoader::LoaderFlags> p_flags, float p_scale) {
 	ERR_FAIL_COND_V_MSG(p_image.is_null(), ERR_INVALID_PARAMETER, "Can't load an image: invalid Image object.");
+	const String file = ResourceUID::ensure_path(p_file);
 
 	Ref<FileAccess> f = p_custom;
 	if (f.is_null()) {
 		Error err;
-		f = FileAccess::open(p_file, FileAccess::READ, &err);
-		ERR_FAIL_COND_V_MSG(f.is_null(), err, "Error opening file '" + p_file + "'.");
+		f = FileAccess::open(file, FileAccess::READ, &err);
+		ERR_FAIL_COND_V_MSG(f.is_null(), err, vformat("Error opening file '%s'.", file));
 	}
 
-	String extension = p_file.get_extension();
+	String extension = file.get_extension();
 
 	for (int i = 0; i < loader.size(); i++) {
 		if (!loader[i]->recognize(extension)) {
@@ -98,7 +101,7 @@ Error ImageLoader::load_image(const String &p_file, Ref<Image> p_image, Ref<File
 		}
 		Error err = loader.write[i]->load_image(p_image, f, p_flags, p_scale);
 		if (err != OK) {
-			ERR_PRINT("Error loading image: " + p_file);
+			ERR_PRINT(vformat("Error loading image: '%s'.", file));
 		}
 
 		if (err != ERR_FILE_UNRECOGNIZED) {

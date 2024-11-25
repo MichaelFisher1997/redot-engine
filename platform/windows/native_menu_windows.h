@@ -2,9 +2,11 @@
 /*  native_menu_windows.h                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,6 +33,7 @@
 #ifndef NATIVE_MENU_WINDOWS_H
 #define NATIVE_MENU_WINDOWS_H
 
+#include "core/io/image.h"
 #include "core/templates/hash_map.h"
 #include "core/templates/rid_owner.h"
 #include "servers/display/native_menu.h"

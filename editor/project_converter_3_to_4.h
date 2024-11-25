@@ -2,9 +2,11 @@
 /*  project_converter_3_to_4.h                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -44,11 +46,11 @@ public:
 	ProjectConverter3To4(int, int) {}
 
 	bool validate_conversion() {
-		ERR_FAIL_V_MSG(false, "Can't validate conversion for Godot 3.x projects, because RegEx module is disabled.");
+		ERR_FAIL_V_MSG(false, "Can't validate conversion for Redot 3.x projects, because RegEx module is disabled.");
 	}
 
 	bool convert() {
-		ERR_FAIL_V_MSG(false, "Can't run converter for Godot 3.x projects, because RegEx module is disabled.");
+		ERR_FAIL_V_MSG(false, "Can't run converter for Redot 3.x projects, because RegEx module is disabled.");
 	}
 };
 

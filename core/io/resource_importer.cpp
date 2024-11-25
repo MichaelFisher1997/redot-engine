@@ -2,9 +2,11 @@
 /*  resource_importer.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -75,7 +77,7 @@ Error ResourceFormatImporter::_get_path_and_type(const String &p_path, PathAndTy
 		if (err == ERR_FILE_EOF) {
 			return OK;
 		} else if (err != OK) {
-			ERR_PRINT("ResourceFormatImporter::load - " + p_path + ".import:" + itos(lines) + " error: " + error_text);
+			ERR_PRINT(vformat("ResourceFormatImporter::load - %s.import:%d error: %s.", p_path, lines, error_text));
 			return err;
 		}
 
@@ -335,7 +337,7 @@ void ResourceFormatImporter::get_internal_resource_path_list(const String &p_pat
 		if (err == ERR_FILE_EOF) {
 			return;
 		} else if (err != OK) {
-			ERR_PRINT("ResourceFormatImporter::get_internal_resource_path_list - " + p_path + ".import:" + itos(lines) + " error: " + error_text);
+			ERR_PRINT(vformat("ResourceFormatImporter::get_internal_resource_path_list - %s.import:%d error: %s.", p_path, lines, error_text));
 			return;
 		}
 
@@ -385,6 +387,10 @@ ResourceUID::ID ResourceFormatImporter::get_resource_uid(const String &p_path) c
 	}
 
 	return pat.uid;
+}
+
+bool ResourceFormatImporter::has_custom_uid_support() const {
+	return true;
 }
 
 Error ResourceFormatImporter::get_resource_import_info(const String &p_path, StringName &r_type, ResourceUID::ID &r_uid, String &r_import_group_file) const {

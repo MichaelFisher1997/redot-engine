@@ -2,9 +2,11 @@
 /*  file_dialog.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -50,7 +52,7 @@ void FileDialog::popup_file_dialog() {
 }
 
 void FileDialog::_focus_file_text() {
-	int lp = file->get_text().rfind(".");
+	int lp = file->get_text().rfind_char('.');
 	if (lp != -1) {
 		file->select(0, lp);
 		if (file->is_inside_tree() && !is_part_of_edited_scene()) {
@@ -67,7 +69,18 @@ void FileDialog::_native_popup() {
 	} else if (access == ACCESS_USERDATA) {
 		root = OS::get_singleton()->get_user_data_dir();
 	}
-	DisplayServer::get_singleton()->file_dialog_with_options_show(get_title(), ProjectSettings::get_singleton()->globalize_path(dir->get_text()), root, file->get_text().get_file(), show_hidden_files, DisplayServer::FileDialogMode(mode), filters, _get_options(), callable_mp(this, &FileDialog::_native_dialog_cb));
+	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE_EXTRA)) {
+		DisplayServer::get_singleton()->file_dialog_with_options_show(get_translated_title(), ProjectSettings::get_singleton()->globalize_path(dir->get_text()), root, file->get_text().get_file(), show_hidden_files, DisplayServer::FileDialogMode(mode), processed_filters, _get_options(), callable_mp(this, &FileDialog::_native_dialog_cb_with_options));
+	} else {
+		DisplayServer::get_singleton()->file_dialog_show(get_translated_title(), ProjectSettings::get_singleton()->globalize_path(dir->get_text()), file->get_text().get_file(), show_hidden_files, DisplayServer::FileDialogMode(mode), processed_filters, callable_mp(this, &FileDialog::_native_dialog_cb));
+	}
+}
+
+bool FileDialog::_can_use_native_popup() {
+	if (access == ACCESS_RESOURCES || access == ACCESS_USERDATA || options.size() > 0) {
+		return DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE_EXTRA);
+	}
+	return DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE);
 }
 
 void FileDialog::popup(const Rect2i &p_rect) {
@@ -80,7 +93,7 @@ void FileDialog::popup(const Rect2i &p_rect) {
 	}
 #endif
 
-	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE) && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
+	if (_can_use_native_popup() && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
 		_native_popup();
 	} else {
 		ConfirmationDialog::popup(p_rect);
@@ -99,7 +112,7 @@ void FileDialog::set_visible(bool p_visible) {
 	}
 #endif
 
-	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE) && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
+	if (_can_use_native_popup() && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
 		if (p_visible) {
 			_native_popup();
 		}
@@ -108,7 +121,11 @@ void FileDialog::set_visible(bool p_visible) {
 	}
 }
 
-void FileDialog::_native_dialog_cb(bool p_ok, const Vector<String> &p_files, int p_filter, const Dictionary &p_selected_options) {
+void FileDialog::_native_dialog_cb(bool p_ok, const Vector<String> &p_files, int p_filter) {
+	_native_dialog_cb_with_options(p_ok, p_files, p_filter, Dictionary());
+}
+
+void FileDialog::_native_dialog_cb_with_options(bool p_ok, const Vector<String> &p_files, int p_filter, const Dictionary &p_selected_options) {
 	if (!p_ok) {
 		file->set_text("");
 		emit_signal(SNAME("canceled"));
@@ -182,7 +199,7 @@ void FileDialog::_notification(int p_what) {
 #endif
 
 			// Replace the built-in dialog with the native one if it started visible.
-			if (is_visible() && DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE) && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
+			if (is_visible() && _can_use_native_popup() && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
 				ConfirmationDialog::set_visible(false);
 				_native_popup();
 			}
@@ -197,18 +214,18 @@ void FileDialog::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			dir_up->set_icon(theme_cache.parent_folder);
+			dir_up->set_button_icon(theme_cache.parent_folder);
 			if (vbox->is_layout_rtl()) {
-				dir_prev->set_icon(theme_cache.forward_folder);
-				dir_next->set_icon(theme_cache.back_folder);
+				dir_prev->set_button_icon(theme_cache.forward_folder);
+				dir_next->set_button_icon(theme_cache.back_folder);
 			} else {
-				dir_prev->set_icon(theme_cache.back_folder);
-				dir_next->set_icon(theme_cache.forward_folder);
+				dir_prev->set_button_icon(theme_cache.back_folder);
+				dir_next->set_button_icon(theme_cache.forward_folder);
 			}
-			refresh->set_icon(theme_cache.reload);
-			show_hidden->set_icon(theme_cache.toggle_hidden);
-			makedir->set_icon(theme_cache.create_folder);
-			show_filename_filter_button->set_icon(theme_cache.toggle_filename_filter);
+			refresh->set_button_icon(theme_cache.reload);
+			show_hidden->set_button_icon(theme_cache.toggle_hidden);
+			makedir->set_button_icon(theme_cache.create_folder);
+			show_filename_filter_button->set_button_icon(theme_cache.toggle_filename_filter);
 
 			dir_up->begin_bulk_theme_override();
 			dir_up->add_theme_color_override("icon_normal_color", theme_cache.icon_normal_color);
@@ -836,37 +853,54 @@ void FileDialog::_filename_filter_selected() {
 
 void FileDialog::update_filters() {
 	filter->clear();
+	processed_filters.clear();
 
 	if (filters.size() > 1) {
 		String all_filters;
+		String all_filters_full;
 
 		const int max_filters = 5;
 
 		for (int i = 0; i < MIN(max_filters, filters.size()); i++) {
-			String flt = filters[i].get_slice(";", 0).strip_edges();
+			String flt = filters[i].get_slicec(';', 0).strip_edges();
 			if (i > 0) {
 				all_filters += ", ";
 			}
 			all_filters += flt;
+		}
+		for (int i = 0; i < filters.size(); i++) {
+			String flt = filters[i].get_slicec(';', 0).strip_edges();
+			if (i > 0) {
+				all_filters_full += ",";
+			}
+			all_filters_full += flt;
 		}
 
 		if (max_filters < filters.size()) {
 			all_filters += ", ...";
 		}
 
-		filter->add_item(atr(ETR("All Recognized")) + " (" + all_filters + ")");
+		String f = atr(ETR("All Recognized")) + " (" + all_filters + ")";
+		filter->add_item(f);
+		processed_filters.push_back(all_filters_full + ";" + f);
 	}
 	for (int i = 0; i < filters.size(); i++) {
-		String flt = filters[i].get_slice(";", 0).strip_edges();
+		String flt = filters[i].get_slicec(';', 0).strip_edges();
 		String desc = filters[i].get_slice(";", 1).strip_edges();
 		if (desc.length()) {
-			filter->add_item(String(tr(desc)) + " (" + flt + ")");
+			String f = atr(desc) + " (" + flt + ")";
+			filter->add_item(f);
+			processed_filters.push_back(flt + ";" + f);
 		} else {
-			filter->add_item("(" + flt + ")");
+			String f = "(" + flt + ")";
+			filter->add_item(f);
+			processed_filters.push_back(flt + ";" + f);
 		}
 	}
 
-	filter->add_item(atr(ETR("All Files")) + " (*)");
+	String f = atr(ETR("All Files")) + " (*)";
+	filter->add_item(f);
+	processed_filters.push_back("*.*;" + f);
 }
 
 void FileDialog::clear_filename_filter() {
@@ -969,7 +1003,7 @@ void FileDialog::set_current_path(const String &p_path) {
 	if (!p_path.size()) {
 		return;
 	}
-	int pos = MAX(p_path.rfind("/"), p_path.rfind("\\"));
+	int pos = MAX(p_path.rfind_char('/'), p_path.rfind_char('\\'));
 	if (pos == -1) {
 		set_current_file(p_path);
 	} else {
@@ -1487,7 +1521,7 @@ void FileDialog::set_use_native_dialog(bool p_native) {
 #endif
 
 	// Replace the built-in dialog with the native one if it's currently visible.
-	if (is_inside_tree() && is_visible() && DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE) && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
+	if (is_inside_tree() && is_visible() && _can_use_native_popup() && (use_native_dialog || OS::get_singleton()->is_sandboxed())) {
 		ConfirmationDialog::set_visible(false);
 		_native_popup();
 	}
@@ -1571,6 +1605,7 @@ FileDialog::FileDialog() {
 	vbox->add_child(hbc);
 
 	tree = memnew(Tree);
+	tree->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	tree->set_hide_root(true);
 	vbox->add_margin_child(ETR("Directories & Files:"), tree, true);
 

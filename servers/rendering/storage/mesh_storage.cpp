@@ -2,9 +2,11 @@
 /*  mesh_storage.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -221,6 +223,10 @@ void RendererMeshStorage::multimesh_set_buffer(RID p_multimesh, const Vector<flo
 	}
 
 	_multimesh_set_buffer(p_multimesh, p_buffer);
+}
+
+RID RendererMeshStorage::multimesh_get_buffer_rd_rid(RID p_multimesh) const {
+	return _multimesh_get_buffer_rd_rid(p_multimesh);
 }
 
 Vector<float> RendererMeshStorage::multimesh_get_buffer(RID p_multimesh) const {

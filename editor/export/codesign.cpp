@@ -2,9 +2,11 @@
 /*  codesign.cpp                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -1381,14 +1383,14 @@ Error CodeSign::_codesign_file(bool p_use_hardened_runtime, bool p_force, const 
 			r_error_msg = TTR("Invalid entitlements file.");
 			ERR_FAIL_V_MSG(FAILED, "CodeSign: Invalid entitlements file.");
 		}
-		cet = Ref<CodeSignEntitlementsText>(memnew(CodeSignEntitlementsText(entitlements)));
-		ceb = Ref<CodeSignEntitlementsBinary>(memnew(CodeSignEntitlementsBinary(entitlements)));
+		cet.instantiate(entitlements);
+		ceb.instantiate(entitlements);
 	}
 
 	print_verbose("CodeSign: Generating requirements...");
 	Ref<CodeSignRequirements> rq;
 	String team_id = "";
-	rq = Ref<CodeSignRequirements>(memnew(CodeSignRequirements()));
+	rq.instantiate();
 
 	// Sign executables.
 	for (int i = 0; i < files_to_sign.size(); i++) {
@@ -1487,7 +1489,7 @@ Error CodeSign::_codesign_file(bool p_use_hardened_runtime, bool p_force, const 
 
 		print_verbose("CodeSign: Generating signature...");
 		Ref<CodeSignSignature> cs;
-		cs = Ref<CodeSignSignature>(memnew(CodeSignSignature()));
+		cs.instantiate();
 
 		print_verbose("CodeSign: Writing signature superblob...");
 		// Write signature data to the executable.

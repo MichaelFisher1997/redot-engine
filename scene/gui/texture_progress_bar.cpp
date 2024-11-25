@@ -2,9 +2,11 @@
 /*  texture_progress_bar.cpp                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -608,11 +610,10 @@ int TextureProgressBar::get_fill_mode() {
 }
 
 void TextureProgressBar::set_radial_initial_angle(float p_angle) {
-	while (p_angle > 360) {
-		p_angle -= 360;
-	}
-	while (p_angle < 0) {
-		p_angle += 360;
+	ERR_FAIL_COND_MSG(!Math::is_finite(p_angle), "Angle is non-finite.");
+
+	if (p_angle < 0.0 || p_angle > 360.0) {
+		p_angle = Math::fposmodp(p_angle, 360.0f);
 	}
 
 	if (rad_init_angle == p_angle) {

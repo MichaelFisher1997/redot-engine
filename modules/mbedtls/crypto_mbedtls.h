@@ -2,9 +2,11 @@
 /*  crypto_mbedtls.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -57,7 +59,7 @@ public:
 	virtual Error save(const String &p_path, bool p_public_only);
 	virtual String save_to_string(bool p_public_only);
 	virtual Error load_from_string(const String &p_string_key, bool p_public_only);
-	virtual bool is_public_only() const { return public_only; };
+	virtual bool is_public_only() const { return public_only; }
 
 	CryptoKeyMbedTLS() {
 		mbedtls_pk_init(&pkey);

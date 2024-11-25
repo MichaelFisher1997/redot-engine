@@ -2,9 +2,11 @@
 /*  image_compress_betsy.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -50,6 +52,8 @@ enum BetsyFormat {
 	BETSY_FORMAT_BC1,
 	BETSY_FORMAT_BC1_DITHER,
 	BETSY_FORMAT_BC3,
+	BETSY_FORMAT_BC4_SIGNED,
+	BETSY_FORMAT_BC4_UNSIGNED,
 	BETSY_FORMAT_BC6_SIGNED,
 	BETSY_FORMAT_BC6_UNSIGNED,
 };
@@ -62,6 +66,11 @@ struct BC6PushConstant {
 
 struct BC1PushConstant {
 	uint32_t num_refines;
+	uint32_t padding[3];
+};
+
+struct BC4PushConstant {
+	uint32_t channel_idx;
 	uint32_t padding[3];
 };
 
@@ -84,10 +93,10 @@ class BetsyCompressor : public Object {
 	RenderingDevice *compress_rd = nullptr;
 	RenderingContextDriver *compress_rcd = nullptr;
 	HashMap<String, BetsyShader> cached_shaders;
-	RID src_sampler = RID();
+	RID src_sampler;
 
 	// Format-specific resources.
-	RID dxt1_encoding_table_buffer = RID();
+	RID dxt1_encoding_table_buffer;
 
 	void _init();
 	void _assign_mt_ids(WorkerThreadPool::TaskID p_pump_task_id);

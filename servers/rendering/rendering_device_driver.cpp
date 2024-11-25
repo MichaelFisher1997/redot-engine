@@ -2,9 +2,11 @@
 /*  rendering_device_driver.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -374,6 +376,10 @@ uint64_t RenderingDeviceDriver::api_trait_get(ApiTrait p_trait) {
 			return 1;
 		case API_TRAIT_CLEARS_WITH_COPY_ENGINE:
 			return true;
+		case API_TRAIT_USE_GENERAL_IN_COPY_QUEUES:
+			return false;
+		case API_TRAIT_BUFFERS_REQUIRE_TRANSITIONS:
+			return false;
 		default:
 			ERR_FAIL_V(0);
 	}

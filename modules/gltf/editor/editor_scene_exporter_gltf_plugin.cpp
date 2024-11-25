@@ -2,9 +2,11 @@
 /*  editor_scene_exporter_gltf_plugin.cpp                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -88,7 +90,7 @@ void SceneExporterGLTFPlugin::_popup_gltf_export_dialog() {
 	}
 	_file_dialog->set_current_file(filename + String(".gltf"));
 	// Generate and refresh the export settings.
-	_export_settings->generate_property_list(_gltf_document);
+	_export_settings->generate_property_list(_gltf_document, root);
 	_settings_inspector->edit(nullptr);
 	_settings_inspector->edit(_export_settings.ptr());
 	// Show the file dialog.

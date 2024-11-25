@@ -2,9 +2,11 @@
 /*  animation_mixer.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -563,6 +565,7 @@ void AnimationMixer::_clear_caches() {
 		memdelete(K.value);
 	}
 	track_cache.clear();
+	animation_track_num_to_track_cashe.clear();
 	cache_valid = false;
 	capture_cache.clear();
 
@@ -597,6 +600,22 @@ void AnimationMixer::_init_root_motion_cache() {
 	root_motion_position_accumulator = Vector3(0, 0, 0);
 	root_motion_rotation_accumulator = Quaternion(0, 0, 0, 1);
 	root_motion_scale_accumulator = Vector3(1, 1, 1);
+}
+
+void AnimationMixer::_create_track_num_to_track_cashe_for_animation(Ref<Animation> &p_animation) {
+	ERR_FAIL_COND(animation_track_num_to_track_cashe.has(p_animation));
+	LocalVector<TrackCache *> &track_num_to_track_cashe = animation_track_num_to_track_cashe.insert_new(p_animation, LocalVector<TrackCache *>())->value;
+	const Vector<Animation::Track *> &tracks = p_animation->get_tracks();
+
+	track_num_to_track_cashe.resize(tracks.size());
+	for (int i = 0; i < tracks.size(); i++) {
+		TrackCache **track_ptr = track_cache.getptr(tracks[i]->thash);
+		if (track_ptr == nullptr) {
+			track_num_to_track_cashe[i] = nullptr;
+		} else {
+			track_num_to_track_cashe[i] = *track_ptr;
+		}
+	}
 }
 
 bool AnimationMixer::_update_caches() {
@@ -922,6 +941,16 @@ bool AnimationMixer::_update_caches() {
 		idx++;
 	}
 
+	for (KeyValue<Animation::TypeHash, TrackCache *> &K : track_cache) {
+		K.value->blend_idx = track_map[K.value->path];
+	}
+
+	animation_track_num_to_track_cashe.clear();
+	for (const StringName &E : sname_list) {
+		Ref<Animation> anim = get_animation(E);
+		_create_track_num_to_track_cashe_for_animation(anim);
+	}
+
 	track_count = idx;
 
 	cache_valid = true;
@@ -946,7 +975,7 @@ void AnimationMixer::_process_animation(double p_delta, bool p_update_only) {
 	clear_animation_instances();
 }
 
-Variant AnimationMixer::_post_process_key_value(const Ref<Animation> &p_anim, int p_track, Variant p_value, ObjectID p_object_id, int p_object_sub_idx) {
+Variant AnimationMixer::_post_process_key_value(const Ref<Animation> &p_anim, int p_track, Variant &p_value, ObjectID p_object_id, int p_object_sub_idx) {
 #ifndef _3D_DISABLED
 	switch (p_anim->track_get_type(p_track)) {
 		case Animation::TYPE_POSITION_3D: {
@@ -1033,7 +1062,7 @@ void AnimationMixer::_blend_init() {
 	}
 }
 
-bool AnimationMixer::_blend_pre_process(double p_delta, int p_track_count, const HashMap<NodePath, int> &p_track_map) {
+bool AnimationMixer::_blend_pre_process(double p_delta, int p_track_count, const AHashMap<NodePath, int> &p_track_map) {
 	return true;
 }
 
@@ -1052,6 +1081,9 @@ void AnimationMixer::blend_capture(double p_delta) {
 
 	capture_cache.remain -= p_delta * capture_cache.step;
 	if (Animation::is_less_or_equal_approx(capture_cache.remain, 0)) {
+		if (capture_cache.animation.is_valid()) {
+			animation_track_num_to_track_cashe.erase(capture_cache.animation);
+		}
 		capture_cache.clear();
 		return;
 	}
@@ -1084,26 +1116,30 @@ void AnimationMixer::_blend_calc_total_weight() {
 		real_t weight = ai.playback_info.weight;
 		const real_t *track_weights_ptr = ai.playback_info.track_weights.ptr();
 		int track_weights_count = ai.playback_info.track_weights.size();
-		static LocalVector<Animation::TypeHash> processed_hashes;
+		ERR_CONTINUE_EDMSG(!animation_track_num_to_track_cashe.has(a), "No animation in cache.");
+		LocalVector<TrackCache *> &track_num_to_track_cashe = animation_track_num_to_track_cashe[a];
+		thread_local HashSet<Animation::TypeHash, HashHasher> processed_hashes;
 		processed_hashes.clear();
 		const Vector<Animation::Track *> tracks = a->get_tracks();
-		for (const Animation::Track *animation_track : tracks) {
+		Animation::Track *const *tracks_ptr = tracks.ptr();
+		int count = tracks.size();
+		for (int i = 0; i < count; i++) {
+			Animation::Track *animation_track = tracks_ptr[i];
 			if (!animation_track->enabled) {
 				continue;
 			}
 			Animation::TypeHash thash = animation_track->thash;
-			TrackCache **track_ptr = track_cache.getptr(thash);
-			if (track_ptr == nullptr || processed_hashes.has(thash)) {
+			TrackCache *track = track_num_to_track_cashe[i];
+			if (track == nullptr || processed_hashes.has(thash)) {
 				// No path, but avoid error spamming.
 				// Or, there is the case different track type with same path; These can be distinguished by hash. So don't add the weight doubly.
 				continue;
 			}
-			TrackCache *track = *track_ptr;
-			int blend_idx = track_map[track->path];
+			int blend_idx = track->blend_idx;
 			ERR_CONTINUE(blend_idx < 0 || blend_idx >= track_count);
 			real_t blend = blend_idx < track_weights_count ? track_weights_ptr[blend_idx] * weight : weight;
 			track->total_weight += blend;
-			processed_hashes.push_back(thash);
+			processed_hashes.insert(thash);
 		}
 	}
 }
@@ -1130,6 +1166,8 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 #ifndef _3D_DISABLED
 		bool calc_root = !seeked || is_external_seeking;
 #endif // _3D_DISABLED
+		ERR_CONTINUE_EDMSG(!animation_track_num_to_track_cashe.has(a), "No animation in cache.");
+		LocalVector<TrackCache *> &track_num_to_track_cashe = animation_track_num_to_track_cashe[a];
 		const Vector<Animation::Track *> tracks = a->get_tracks();
 		Animation::Track *const *tracks_ptr = tracks.ptr();
 		real_t a_length = a->get_length();
@@ -1139,15 +1177,11 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 			if (!animation_track->enabled) {
 				continue;
 			}
-			Animation::TypeHash thash = animation_track->thash;
-			TrackCache **track_ptr = track_cache.getptr(thash);
-			if (track_ptr == nullptr) {
+			TrackCache *track = track_num_to_track_cashe[i];
+			if (track == nullptr) {
 				continue; // No path, but avoid error spamming.
 			}
-			TrackCache *track = *track_ptr;
-			int *blend_idx_ptr = track_map.getptr(track->path);
-			ERR_CONTINUE(blend_idx_ptr == nullptr);
-			int blend_idx = *blend_idx_ptr;
+			int blend_idx = track->blend_idx;
 			ERR_CONTINUE(blend_idx < 0 || blend_idx >= track_count);
 			real_t blend = blend_idx < track_weights_count ? track_weights_ptr[blend_idx] * weight : weight;
 			if (!deterministic) {
@@ -1581,7 +1615,7 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 					track_info.loop = a->get_loop_mode() != Animation::LOOP_NONE;
 					track_info.backward = backward;
 					track_info.use_blend = a->audio_track_is_use_blend(i);
-					HashMap<int, PlayingAudioStreamInfo> &map = track_info.stream_info;
+					AHashMap<int, PlayingAudioStreamInfo> &map = track_info.stream_info;
 
 					// Main process to fire key is started from here.
 					if (p_update_only) {
@@ -1850,7 +1884,7 @@ void AnimationMixer::_blend_apply() {
 					PlayingAudioTrackInfo &track_info = L.value;
 					float db = Math::linear_to_db(track_info.use_blend ? track_info.volume : 1.0);
 					LocalVector<int> erase_streams;
-					HashMap<int, PlayingAudioStreamInfo> &map = track_info.stream_info;
+					AHashMap<int, PlayingAudioStreamInfo> &map = track_info.stream_info;
 					for (const KeyValue<int, PlayingAudioStreamInfo> &M : map) {
 						PlayingAudioStreamInfo pasi = M.value;
 
@@ -2134,7 +2168,7 @@ void AnimationMixer::restore(const Ref<AnimatedValuesBackup> &p_backup) {
 	ERR_FAIL_COND(p_backup.is_null());
 	track_cache = p_backup->get_data();
 	_blend_apply();
-	track_cache = HashMap<Animation::TypeHash, AnimationMixer::TrackCache *>();
+	track_cache = AHashMap<Animation::TypeHash, AnimationMixer::TrackCache *, HashHasher>();
 	cache_valid = false;
 }
 
@@ -2181,6 +2215,9 @@ void AnimationMixer::capture(const StringName &p_name, double p_duration, Tween:
 	capture_cache.step = 1.0 / p_duration;
 	capture_cache.trans_type = p_trans_type;
 	capture_cache.ease_type = p_ease_type;
+	if (capture_cache.animation.is_valid()) {
+		animation_track_num_to_track_cashe.erase(capture_cache.animation);
+	}
 	capture_cache.animation.instantiate();
 
 	bool is_valid = false;
@@ -2204,6 +2241,8 @@ void AnimationMixer::capture(const StringName &p_name, double p_duration, Tween:
 	}
 	if (!is_valid) {
 		capture_cache.clear();
+	} else {
+		_create_track_num_to_track_cashe_for_animation(capture_cache.animation);
 	}
 }
 
@@ -2370,7 +2409,7 @@ AnimationMixer::AnimationMixer() {
 AnimationMixer::~AnimationMixer() {
 }
 
-void AnimatedValuesBackup::set_data(const HashMap<Animation::TypeHash, AnimationMixer::TrackCache *> p_data) {
+void AnimatedValuesBackup::set_data(const AHashMap<Animation::TypeHash, AnimationMixer::TrackCache *, HashHasher> p_data) {
 	clear_data();
 
 	for (const KeyValue<Animation::TypeHash, AnimationMixer::TrackCache *> &E : p_data) {
@@ -2383,7 +2422,7 @@ void AnimatedValuesBackup::set_data(const HashMap<Animation::TypeHash, Animation
 	}
 }
 
-HashMap<Animation::TypeHash, AnimationMixer::TrackCache *> AnimatedValuesBackup::get_data() const {
+AHashMap<Animation::TypeHash, AnimationMixer::TrackCache *, HashHasher> AnimatedValuesBackup::get_data() const {
 	HashMap<Animation::TypeHash, AnimationMixer::TrackCache *> ret;
 	for (const KeyValue<Animation::TypeHash, AnimationMixer::TrackCache *> &E : data) {
 		AnimationMixer::TrackCache *track = get_cache_copy(E.value);

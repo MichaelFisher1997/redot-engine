@@ -2,9 +2,11 @@
 /*  rigid_body_3d.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -659,7 +661,7 @@ void RigidBody3D::_reload_physics_characteristics() {
 }
 
 PackedStringArray RigidBody3D::get_configuration_warnings() const {
-	PackedStringArray warnings = CollisionObject3D::get_configuration_warnings();
+	PackedStringArray warnings = PhysicsBody3D::get_configuration_warnings();
 
 	Vector3 scale = get_transform().get_basis().get_scale();
 	if (ABS(scale.x - 1.0) > 0.05 || ABS(scale.y - 1.0) > 0.05 || ABS(scale.z - 1.0) > 0.05) {

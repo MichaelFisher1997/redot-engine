@@ -2,9 +2,11 @@
 /*  nav_agent.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -67,7 +69,7 @@ class NavAgent : public NavRid {
 	uint32_t avoidance_mask = 1;
 	real_t avoidance_priority = 1.0;
 
-	Callable avoidance_callback = Callable();
+	Callable avoidance_callback;
 
 	bool agent_dirty = true;
 
@@ -130,13 +132,13 @@ public:
 	const Vector3 &get_velocity_forced() const { return velocity_forced; }
 
 	void set_avoidance_layers(uint32_t p_layers);
-	uint32_t get_avoidance_layers() const { return avoidance_layers; };
+	uint32_t get_avoidance_layers() const { return avoidance_layers; }
 
 	void set_avoidance_mask(uint32_t p_mask);
-	uint32_t get_avoidance_mask() const { return avoidance_mask; };
+	uint32_t get_avoidance_mask() const { return avoidance_mask; }
 
 	void set_avoidance_priority(real_t p_priority);
-	real_t get_avoidance_priority() const { return avoidance_priority; };
+	real_t get_avoidance_priority() const { return avoidance_priority; }
 
 	void set_paused(bool p_paused);
 	bool get_paused() const;

@@ -2,9 +2,11 @@
 /*  net_socket_android.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,7 +33,7 @@
 #ifndef NET_SOCKET_ANDROID_H
 #define NET_SOCKET_ANDROID_H
 
-#include "drivers/unix/net_socket_posix.h"
+#include "drivers/unix/net_socket_unix.h"
 
 #include <jni.h>
 
@@ -44,7 +46,7 @@
  * the lock when broadcasting is enabled/disabled on a socket, or that socket
  * joins/leaves a multicast group.
  */
-class NetSocketAndroid : public NetSocketPosix {
+class NetSocketAndroid : public NetSocketUnix {
 private:
 	static jobject net_utils;
 	static jclass cls;

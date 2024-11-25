@@ -2,9 +2,11 @@
 /*  multimesh_instance_2d.cpp                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -84,7 +86,7 @@ Ref<Texture2D> MultiMeshInstance2D::get_texture() const {
 	return texture;
 }
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 MultiMeshInstance2D::_edit_get_rect() const {
 	if (multimesh.is_valid()) {
 		AABB aabb = multimesh->get_aabb();
@@ -93,7 +95,7 @@ Rect2 MultiMeshInstance2D::_edit_get_rect() const {
 
 	return Node2D::_edit_get_rect();
 }
-#endif
+#endif // DEBUG_ENABLED
 
 MultiMeshInstance2D::MultiMeshInstance2D() {
 }

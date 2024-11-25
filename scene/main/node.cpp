@@ -2,9 +2,11 @@
 /*  node.cpp                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -184,6 +186,7 @@ void Node::_notification(int p_notification) {
 			}
 		} break;
 
+		case NOTIFICATION_SUSPENDED:
 		case NOTIFICATION_PAUSED: {
 			if (is_physics_interpolated_and_enabled() && is_inside_tree()) {
 				reset_physics_interpolation();
@@ -212,6 +215,10 @@ void Node::_notification(int p_notification) {
 
 			if (GDVIRTUAL_IS_OVERRIDDEN(_unhandled_key_input)) {
 				set_process_unhandled_key_input(true);
+			}
+
+			if (GDVIRTUAL_IS_OVERRIDDEN(_unhandled_picking_input)) {
+				set_process_unhandled_picking_input(true);
 			}
 
 			if (GDVIRTUAL_IS_OVERRIDDEN(_process)) {
@@ -695,6 +702,16 @@ void Node::_propagate_pause_notification(bool p_enable) {
 	data.blocked--;
 }
 
+void Node::_propagate_suspend_notification(bool p_enable) {
+	notification(p_enable ? NOTIFICATION_SUSPENDED : NOTIFICATION_UNSUSPENDED);
+
+	data.blocked++;
+	for (KeyValue<StringName, Node *> &KV : data.children) {
+		KV.value->_propagate_suspend_notification(p_enable);
+	}
+	data.blocked--;
+}
+
 Node::ProcessMode Node::get_process_mode() const {
 	return data.process_mode;
 }
@@ -850,7 +867,7 @@ bool Node::can_process_notification(int p_what) const {
 
 bool Node::can_process() const {
 	ERR_FAIL_COND_V(!is_inside_tree(), false);
-	return _can_process(get_tree()->is_paused());
+	return !get_tree()->is_suspended() && _can_process(get_tree()->is_paused());
 }
 
 bool Node::_can_process(bool p_paused) const {
@@ -1276,6 +1293,27 @@ void Node::set_process_unhandled_key_input(bool p_enable) {
 
 bool Node::is_processing_unhandled_key_input() const {
 	return data.unhandled_key_input;
+}
+
+void Node::set_process_unhandled_picking_input(bool p_enable) {
+	ERR_THREAD_GUARD
+	if (p_enable == data.unhandled_picking_input) {
+		return;
+	}
+	data.unhandled_picking_input = p_enable;
+	if (!is_inside_tree()) {
+		return;
+	}
+
+	if (p_enable) {
+		add_to_group("_vp_unhandled_picking_input" + itos(get_viewport()->get_instance_id()));
+	} else {
+		remove_from_group("_vp_unhandled_picking_input" + itos(get_viewport()->get_instance_id()));
+	}
+}
+
+bool Node::is_processing_unhandled_picking_input() const {
+	return data.unhandled_picking_input;
 }
 
 void Node::set_auto_translate_mode(AutoTranslateMode p_mode) {
@@ -1904,24 +1942,52 @@ Node *Node::find_child(const String &p_pattern, bool p_recursive, bool p_owned) 
 // Can be recursive or not, and limited to owned nodes.
 TypedArray<Node> Node::find_children(const String &p_pattern, const String &p_type, bool p_recursive, bool p_owned) const {
 	ERR_THREAD_GUARD_V(TypedArray<Node>());
-	TypedArray<Node> ret;
-	ERR_FAIL_COND_V(p_pattern.is_empty() && p_type.is_empty(), ret);
-	_update_children_cache();
-	Node *const *cptr = data.children_cache.ptr();
-	int ccount = data.children_cache.size();
-	for (int i = 0; i < ccount; i++) {
-		if (p_owned && !cptr[i]->data.owner) {
-			continue;
+	TypedArray<Node> matches;
+	ERR_FAIL_COND_V(p_pattern.is_empty() && p_type.is_empty(), matches);
+
+	// Save basic pattern and type info for faster lookup
+	bool is_pattern_empty = p_pattern.is_empty();
+	bool is_type_empty = p_type.is_empty();
+	bool is_type_global_class = !is_type_empty && ScriptServer::is_global_class(p_type);
+	String type_global_path = is_type_global_class ? ScriptServer::get_global_class_path(p_type) : "";
+
+	LocalVector<Node *> to_search;
+	to_search.push_back((Node *)this);
+	bool is_adding_children = true;
+	while (!to_search.is_empty()) {
+		// Pop the next entry off the search stack
+		Node *entry = Object::cast_to<Node>(to_search[0]);
+		to_search.remove_at(0);
+
+		// Add all the children to the list to search
+		entry->_update_children_cache();
+		if (is_adding_children) {
+			Node *const *cptr = entry->data.children_cache.ptr();
+			int ccount = entry->data.children_cache.size();
+			for (int i = 0; i < ccount; i++) {
+				if (p_owned && !cptr[i]->data.owner) {
+					continue;
+				}
+
+				to_search.push_back(cptr[i]);
+			}
+
+			// Stop further child adding if we don't want recursive
+			if (!p_recursive) {
+				is_adding_children = false;
+			}
 		}
 
-		if (p_pattern.is_empty() || cptr[i]->data.name.operator String().match(p_pattern)) {
-			if (p_type.is_empty() || cptr[i]->is_class(p_type)) {
-				ret.append(cptr[i]);
-			} else if (cptr[i]->get_script_instance()) {
-				Ref<Script> scr = cptr[i]->get_script_instance()->get_script();
+		// Check if the entry matches
+		bool is_pattern_match = is_pattern_empty || entry->data.name.operator String().match(p_pattern);
+		bool is_type_match = is_type_empty || entry->is_class(p_type);
+		bool is_script_type_match = false;
+		if (!is_type_match) {
+			if (ScriptInstance *script_inst = entry->get_script_instance()) {
+				Ref<Script> scr = script_inst->get_script();
 				while (scr.is_valid()) {
-					if ((ScriptServer::is_global_class(p_type) && ScriptServer::get_global_class_path(p_type) == scr->get_path()) || p_type == scr->get_path()) {
-						ret.append(cptr[i]);
+					if ((is_type_global_class && type_global_path == scr->get_path()) || p_type == scr->get_path()) {
+						is_script_type_match = true;
 						break;
 					}
 
@@ -1930,12 +1996,13 @@ TypedArray<Node> Node::find_children(const String &p_pattern, const String &p_ty
 			}
 		}
 
-		if (p_recursive) {
-			ret.append_array(cptr[i]->find_children(p_pattern, p_type, true, p_owned));
+		// Save it if it matches the pattern and at least one type
+		if (is_pattern_match && (is_type_match || is_script_type_match)) {
+			matches.append(entry);
 		}
 	}
 
-	return ret;
+	return matches;
 }
 
 void Node::reparent(Node *p_parent, bool p_keep_global_transform) {
@@ -3044,11 +3111,12 @@ void Node::_duplicate_signals(const Node *p_original, Node *p_copy) const {
 				if (copy && copytarget && E.callable.get_method() != StringName()) {
 					Callable copy_callable = Callable(copytarget, E.callable.get_method());
 					if (!copy->is_connected(E.signal.get_name(), copy_callable)) {
-						int arg_count = E.callable.get_bound_arguments_count();
-						if (arg_count > 0) {
+						int unbound_arg_count = E.callable.get_unbound_arguments_count();
+						if (unbound_arg_count > 0) {
+							copy_callable = copy_callable.unbind(unbound_arg_count);
+						}
+						if (E.callable.get_bound_arguments_count() > 0) {
 							copy_callable = copy_callable.bindv(E.callable.get_bound_arguments());
-						} else if (arg_count < 0) {
-							copy_callable = copy_callable.unbind(-arg_count);
 						}
 						copy->connect(E.signal.get_name(), copy_callable, E.flags);
 					}
@@ -3455,6 +3523,16 @@ void Node::_call_unhandled_key_input(const Ref<InputEvent> &p_event) {
 	unhandled_key_input(p_event);
 }
 
+void Node::_call_unhandled_picking_input(const Ref<InputEvent> &p_event) {
+	if (p_event->get_device() != InputEvent::DEVICE_ID_INTERNAL) {
+		GDVIRTUAL_CALL(_unhandled_picking_input, p_event);
+	}
+	if (!is_inside_tree() || !get_viewport() || get_viewport()->is_input_handled()) {
+		return;
+	}
+	unhandled_key_input(p_event);
+}
+
 void Node::_validate_property(PropertyInfo &p_property) const {
 	if ((p_property.name == "process_thread_group_order" || p_property.name == "process_thread_messages") && data.process_thread_group == PROCESS_THREAD_GROUP_INHERIT) {
 		p_property.usage = 0;
@@ -3471,6 +3549,9 @@ void Node::unhandled_input(const Ref<InputEvent> &p_event) {
 }
 
 void Node::unhandled_key_input(const Ref<InputEvent> &p_key_event) {
+}
+
+void Node::unhandled_picking_input(const Ref<InputEvent> &p_picking_event) {
 }
 
 Variant Node::_call_deferred_thread_group_bind(const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
@@ -3626,6 +3707,8 @@ void Node::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_processing_unhandled_input"), &Node::is_processing_unhandled_input);
 	ClassDB::bind_method(D_METHOD("set_process_unhandled_key_input", "enable"), &Node::set_process_unhandled_key_input);
 	ClassDB::bind_method(D_METHOD("is_processing_unhandled_key_input"), &Node::is_processing_unhandled_key_input);
+	ClassDB::bind_method(D_METHOD("set_process_unhandled_picking_input", "enable"), &Node::set_process_unhandled_picking_input);
+	ClassDB::bind_method(D_METHOD("is_processing_unhandled_picking_input"), &Node::is_processing_unhandled_picking_input);
 	ClassDB::bind_method(D_METHOD("set_process_mode", "mode"), &Node::set_process_mode);
 	ClassDB::bind_method(D_METHOD("get_process_mode"), &Node::get_process_mode);
 	ClassDB::bind_method(D_METHOD("can_process"), &Node::can_process);
@@ -3865,6 +3948,7 @@ void Node::_bind_methods() {
 	GDVIRTUAL_BIND(_shortcut_input, "event");
 	GDVIRTUAL_BIND(_unhandled_input, "event");
 	GDVIRTUAL_BIND(_unhandled_key_input, "event");
+	GDVIRTUAL_BIND(_unhandled_picking_input, "event");
 }
 
 String Node::_get_name_num_separator() {
@@ -3899,6 +3983,7 @@ Node::Node() {
 	data.shortcut_input = false;
 	data.unhandled_input = false;
 	data.unhandled_key_input = false;
+	data.unhandled_picking_input = false;
 
 	data.physics_interpolated = true;
 	data.physics_interpolation_reset_requested = false;

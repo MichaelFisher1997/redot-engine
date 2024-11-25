@@ -2,9 +2,11 @@
 /*  gdscript_highlighter.cpp                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -163,7 +165,7 @@ Dictionary GDScriptSyntaxHighlighter::_get_line_syntax_highlighting_impl(int p_l
 							}
 							if (from + end_key_length > line_length) {
 								// If it's key length and there is a '\', dont skip to highlight esc chars.
-								if (str.find("\\", from) >= 0) {
+								if (str.find_char('\\', from) >= 0) {
 									break;
 								}
 							}
@@ -236,7 +238,7 @@ Dictionary GDScriptSyntaxHighlighter::_get_line_syntax_highlighting_impl(int p_l
 						for (; from < line_length; from++) {
 							if (line_length - from < end_key_length) {
 								// Don't break if '\' to highlight esc chars.
-								if (str.find("\\", from) < 0) {
+								if (str.find_char('\\', from) < 0) {
 									break;
 								}
 							}
@@ -701,7 +703,9 @@ void GDScriptSyntaxHighlighter::_update_cache() {
 	List<StringName> types;
 	ClassDB::get_class_list(&types);
 	for (const StringName &E : types) {
-		class_names[E] = types_color;
+		if (ClassDB::is_class_exposed(E)) {
+			class_names[E] = types_color;
+		}
 	}
 
 	/* User types. */

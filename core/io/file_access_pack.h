@@ -2,9 +2,11 @@
 /*  file_access_pack.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,7 +40,7 @@
 #include "core/templates/list.h"
 #include "core/templates/rb_map.h"
 
-// Godot's packed file magic header ("GDPC" in ASCII).
+// Redot's packed file magic header ("GDPC" in ASCII).
 #define PACK_HEADER_MAGIC 0x43504447
 // The current packed file format version number.
 #define PACK_FORMAT_VERSION 2
@@ -49,7 +51,8 @@ enum PackFlags {
 };
 
 enum PackFileFlags {
-	PACK_FILE_ENCRYPTED = 1 << 0
+	PACK_FILE_ENCRYPTED = 1 << 0,
+	PACK_FILE_REMOVAL = 1 << 1,
 };
 
 class PackSource;
@@ -107,11 +110,14 @@ private:
 	bool disabled = false;
 
 	void _free_packed_dirs(PackedDir *p_dir);
+	void _get_file_paths(PackedDir *p_dir, const String &p_parent_dir, HashSet<String> &r_paths) const;
 
 public:
 	void add_pack_source(PackSource *p_source);
 	void add_path(const String &p_pkg_path, const String &p_path, uint64_t p_ofs, uint64_t p_size, const uint8_t *p_md5, PackSource *p_src, bool p_replace_files, bool p_encrypted = false); // for PackSource
+	void remove_path(const String &p_path);
 	uint8_t *get_file_hash(const String &p_path);
+	HashSet<String> get_file_paths() const;
 
 	void set_disabled(bool p_disabled) { disabled = p_disabled; }
 	_FORCE_INLINE_ bool is_disabled() const { return disabled; }
@@ -190,21 +196,18 @@ public:
 };
 
 Ref<FileAccess> PackedData::try_open_path(const String &p_path) {
-	String simplified_path = p_path.simplify_path();
+	String simplified_path = p_path.simplify_path().trim_prefix("res://");
 	PathMD5 pmd5(simplified_path.md5_buffer());
 	HashMap<PathMD5, PackedFile, PathMD5>::Iterator E = files.find(pmd5);
 	if (!E) {
-		return nullptr; //not found
-	}
-	if (E->value.offset == 0) {
-		return nullptr; //was erased
+		return nullptr; // Not found.
 	}
 
 	return E->value.src->get_file(p_path, &E->value);
 }
 
 bool PackedData::has_path(const String &p_path) {
-	return files.has(PathMD5(p_path.simplify_path().md5_buffer()));
+	return files.has(PathMD5(p_path.simplify_path().trim_prefix("res://").md5_buffer()));
 }
 
 bool PackedData::has_directory(const String &p_path) {

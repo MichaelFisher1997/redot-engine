@@ -2,9 +2,11 @@
 /*  material_storage.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -576,8 +578,8 @@ public:
 
 	/* SHADER API */
 
-	Shader *get_shader(RID p_rid) { return shader_owner.get_or_null(p_rid); };
-	bool owns_shader(RID p_rid) { return shader_owner.owns(p_rid); };
+	Shader *get_shader(RID p_rid) { return shader_owner.get_or_null(p_rid); }
+	bool owns_shader(RID p_rid) { return shader_owner.owns(p_rid); }
 
 	void _shader_make_dirty(Shader *p_shader);
 
@@ -598,8 +600,8 @@ public:
 
 	/* MATERIAL API */
 
-	Material *get_material(RID p_rid) { return material_owner.get_or_null(p_rid); };
-	bool owns_material(RID p_rid) { return material_owner.owns(p_rid); };
+	Material *get_material(RID p_rid) { return material_owner.get_or_null(p_rid); }
+	bool owns_material(RID p_rid) { return material_owner.owns(p_rid); }
 
 	void _material_queue_update(Material *material, bool p_uniform, bool p_texture);
 	void _update_queued_materials();

@@ -2,9 +2,11 @@
 /*  os_windows.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,7 +39,6 @@
 #include "core/config/project_settings.h"
 #include "core/input/input.h"
 #include "core/os/os.h"
-#include "drivers/unix/ip_unix.h"
 #include "drivers/wasapi/audio_driver_wasapi.h"
 #include "drivers/winmidi/midi_driver_winmidi.h"
 #include "servers/audio_server.h"
@@ -134,6 +135,8 @@ class OS_Windows : public OS {
 	DWRITE_FONT_WEIGHT _weight_to_dw(int p_weight) const;
 	DWRITE_FONT_STRETCH _stretch_to_dw(int p_stretch) const;
 
+	bool is_using_con_wrapper() const;
+
 	// functions used by main to initialize/deinitialize the OS
 protected:
 	virtual void initialize() override;
@@ -143,12 +146,17 @@ protected:
 
 	virtual void finalize() override;
 	virtual void finalize_core() override;
-	virtual String get_stdin_string() override;
+
+	virtual String get_stdin_string(int64_t p_buffer_size = 1024) override;
+	virtual PackedByteArray get_stdin_buffer(int64_t p_buffer_size = 1024) override;
+	virtual StdHandleType get_stdin_type() const override;
+	virtual StdHandleType get_stdout_type() const override;
+	virtual StdHandleType get_stderr_type() const override;
 
 	String _quote_command_line_argument(const String &p_text) const;
 
 	struct ProcessInfo {
-		STARTUPINFO si;
+		STARTUPINFOEX si;
 		PROCESS_INFORMATION pi;
 		mutable bool is_running = true;
 		mutable int exit_code = -1;
@@ -209,6 +217,8 @@ public:
 	virtual String get_locale() const override;
 
 	virtual String get_processor_name() const override;
+
+	virtual String get_model_name() const override;
 
 	virtual uint64_t get_embedded_pck_offset() const override;
 

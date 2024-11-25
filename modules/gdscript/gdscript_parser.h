@@ -2,9 +2,11 @@
 /*  gdscript_parser.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -163,6 +165,10 @@ public:
 				container_element_types.push_back(get_variant_type());
 			}
 			container_element_types.write[p_index] = DataType(p_type);
+		}
+
+		_FORCE_INLINE_ int get_container_element_type_count() const {
+			return container_element_types.size();
 		}
 
 		_FORCE_INLINE_ DataType get_container_element_type(int p_index) const {
@@ -1597,6 +1603,8 @@ public:
 
 #ifdef TOOLS_ENABLED
 	static HashMap<String, String> theme_color_names;
+
+	HashMap<int, GDScriptTokenizer::CommentData> comment_data;
 #endif // TOOLS_ENABLED
 
 	GDScriptParser();

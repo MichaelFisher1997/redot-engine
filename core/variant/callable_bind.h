@@ -2,9 +2,11 @@
 /*  callable_bind.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -55,7 +57,8 @@ public:
 	virtual const Callable *get_base_comparator() const override;
 	virtual int get_argument_count(bool &r_is_valid) const override;
 	virtual int get_bound_arguments_count() const override;
-	virtual void get_bound_arguments(Vector<Variant> &r_arguments, int &r_argcount) const override;
+	virtual void get_bound_arguments(Vector<Variant> &r_arguments) const override;
+	virtual int get_unbound_arguments_count() const override;
 	Callable get_callable() { return callable; }
 	Vector<Variant> get_binds() { return binds; }
 
@@ -84,7 +87,8 @@ public:
 	virtual const Callable *get_base_comparator() const override;
 	virtual int get_argument_count(bool &r_is_valid) const override;
 	virtual int get_bound_arguments_count() const override;
-	virtual void get_bound_arguments(Vector<Variant> &r_arguments, int &r_argcount) const override;
+	virtual void get_bound_arguments(Vector<Variant> &r_arguments) const override;
+	virtual int get_unbound_arguments_count() const override;
 
 	Callable get_callable() { return callable; }
 	int get_unbinds() { return argcount; }

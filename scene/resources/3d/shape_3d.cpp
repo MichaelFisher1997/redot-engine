@@ -2,9 +2,11 @@
 /*  shape_3d.cpp                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -73,7 +75,7 @@ Ref<ArrayMesh> Shape3D::get_debug_mesh() {
 
 	Vector<Vector3> lines = get_debug_mesh_lines();
 
-	debug_mesh_cache = Ref<ArrayMesh>(memnew(ArrayMesh));
+	debug_mesh_cache.instantiate();
 
 	if (!lines.is_empty()) {
 		//make mesh

@@ -2,9 +2,11 @@
 /*  animation_track_editor.h                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -600,6 +602,8 @@ class AnimationTrackEditor : public VBoxContainer {
 	AnimationMarkerEdit *marker_edit = nullptr;
 	HSlider *zoom = nullptr;
 	EditorSpinSlider *step = nullptr;
+	Button *fps_compat = nullptr;
+	Label *nearest_fps_label = nullptr;
 	TextureRect *zoom_icon = nullptr;
 	Button *snap_keys = nullptr;
 	Button *snap_timeline = nullptr;
@@ -637,6 +641,8 @@ class AnimationTrackEditor : public VBoxContainer {
 	void _track_grab_focus(int p_track);
 
 	void _update_scroll(double);
+	void _update_nearest_fps_label();
+	void _update_fps_compat_mode(bool p_enabled);
 	void _update_step(double p_new_step);
 	void _update_length(double p_new_len);
 	void _dropped_track(int p_from_track, int p_to_track);
@@ -716,7 +722,7 @@ class AnimationTrackEditor : public VBoxContainer {
 	struct SelectedKey {
 		int track = 0;
 		int key = 0;
-		bool operator<(const SelectedKey &p_key) const { return track == p_key.track ? key < p_key.key : track < p_key.track; };
+		bool operator<(const SelectedKey &p_key) const { return track == p_key.track ? key < p_key.key : track < p_key.track; }
 	};
 
 	struct KeyInfo {
@@ -853,6 +859,8 @@ class AnimationTrackEditor : public VBoxContainer {
 	void _pick_track_select_recursive(TreeItem *p_item, const String &p_filter, Vector<Node *> &p_select_candidates);
 
 	double snap_unit;
+	bool fps_compatible = true;
+	int nearest_fps = 0;
 	void _update_snap_unit();
 
 protected:
@@ -935,6 +943,7 @@ public:
 	bool can_add_reset_key() const;
 	float get_moving_selection_offset() const;
 	float snap_time(float p_value, bool p_relative = false);
+	float get_snap_unit();
 	bool is_grouping_tracks();
 	PackedStringArray get_selected_section() const;
 	bool is_marker_selected(const StringName &p_marker) const;
@@ -970,6 +979,7 @@ class AnimationTrackKeyEditEditor : public EditorProperty {
 		Variant value;
 	} key_data_cache;
 
+	void _time_edit_spun();
 	void _time_edit_entered();
 	void _time_edit_exited();
 
@@ -989,7 +999,6 @@ class AnimationMarkerKeyEditEditor : public EditorProperty {
 
 	EditorSpinSlider *spinner = nullptr;
 
-	void _time_edit_entered();
 	void _time_edit_exited();
 
 public:

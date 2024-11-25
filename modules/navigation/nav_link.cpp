@@ -2,9 +2,11 @@
 /*  nav_link.cpp                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -57,7 +59,7 @@ void NavLink::set_enabled(bool p_enabled) {
 
 	// TODO: This should not require a full rebuild as the link has not really changed.
 	link_dirty = true;
-};
+}
 
 void NavLink::set_bidirectional(bool p_bidirectional) {
 	if (bidirectional == p_bidirectional) {

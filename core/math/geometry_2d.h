@@ -2,9 +2,11 @@
 /*  geometry_2d.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -451,17 +453,17 @@ public:
 		return H;
 	}
 
-	static Vector<Point2i> bresenham_line(const Point2i &p_start, const Point2i &p_end) {
+	static Vector<Point2i> bresenham_line(const Point2i &p_from, const Point2i &p_to) {
 		Vector<Point2i> points;
 
-		Vector2i delta = (p_end - p_start).abs() * 2;
-		Vector2i step = (p_end - p_start).sign();
-		Vector2i current = p_start;
+		Vector2i delta = (p_to - p_from).abs() * 2;
+		Vector2i step = (p_to - p_from).sign();
+		Vector2i current = p_from;
 
 		if (delta.x > delta.y) {
 			int err = delta.x / 2;
 
-			for (; current.x != p_end.x; current.x += step.x) {
+			for (; current.x != p_to.x; current.x += step.x) {
 				points.push_back(current);
 
 				err -= delta.y;
@@ -473,7 +475,7 @@ public:
 		} else {
 			int err = delta.y / 2;
 
-			for (; current.y != p_end.y; current.y += step.y) {
+			for (; current.y != p_to.y; current.y += step.y) {
 				points.push_back(current);
 
 				err -= delta.x;

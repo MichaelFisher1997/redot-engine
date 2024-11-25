@@ -2,9 +2,11 @@
 /*  openxr_interface.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -70,6 +72,7 @@ class OpenXRInterface : public XRInterface {
 private:
 	OpenXRAPI *openxr_api = nullptr;
 	bool initialized = false;
+	bool reference_stage_changing = false;
 	XRInterface::TrackingStatus tracking_state;
 
 	// At a minimum we need a tracker for our head
@@ -207,7 +210,7 @@ public:
 	void on_state_stopping();
 	void on_state_loss_pending();
 	void on_state_exiting();
-	void on_pose_recentered();
+	void on_reference_space_change_pending();
 	void on_refresh_rate_changes(float p_new_rate);
 	void tracker_profile_changed(RID p_tracker, RID p_interaction_profile);
 

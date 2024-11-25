@@ -2,9 +2,11 @@
 /*  tile_map_layer_editor.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -63,9 +65,9 @@ public:
 
 	virtual Vector<TabData> get_tabs() const {
 		return Vector<TabData>();
-	};
+	}
 
-	virtual bool forward_canvas_gui_input(const Ref<InputEvent> &p_event) { return false; };
+	virtual bool forward_canvas_gui_input(const Ref<InputEvent> &p_event) { return false; }
 	virtual void forward_canvas_draw_over_viewport(Control *p_overlay) {}
 	virtual void tile_set_changed() {}
 	virtual void edit(ObjectID p_tile_map_layer_id) {}

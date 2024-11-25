@@ -2,9 +2,11 @@
 /*  visual_instance_3d.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -134,7 +136,7 @@ private:
 
 	float extra_cull_margin = 0.0;
 	AABB custom_aabb;
-	LightmapScale lightmap_scale = LIGHTMAP_SCALE_1X;
+	float lightmap_texel_scale = 1.0f;
 	GIMode gi_mode = GI_MODE_STATIC;
 	bool ignore_occlusion_culling = false;
 
@@ -185,8 +187,13 @@ public:
 	void set_gi_mode(GIMode p_mode);
 	GIMode get_gi_mode() const;
 
-	void set_lightmap_scale(LightmapScale p_scale);
+	void set_lightmap_texel_scale(float p_scale);
+	float get_lightmap_texel_scale() const;
+
+#ifndef DISABLE_DEPRECATED
+	void set_lightmap_scale(GeometryInstance3D::LightmapScale p_scale);
 	LightmapScale get_lightmap_scale() const;
+#endif // DISABLE_DEPRECATED
 
 	void set_instance_shader_parameter(const StringName &p_name, const Variant &p_value);
 	Variant get_instance_shader_parameter(const StringName &p_name) const;
@@ -203,8 +210,8 @@ public:
 };
 
 VARIANT_ENUM_CAST(GeometryInstance3D::ShadowCastingSetting);
-VARIANT_ENUM_CAST(GeometryInstance3D::LightmapScale);
 VARIANT_ENUM_CAST(GeometryInstance3D::GIMode);
+VARIANT_ENUM_CAST(GeometryInstance3D::LightmapScale);
 VARIANT_ENUM_CAST(GeometryInstance3D::VisibilityRangeFadeMode);
 
 #endif // VISUAL_INSTANCE_3D_H

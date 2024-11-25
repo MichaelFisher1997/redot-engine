@@ -2,9 +2,11 @@
 /*  windows_terminal_logger.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -29,6 +31,8 @@
 /**************************************************************************/
 
 #include "windows_terminal_logger.h"
+
+#include "core/os/os.h"
 
 #ifdef WINDOWS_ENABLED
 
@@ -78,7 +82,7 @@ void WindowsTerminalLogger::log_error(const char *p_function, const char *p_file
 	}
 
 	HANDLE hCon = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (!hCon || hCon == INVALID_HANDLE_VALUE) {
+	if (OS::get_singleton()->get_stdout_type() != OS::STD_HANDLE_CONSOLE || !hCon || hCon == INVALID_HANDLE_VALUE) {
 		StdLogger::log_error(p_function, p_file, p_line, p_code, p_rationale, p_type);
 	} else {
 		CONSOLE_SCREEN_BUFFER_INFO sbi; //original

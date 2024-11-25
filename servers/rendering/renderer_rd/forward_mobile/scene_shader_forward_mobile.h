@@ -2,9 +2,11 @@
 /*  scene_shader_forward_mobile.h                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -65,31 +67,42 @@ public:
 				uint32_t use_directional_soft_shadows : 1;
 				uint32_t decal_use_mipmaps : 1;
 				uint32_t projector_use_mipmaps : 1;
-				uint32_t disable_omni_lights : 1;
-				uint32_t disable_spot_lights : 1;
-				uint32_t disable_reflection_probes : 1;
-				uint32_t disable_directional_lights : 1;
-				uint32_t disable_decals : 1;
 				uint32_t disable_fog : 1;
 				uint32_t use_depth_fog : 1;
-				uint32_t is_multimesh : 1;
 				uint32_t use_lightmap_bicubic_filter : 1;
-				uint32_t pad : 2;
-				uint32_t soft_shadow_samples : 4;
-				uint32_t penumbra_shadow_samples : 4;
-				uint32_t directional_soft_shadow_samples : 4;
-				uint32_t directional_penumbra_shadow_samples : 4;
+				uint32_t multimesh : 1;
+				uint32_t multimesh_format_2d : 1;
+				uint32_t multimesh_has_color : 1;
+				uint32_t multimesh_has_custom_data : 1;
+				uint32_t scene_use_ambient_cubemap : 1;
+				uint32_t scene_use_reflection_cubemap : 1;
+				uint32_t scene_roughness_limiter_enabled : 1;
+				uint32_t padding : 5;
+				uint32_t soft_shadow_samples : 6;
+				uint32_t penumbra_shadow_samples : 6;
 			};
 
 			uint32_t packed_0;
 		};
 
 		union {
-			float luminance_multiplier;
-			float packed_1;
+			struct {
+				uint32_t directional_soft_shadow_samples : 6;
+				uint32_t directional_penumbra_shadow_samples : 6;
+				uint32_t omni_lights : 4;
+				uint32_t spot_lights : 4;
+				uint32_t reflection_probes : 4;
+				uint32_t directional_lights : 4;
+				uint32_t decals : 4;
+			};
+
+			uint32_t packed_1;
 		};
 
-		uint32_t packed_2;
+		union {
+			float luminance_multiplier;
+			float packed_2;
+		};
 	};
 
 	struct UbershaderConstants {
@@ -232,7 +245,7 @@ public:
 		}
 
 		_FORCE_INLINE_ bool uses_shared_shadow_material() const {
-			return !uses_particle_trails && !writes_modelview_or_projection && !uses_vertex && !uses_discard && !uses_depth_prepass_alpha && !uses_alpha_clip && !uses_alpha_antialiasing && !uses_world_coordinates;
+			return !uses_particle_trails && !writes_modelview_or_projection && !uses_vertex && !uses_discard && !uses_depth_prepass_alpha && !uses_alpha_clip && !uses_alpha_antialiasing && !uses_world_coordinates && !wireframe;
 		}
 
 		virtual void set_code(const String &p_Code);

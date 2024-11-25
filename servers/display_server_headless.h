@@ -2,9 +2,11 @@
 /*  display_server_headless.h                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -72,7 +74,7 @@ public:
 	// that don't affect the project's behavior in headless mode.
 
 	int get_screen_count() const override { return 0; }
-	int get_primary_screen() const override { return 0; };
+	int get_primary_screen() const override { return 0; }
 	Point2i screen_get_position(int p_screen = SCREEN_OF_MAIN_WINDOW) const override { return Point2i(); }
 	Size2i screen_get_size(int p_screen = SCREEN_OF_MAIN_WINDOW) const override { return Size2i(); }
 	Rect2i screen_get_usable_rect(int p_screen = SCREEN_OF_MAIN_WINDOW) const override { return Rect2i(); }
@@ -141,7 +143,7 @@ public:
 
 	void window_request_attention(WindowID p_window = MAIN_WINDOW_ID) override {}
 	void window_move_to_foreground(WindowID p_window = MAIN_WINDOW_ID) override {}
-	bool window_is_focused(WindowID p_window = MAIN_WINDOW_ID) const override { return true; };
+	bool window_is_focused(WindowID p_window = MAIN_WINDOW_ID) const override { return true; }
 
 	bool window_can_draw(WindowID p_window = MAIN_WINDOW_ID) const override { return false; }
 

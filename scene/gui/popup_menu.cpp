@@ -2,9 +2,11 @@
 /*  popup_menu.cpp                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -474,7 +476,7 @@ void PopupMenu::_input_from_window_internal(const Ref<InputEvent> &p_event) {
 			for (int i = search_from; i < items.size(); i++) {
 				if (!items[i].separator && !items[i].disabled) {
 					mouse_over = i;
-					emit_signal(SNAME("id_focused"), i);
+					emit_signal(SNAME("id_focused"), items[i].id);
 					scroll_to_item(i);
 					control->queue_redraw();
 					set_input_as_handled();
@@ -488,7 +490,7 @@ void PopupMenu::_input_from_window_internal(const Ref<InputEvent> &p_event) {
 				for (int i = 0; i < search_from; i++) {
 					if (!items[i].separator && !items[i].disabled) {
 						mouse_over = i;
-						emit_signal(SNAME("id_focused"), i);
+						emit_signal(SNAME("id_focused"), items[i].id);
 						scroll_to_item(i);
 						control->queue_redraw();
 						set_input_as_handled();
@@ -512,7 +514,7 @@ void PopupMenu::_input_from_window_internal(const Ref<InputEvent> &p_event) {
 			for (int i = search_from; i >= 0; i--) {
 				if (!items[i].separator && !items[i].disabled) {
 					mouse_over = i;
-					emit_signal(SNAME("id_focused"), i);
+					emit_signal(SNAME("id_focused"), items[i].id);
 					scroll_to_item(i);
 					control->queue_redraw();
 					set_input_as_handled();
@@ -526,7 +528,7 @@ void PopupMenu::_input_from_window_internal(const Ref<InputEvent> &p_event) {
 				for (int i = items.size() - 1; i >= search_from; i--) {
 					if (!items[i].separator && !items[i].disabled) {
 						mouse_over = i;
-						emit_signal(SNAME("id_focused"), i);
+						emit_signal(SNAME("id_focused"), items[i].id);
 						scroll_to_item(i);
 						control->queue_redraw();
 						set_input_as_handled();
@@ -692,7 +694,7 @@ void PopupMenu::_input_from_window_internal(const Ref<InputEvent> &p_event) {
 
 			if (items[i].text.findn(search_string) == 0) {
 				mouse_over = i;
-				emit_signal(SNAME("id_focused"), i);
+				emit_signal(SNAME("id_focused"), items[i].id);
 				scroll_to_item(i);
 				control->queue_redraw();
 				set_input_as_handled();
@@ -1091,7 +1093,7 @@ void PopupMenu::_notification(int p_what) {
 					for (int i = search_from; i < items.size(); i++) {
 						if (!items[i].separator && !items[i].disabled) {
 							mouse_over = i;
-							emit_signal(SNAME("id_focused"), i);
+							emit_signal(SNAME("id_focused"), items[i].id);
 							scroll_to_item(i);
 							control->queue_redraw();
 							match_found = true;
@@ -1104,7 +1106,7 @@ void PopupMenu::_notification(int p_what) {
 						for (int i = 0; i < search_from; i++) {
 							if (!items[i].separator && !items[i].disabled) {
 								mouse_over = i;
-								emit_signal(SNAME("id_focused"), i);
+								emit_signal(SNAME("id_focused"), items[i].id);
 								scroll_to_item(i);
 								control->queue_redraw();
 								break;
@@ -1124,7 +1126,7 @@ void PopupMenu::_notification(int p_what) {
 					for (int i = search_from; i >= 0; i--) {
 						if (!items[i].separator && !items[i].disabled) {
 							mouse_over = i;
-							emit_signal(SNAME("id_focused"), i);
+							emit_signal(SNAME("id_focused"), items[i].id);
 							scroll_to_item(i);
 							control->queue_redraw();
 							match_found = true;
@@ -1137,7 +1139,7 @@ void PopupMenu::_notification(int p_what) {
 						for (int i = items.size() - 1; i >= search_from; i--) {
 							if (!items[i].separator && !items[i].disabled) {
 								mouse_over = i;
-								emit_signal(SNAME("id_focused"), i);
+								emit_signal(SNAME("id_focused"), items[i].id);
 								scroll_to_item(i);
 								control->queue_redraw();
 								break;

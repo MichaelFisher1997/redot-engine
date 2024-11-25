@@ -2,9 +2,11 @@
 /*  editor_settings_dialog.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -106,8 +108,8 @@ void EditorSettingsDialog::update_navigation_preset() {
 		orbit_mod_key_2 = InputEventKey::create_reference(Key::NONE);
 		pan_mod_key_1 = InputEventKey::create_reference(Key::SHIFT);
 		pan_mod_key_2 = InputEventKey::create_reference(Key::NONE);
-		zoom_mod_key_1 = InputEventKey::create_reference(Key::SHIFT);
-		zoom_mod_key_2 = InputEventKey::create_reference(Key::CTRL);
+		zoom_mod_key_1 = InputEventKey::create_reference(Key::CTRL);
+		zoom_mod_key_2 = InputEventKey::create_reference(Key::NONE);
 	} else if (nav_scheme == Node3DEditorViewport::NAVIGATION_MAYA) {
 		set_preset = true;
 		set_orbit_mouse_button = Node3DEditorViewport::NAVIGATION_LEFT_MOUSE;
@@ -285,7 +287,7 @@ void EditorSettingsDialog::_update_icons() {
 	shortcut_search_box->set_right_icon(shortcuts->get_editor_theme_icon(SNAME("Search")));
 	shortcut_search_box->set_clear_button_enabled(true);
 
-	restart_close_button->set_icon(shortcuts->get_editor_theme_icon(SNAME("Close")));
+	restart_close_button->set_button_icon(shortcuts->get_editor_theme_icon(SNAME("Close")));
 	restart_container->add_theme_style_override(SceneStringName(panel), shortcuts->get_theme_stylebox(SceneStringName(panel), SNAME("Tree")));
 	restart_icon->set_texture(shortcuts->get_editor_theme_icon(SNAME("StatusWarning")));
 	restart_label->add_theme_color_override(SceneStringName(font_color), shortcuts->get_theme_color(SNAME("warning_color"), EditorStringName(Editor)));

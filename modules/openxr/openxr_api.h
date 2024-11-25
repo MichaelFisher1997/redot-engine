@@ -2,9 +2,11 @@
 /*  openxr_api.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -396,12 +398,12 @@ private:
 	}
 
 public:
-	XrInstance get_instance() const { return instance; };
-	XrSystemId get_system_id() const { return system_id; };
-	XrSession get_session() const { return session; };
-	OpenXRGraphicsExtensionWrapper *get_graphics_extension() const { return graphics_extension; };
-	String get_runtime_name() const { return runtime_name; };
-	String get_runtime_version() const { return runtime_version; };
+	XrInstance get_instance() const { return instance; }
+	XrSystemId get_system_id() const { return system_id; }
+	XrSession get_session() const { return session; }
+	OpenXRGraphicsExtensionWrapper *get_graphics_extension() const { return graphics_extension; }
+	String get_runtime_name() const { return runtime_name; }
+	String get_runtime_version() const { return runtime_version; }
 
 	// helper method to convert an XrPosef to a Transform3D
 	Transform3D transform_from_pose(const XrPosef &p_pose);
