@@ -1261,6 +1261,10 @@ Ref<World2D> Viewport::get_world_2d() const {
 	return world_2d;
 }
 
+Transform2D Viewport::get_stretch_transform() const {
+	return stretch_transform;
+}
+
 Transform2D Viewport::get_final_transform() const {
 	ERR_READ_THREAD_GUARD_V(Transform2D());
 	return stretch_transform * global_canvas_transform;
@@ -3067,6 +3071,14 @@ void Viewport::_update_mouse_over(Vector2 p_pos) {
 			}
 			v->_update_mouse_over(v->get_final_transform().affine_inverse().xform(pos));
 		}
+
+		Viewport *section_root = get_section_root_viewport();
+		if (section_root && c->is_consume_drag_and_drop_enabled()) {
+			// Evaluating `consume_drag_and_drop` and adjusting target_control needs to happen
+			// after `_update_mouse_over` in the SubViewports, because otherwise physics picking
+			// would not work inside SubViewports.
+			section_root->gui.target_control = over;
+		}
 	}
 }
 
@@ -4635,6 +4647,7 @@ void Viewport::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_global_canvas_transform", "xform"), &Viewport::set_global_canvas_transform);
 	ClassDB::bind_method(D_METHOD("get_global_canvas_transform"), &Viewport::get_global_canvas_transform);
+	ClassDB::bind_method(D_METHOD("get_stretch_transform"), &Viewport::get_stretch_transform);
 	ClassDB::bind_method(D_METHOD("get_final_transform"), &Viewport::get_final_transform);
 	ClassDB::bind_method(D_METHOD("get_screen_transform"), &Viewport::get_screen_transform);
 

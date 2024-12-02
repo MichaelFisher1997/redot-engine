@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  thorvg_bounds_iterator.cpp                                            */
+/*  translation_server.compat.inc                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             REDOT ENGINE                               */
@@ -30,43 +30,14 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifdef GDEXTENSION
-// Headers for building as GDExtension plug-in.
+#ifndef DISABLE_DEPRECATED
 
-#include <godot_cpp/godot.hpp>
-
-using namespace godot;
-
-#elif defined(GODOT_MODULE)
-// Headers for building as built-in module.
-
-#include "core/typedefs.h"
-
-#include "modules/modules_enabled.gen.h" // For svg.
-#endif
-
-#ifdef MODULE_SVG_ENABLED
-
-#include "thorvg_bounds_iterator.h"
-
-#include <tvgIteratorAccessor.h>
-#include <tvgPaint.h>
-
-// This function uses private ThorVG API to get bounding box of top level children elements.
-
-void tvg_get_bounds(tvg::Picture *p_picture, float &r_min_x, float &r_min_y, float &r_max_x, float &r_max_y) {
-	tvg::IteratorAccessor itrAccessor;
-	if (tvg::Iterator *it = itrAccessor.iterator(p_picture)) {
-		while (const tvg::Paint *child = it->next()) {
-			float x = 0, y = 0, w = 0, h = 0;
-			child->bounds(&x, &y, &w, &h, true);
-			r_min_x = MIN(x, r_min_x);
-			r_min_y = MIN(y, r_min_y);
-			r_max_x = MAX(x + w, r_max_x);
-			r_max_y = MAX(y + h, r_max_y);
-		}
-		delete (it);
-	}
+String TranslationServer::_standardize_locale_bind_compat_98972(const String &p_locale) const {
+	return standardize_locale(p_locale, false);
 }
 
-#endif // MODULE_SVG_ENABLED
+void TranslationServer::_bind_compatibility_methods() {
+	ClassDB::bind_compatibility_method(D_METHOD("standardize_locale", "locale"), &TranslationServer::_standardize_locale_bind_compat_98972);
+}
+
+#endif // DISABLE_DEPRECATED

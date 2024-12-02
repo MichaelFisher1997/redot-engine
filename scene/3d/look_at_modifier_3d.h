@@ -56,7 +56,8 @@ public:
 	};
 
 private:
-	int bone = 0;
+	String bone_name;
+	int bone = -1;
 
 	Vector3 forward_vector;
 	Vector3 forward_vector_nrm;
@@ -66,6 +67,7 @@ private:
 	bool use_secondary_rotation = true;
 
 	OriginFrom origin_from = ORIGIN_FROM_SELF;
+	String origin_bone_name;
 	int origin_bone = -1;
 	NodePath origin_external_node;
 
@@ -125,6 +127,8 @@ protected:
 	virtual void _process_modification() override;
 
 public:
+	void set_bone_name(const String &p_bone_name);
+	String get_bone_name() const;
 	void set_bone(int p_bone);
 	int get_bone() const;
 
@@ -137,6 +141,8 @@ public:
 
 	void set_origin_from(OriginFrom p_origin_from);
 	OriginFrom get_origin_from() const;
+	void set_origin_bone_name(const String &p_bone_name);
+	String get_origin_bone_name() const;
 	void set_origin_bone(int p_bone);
 	int get_origin_bone() const;
 	void set_origin_external_node(const NodePath &p_external_node);

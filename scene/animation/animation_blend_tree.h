@@ -304,6 +304,10 @@ class AnimationNodeTimeSeek : public AnimationNode {
 	GDCLASS(AnimationNodeTimeSeek, AnimationNode);
 
 	StringName seek_pos_request = PNAME("seek_request");
+	bool explicit_elapse = true;
+
+protected:
+	static void _bind_methods();
 
 public:
 	virtual void get_parameter_list(List<PropertyInfo> *r_list) const override;
@@ -312,6 +316,9 @@ public:
 	virtual String get_caption() const override;
 
 	virtual NodeTimeInfo _process(const AnimationMixer::PlaybackInfo p_playback_info, bool p_test_only = false) override;
+
+	void set_explicit_elapse(bool p_enable);
+	bool is_explicit_elapse() const;
 
 	AnimationNodeTimeSeek();
 };

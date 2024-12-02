@@ -668,6 +668,8 @@ void RendererCanvasRenderRD::canvas_render_items(RID p_to_render_target, Item *p
 		RD::get_singleton()->buffer_update(state.lights_uniform_buffer, 0, sizeof(LightUniform) * light_count, &state.light_uniforms[0]);
 	}
 
+	bool use_linear_colors = texture_storage->render_target_is_using_hdr(p_to_render_target);
+
 	{
 		//update canvas state uniform buffer
 		State::Buffer state_buffer;
@@ -686,7 +688,6 @@ void RendererCanvasRenderRD::canvas_render_items(RID p_to_render_target, Item *p
 		normal_transform.columns[2] = Vector2();
 		_update_transform_2d_to_mat4(normal_transform, state_buffer.canvas_normal_transform);
 
-		bool use_linear_colors = texture_storage->render_target_is_using_hdr(p_to_render_target);
 		Color modulate = p_modulate;
 		if (use_linear_colors) {
 			modulate = p_modulate.srgb_to_linear();
@@ -724,6 +725,8 @@ void RendererCanvasRenderRD::canvas_render_items(RID p_to_render_target, Item *p
 		//print_line("w: " + itos(ssize.width) + " s: " + rtos(canvas_scale));
 		state_buffer.tex_to_sdf = 1.0 / ((canvas_scale.x + canvas_scale.y) * 0.5);
 
+		state_buffer.flags = use_linear_colors ? CANVAS_FLAGS_CONVERT_ATTRIBUTES_TO_LINEAR : 0;
+
 		RD::get_singleton()->buffer_update(state.canvas_state_buffer, 0, sizeof(State::Buffer), &state_buffer);
 	}
 
@@ -754,8 +757,7 @@ void RendererCanvasRenderRD::canvas_render_items(RID p_to_render_target, Item *p
 
 	RenderTarget to_render_target;
 	to_render_target.render_target = p_to_render_target;
-	bool use_linear_colors = texture_storage->render_target_is_using_hdr(p_to_render_target);
-	to_render_target.base_flags = use_linear_colors ? FLAGS_CONVERT_ATTRIBUTES_TO_LINEAR : 0;
+	to_render_target.use_linear_colors = use_linear_colors;
 
 	while (ci) {
 		if (ci->copy_back_buffer && canvas_group_owner == nullptr) {
@@ -975,6 +977,7 @@ void RendererCanvasRenderRD::_update_shadow_atlas() {
 			tf.height = state.max_lights_per_render * 2;
 			tf.usage_bits = RD::TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 			tf.format = RD::DATA_FORMAT_D32_SFLOAT;
+			tf.is_discardable = true;
 			//chunks to write
 			state.shadow_depth_texture = RD::get_singleton()->texture_create(tf, RD::TextureView());
 			fb_textures.push_back(state.shadow_depth_texture);
@@ -1026,7 +1029,7 @@ void RendererCanvasRenderRD::light_update_shadow(RID p_rid, int p_shadow_index, 
 
 	for (int i = 0; i < 4; i++) {
 		Rect2i rect((state.shadow_texture_size / 4) * i, p_shadow_index * 2, (state.shadow_texture_size / 4), 2);
-		RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(state.shadow_fb, RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_DISCARD, cc, 1.0, 0, rect);
+		RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(state.shadow_fb, RD::DRAW_CLEAR_ALL, cc, 1.0f, 0, rect);
 
 		ShadowRenderPushConstant push_constant;
 		for (int y = 0; y < 4; y++) {
@@ -1097,7 +1100,7 @@ void RendererCanvasRenderRD::light_update_directional_shadow(RID p_rid, int p_sh
 	cc.push_back(Color(1, 1, 1, 1));
 
 	Rect2i rect(0, p_shadow_index * 2, state.shadow_texture_size, 2);
-	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(state.shadow_fb, RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_DISCARD, cc, 1.0, 0, rect);
+	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(state.shadow_fb, RD::DRAW_CLEAR_ALL, cc, 1.0f, 0, rect);
 
 	Projection projection;
 	projection.set_orthogonal(-half_size, half_size, -0.5, 0.5, 0.0, distance);
@@ -1167,7 +1170,7 @@ void RendererCanvasRenderRD::render_sdf(RID p_render_target, LightOccluderInstan
 	Vector<Color> cc;
 	cc.push_back(Color(0, 0, 0, 0));
 
-	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(fb, RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_DISCARD, cc);
+	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(fb, RD::DRAW_CLEAR_ALL, cc);
 
 	Projection projection;
 
@@ -2174,7 +2177,7 @@ void RendererCanvasRenderRD::_render_batch_items(RenderTarget p_to_render_target
 
 	RD::FramebufferFormatID fb_format = RD::get_singleton()->framebuffer_get_format(framebuffer);
 
-	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(framebuffer, clear ? RD::INITIAL_ACTION_CLEAR : RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_DISCARD, clear_colors, 1, 0, Rect2(), RDD::BreadcrumbMarker::UI_PASS);
+	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(framebuffer, clear ? RD::DRAW_CLEAR_COLOR_ALL : RD::DRAW_DEFAULT_ALL, clear_colors, 1.0f, 0, Rect2(), RDD::BreadcrumbMarker::UI_PASS);
 
 	RD::get_singleton()->draw_list_bind_uniform_set(draw_list, fb_uniform_set, BASE_UNIFORM_SET);
 	RD::get_singleton()->draw_list_bind_uniform_set(draw_list, state.default_transforms_uniform_set, TRANSFORMS_UNIFORM_SET);
@@ -2246,7 +2249,7 @@ RendererCanvasRenderRD::InstanceData *RendererCanvasRenderRD::new_instance_data(
 		instance_data->world[i] = p_world[i];
 	}
 
-	instance_data->flags = p_base_flags | p_info->flags; // Reset on each command for safety, keep canvas texture binding config.
+	instance_data->flags = p_base_flags; // Reset on each command for safety.
 
 	instance_data->color_texture_pixel_size[0] = p_info->texpixel_size.width;
 	instance_data->color_texture_pixel_size[1] = p_info->texpixel_size.height;
@@ -2267,8 +2270,8 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 	_update_transform_2d_to_mat2x3(base_transform, world);
 
 	Color base_color = p_item->final_modulate;
-	bool use_linear_colors = bool(p_render_target.base_flags & FLAGS_CONVERT_ATTRIBUTES_TO_LINEAR);
-	uint32_t base_flags = p_render_target.base_flags;
+	bool use_linear_colors = p_render_target.use_linear_colors;
+	uint32_t base_flags = 0;
 
 	bool reclip = false;
 
@@ -2278,6 +2281,7 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 	uint32_t lights[4] = { 0, 0, 0, 0 };
 
 	uint16_t light_count = 0;
+	uint16_t shadow_mask = 0;
 
 	{
 		Light *light = p_lights;
@@ -2286,6 +2290,10 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 			if (light->render_index_cache >= 0 && p_item->light_mask & light->item_mask && p_item->z_final >= light->z_min && p_item->z_final <= light->z_max && p_item->global_rect_cache.intersects_transformed(light->xform_cache, light->rect_cache)) {
 				uint32_t light_index = light->render_index_cache;
 				lights[light_count >> 2] |= light_index << ((light_count & 3) * 8);
+
+				if (p_item->light_mask & light->item_shadow_mask) {
+					shadow_mask |= 1 << light_count;
+				}
 
 				light_count++;
 
@@ -2296,7 +2304,8 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 			light = light->next_ptr;
 		}
 
-		base_flags |= light_count << FLAGS_LIGHT_COUNT_SHIFT;
+		base_flags |= light_count << INSTANCE_FLAGS_LIGHT_COUNT_SHIFT;
+		base_flags |= shadow_mask << INSTANCE_FLAGS_SHADOW_MASKED_SHIFT;
 	}
 
 	bool use_lighting = (light_count > 0 || using_directional_lights);
@@ -2325,6 +2334,7 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 					// default variant
 					r_current_batch->shader_variant = SHADER_VARIANT_QUAD;
 					r_current_batch->render_primitive = RD::RENDER_PRIMITIVE_TRIANGLES;
+					r_current_batch->flags = 0;
 				}
 
 				RenderingServer::CanvasItemTextureRepeat rect_repeat = texture_repeat;
@@ -2380,20 +2390,18 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 
 					if (rect->flags & CANVAS_RECT_FLIP_H) {
 						src_rect.size.x *= -1;
-						instance_data->flags |= FLAGS_FLIP_H;
 					}
 
 					if (rect->flags & CANVAS_RECT_FLIP_V) {
 						src_rect.size.y *= -1;
-						instance_data->flags |= FLAGS_FLIP_V;
 					}
 
 					if (rect->flags & CANVAS_RECT_TRANSPOSE) {
-						instance_data->flags |= FLAGS_TRANSPOSE_RECT;
+						instance_data->flags |= INSTANCE_FLAGS_TRANSPOSE_RECT;
 					}
 
 					if (rect->flags & CANVAS_RECT_CLIP_UV) {
-						instance_data->flags |= FLAGS_CLIP_RECT_UV;
+						instance_data->flags |= INSTANCE_FLAGS_CLIP_RECT_UV;
 					}
 
 				} else {
@@ -2412,13 +2420,13 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 				}
 
 				if (has_msdf) {
-					instance_data->flags |= FLAGS_USE_MSDF;
+					instance_data->flags |= INSTANCE_FLAGS_USE_MSDF;
 					instance_data->msdf[0] = rect->px_range; // Pixel range.
 					instance_data->msdf[1] = rect->outline; // Outline size.
 					instance_data->msdf[2] = 0.f; // Reserved.
 					instance_data->msdf[3] = 0.f; // Reserved.
 				} else if (rect->flags & CANVAS_RECT_LCD) {
-					instance_data->flags |= FLAGS_USE_LCD;
+					instance_data->flags |= INSTANCE_FLAGS_USE_LCD;
 				}
 
 				instance_data->modulation[0] = modulated.r;
@@ -2449,6 +2457,7 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 					r_current_batch->has_blend = false;
 					r_current_batch->shader_variant = SHADER_VARIANT_NINEPATCH;
 					r_current_batch->render_primitive = RD::RENDER_PRIMITIVE_TRIANGLES;
+					r_current_batch->flags = 0;
 				}
 
 				TextureState tex_state(np->texture, texture_filter, texture_repeat, false, use_linear_colors);
@@ -2500,11 +2509,11 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 				instance_data->dst_rect[2] = dst_rect.size.width;
 				instance_data->dst_rect[3] = dst_rect.size.height;
 
-				instance_data->flags |= int(np->axis_x) << FLAGS_NINEPATCH_H_MODE_SHIFT;
-				instance_data->flags |= int(np->axis_y) << FLAGS_NINEPATCH_V_MODE_SHIFT;
+				instance_data->flags |= int(np->axis_x) << INSTANCE_FLAGS_NINEPATCH_H_MODE_SHIFT;
+				instance_data->flags |= int(np->axis_y) << INSTANCE_FLAGS_NINEPATCH_V_MODE_SHIFT;
 
 				if (np->draw_center) {
-					instance_data->flags |= FLAGS_NINEPACH_DRAW_CENTER;
+					instance_data->flags |= INSTANCE_FLAGS_NINEPACH_DRAW_CENTER;
 				}
 
 				instance_data->ninepatch_margins[0] = np->margin[SIDE_LEFT];
@@ -2524,6 +2533,7 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 				r_current_batch->command_type = Item::Command::TYPE_POLYGON;
 				r_current_batch->has_blend = false;
 				r_current_batch->command = c;
+				r_current_batch->flags = 0;
 
 				TextureState tex_state(polygon->texture, texture_filter, texture_repeat, false, use_linear_colors);
 				TextureInfo *tex_info = texture_info_map.getptr(tex_state);
@@ -2568,6 +2578,7 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 					r_current_batch->has_blend = false;
 					r_current_batch->command = c;
 					r_current_batch->primitive_points = primitive->point_count;
+					r_current_batch->flags = 0;
 
 					ERR_CONTINUE(primitive->point_count == 0 || primitive->point_count > 4);
 
@@ -2650,6 +2661,7 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 				r_current_batch->command = c;
 				r_current_batch->command_type = c->type;
 				r_current_batch->has_blend = false;
+				r_current_batch->flags = 0;
 
 				InstanceData *instance_data = nullptr;
 
@@ -2692,13 +2704,13 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 					r_current_batch->tex_info = tex_info;
 					instance_data = new_instance_data(world, lights, base_flags, r_index, tex_info);
 
-					instance_data->flags |= 1; // multimesh, trails disabled
+					r_current_batch->flags |= 1; // multimesh, trails disabled
 
 					if (mesh_storage->multimesh_uses_colors(mm->multimesh)) {
-						instance_data->flags |= FLAGS_INSTANCING_HAS_COLORS;
+						r_current_batch->flags |= BATCH_FLAGS_INSTANCING_HAS_COLORS;
 					}
 					if (mesh_storage->multimesh_uses_custom_data(mm->multimesh)) {
-						instance_data->flags |= FLAGS_INSTANCING_HAS_CUSTOM_DATA;
+						r_current_batch->flags |= BATCH_FLAGS_INSTANCING_HAS_CUSTOM_DATA;
 					}
 				} else if (c->type == Item::Command::TYPE_PARTICLES) {
 					RendererRD::TextureStorage *texture_storage = RendererRD::TextureStorage::get_singleton();
@@ -2716,13 +2728,13 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 
 					uint32_t divisor = 1;
 					r_current_batch->mesh_instance_count = particles_storage->particles_get_amount(pt->particles, divisor);
-					instance_data->flags |= (divisor & FLAGS_INSTANCING_MASK);
+					r_current_batch->flags |= (divisor & BATCH_FLAGS_INSTANCING_MASK);
 					r_current_batch->mesh_instance_count /= divisor;
 
 					RID particles = pt->particles;
 
-					instance_data->flags |= FLAGS_INSTANCING_HAS_COLORS;
-					instance_data->flags |= FLAGS_INSTANCING_HAS_CUSTOM_DATA;
+					r_current_batch->flags |= BATCH_FLAGS_INSTANCING_HAS_COLORS;
+					r_current_batch->flags |= BATCH_FLAGS_INSTANCING_HAS_CUSTOM_DATA;
 
 					if (particles_storage->particles_has_collision(particles) && texture_storage->render_target_is_sdf_enabled(p_render_target.render_target)) {
 						// Pass collision information.
@@ -2808,6 +2820,7 @@ void RendererCanvasRenderRD::_record_item_commands(const Item *p_item, RenderTar
 			// default variant
 			r_current_batch->shader_variant = SHADER_VARIANT_QUAD;
 			r_current_batch->render_primitive = RD::RENDER_PRIMITIVE_TRIANGLES;
+			r_current_batch->flags = 0;
 		}
 
 		// 2: If the current batch has lighting, start a new batch.
@@ -2922,6 +2935,7 @@ void RendererCanvasRenderRD::_render_batch(RD::DrawListID p_draw_list, CanvasSha
 	PushConstant push_constant;
 	push_constant.base_instance_index = p_batch->start;
 	push_constant.specular_shininess = p_batch->tex_info->specular_shininess;
+	push_constant.batch_flags = p_batch->tex_info->flags | p_batch->flags;
 
 	RID pipeline;
 	PipelineKey pipeline_key;
@@ -3170,11 +3184,11 @@ void RendererCanvasRenderRD::_prepare_batch_texture_info(RID p_texture, TextureS
 
 	// cache values to be copied to instance data
 	if (info.specular_color.a < 0.999) {
-		p_info->flags |= FLAGS_DEFAULT_SPECULAR_MAP_USED;
+		p_info->flags |= BATCH_FLAGS_DEFAULT_SPECULAR_MAP_USED;
 	}
 
 	if (info.use_normal) {
-		p_info->flags |= FLAGS_DEFAULT_NORMAL_MAP_USED;
+		p_info->flags |= BATCH_FLAGS_DEFAULT_NORMAL_MAP_USED;
 	}
 
 	uint8_t a = uint8_t(CLAMP(info.specular_color.a * 255.0, 0.0, 255.0));

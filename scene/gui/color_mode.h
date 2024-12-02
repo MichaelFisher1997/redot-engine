@@ -35,8 +35,6 @@
 
 #include "scene/gui/color_picker.h"
 
-struct Color;
-
 class ColorMode {
 public:
 	ColorPicker *color_picker = nullptr;
