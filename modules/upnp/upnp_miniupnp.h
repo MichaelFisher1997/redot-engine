@@ -37,7 +37,7 @@
 
 #include "upnp.h"
 
-#include <miniupnpc.h>
+#include <miniupnpc/miniupnpc.h>
 
 class UPNPMiniUPNP : public UPNP {
 	GDCLASS(UPNPMiniUPNP, UPNP);

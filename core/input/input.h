@@ -186,7 +186,7 @@ private:
 
 	HashSet<uint32_t> ignored_device_ids;
 
-	int fallback_mapping = -1;
+	int fallback_mapping = -1; // Index of the guid in map_db.
 
 	CursorShape default_shape = CURSOR_ARROW;
 
@@ -247,6 +247,8 @@ private:
 
 	Vector<JoyDeviceMapping> map_db;
 
+	void _set_joypad_mapping(Joypad &p_js, int p_map_index);
+
 	JoyEvent _get_mapped_button_event(const JoyDeviceMapping &mapping, JoyButton p_button);
 	JoyEvent _get_mapped_axis_event(const JoyDeviceMapping &mapping, JoyAxis p_axis, float p_value, JoyAxisRange &r_range);
 	void _get_mapped_hat_events(const JoyDeviceMapping &mapping, HatDir p_hat, JoyEvent r_events[(size_t)HatDir::MAX]);
@@ -296,6 +298,7 @@ public:
 	static Input *get_singleton();
 
 	bool is_anything_pressed() const;
+	bool is_anything_pressed_except_mouse() const;
 	bool is_key_pressed(Key p_keycode) const;
 	bool is_physical_key_pressed(Key p_keycode) const;
 	bool is_key_label_pressed(Key p_keycode) const;

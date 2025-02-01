@@ -257,7 +257,7 @@ class ControlEditorPlugin : public EditorPlugin {
 	ControlEditorToolbar *toolbar = nullptr;
 
 public:
-	virtual String get_name() const override { return "Control"; }
+	virtual String get_plugin_name() const override { return "Control"; }
 
 	ControlEditorPlugin();
 };

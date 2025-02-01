@@ -5,7 +5,7 @@
 	</brief_description>
 	<description>
 		The Web exporter customizes how a web build is handled. In the editor's "Export" window, it is created when adding a new "Web" preset.
-		[b]Note:[/b] Godot on Web is rendered inside a [code]&lt;canvas&gt;[/code] tag. Normally, the canvas cannot be positioned or resized manually, but otherwise acts as the main [Window] of the application.
+		[b]Note:[/b] Redot on Web is rendered inside a [code]&lt;canvas&gt;[/code] tag. Normally, the canvas cannot be positioned or resized manually, but otherwise acts as the main [Window] of the application.
 	</description>
 	<tutorials>
 		<link title="Exporting for the Web">$DOCS_URL/tutorials/export/exporting_for_web.html</link>
@@ -19,7 +19,7 @@
 			File path to the custom export template used for release builds. If left empty, the default template is used.
 		</member>
 		<member name="html/canvas_resize_policy" type="int" setter="" getter="">
-			Determines how the canvas should be resized by Godot.
+			Determines how the canvas should be resized by Redot.
 			- [b]None:[/b] The canvas is not automatically resized.
 			- [b]Project:[/b] The size of the canvas is dependent on the [ProjectSettings].
 			- [b]Adaptive:[/b] The canvas is automatically resized to fit as much of the web page as possible.
@@ -87,10 +87,10 @@
 			If [code]false[/code], the exported game will not support threads. As a result, it is more prone to performance and audio issues, but will only require to be run on an HTTPS website.
 		</member>
 		<member name="vram_texture_compression/for_desktop" type="bool" setter="" getter="">
-			If [code]true[/code], allows textures to be optimized for desktop through the S3TC algorithm.
+			If [code]true[/code], allows textures to be optimized for desktop through the S3TC/BPTC algorithm.
 		</member>
 		<member name="vram_texture_compression/for_mobile" type="bool" setter="" getter="">
-			If [code]true[/code] allows textures to be optimized for mobile through the ETC2 algorithm.
+			If [code]true[/code] allows textures to be optimized for mobile through the ETC2/ASTC algorithm.
 		</member>
 	</members>
 </class>

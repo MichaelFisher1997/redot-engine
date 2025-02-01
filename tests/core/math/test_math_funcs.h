@@ -641,6 +641,20 @@ TEST_CASE_TEMPLATE("[Math] bezier_interpolate", T, float, double) {
 	CHECK(Math::bezier_interpolate((T)0.0, (T)0.2, (T)0.8, (T)1.0, (T)1.0) == doctest::Approx((T)1.0));
 }
 
+TEST_CASE_TEMPLATE("[Math] sigmoid_affine", T, float, double) {
+	CHECK(Math::sigmoid_affine((T)0.0, (T)1.0, (T)0.0) == doctest::Approx((T)0.5));
+	CHECK(Math::sigmoid_affine((T)1.0, (T)2.0, (T)-1.0) == doctest::Approx((T)0.4621));
+	CHECK(Math::sigmoid_affine((T)-1.0, (T)3.0, (T)2.0) == doctest::Approx((T)2.8068));
+	CHECK(Math::sigmoid_affine((T)1.0, (T)2.0, (T)2.5) == doctest::Approx((T)3.9621));
+}
+
+TEST_CASE_TEMPLATE("[Math] sigmoid_affine_approx", T, float, double) {
+	CHECK(Math::sigmoid_affine_approx((T)0.0, (T)1.0, (T)0.0) == doctest::Approx((T)0.5));
+	CHECK(Math::sigmoid_affine_approx((T)2.0, (T)2.0, (T)1.0) == doctest::Approx((T)2.6667));
+	CHECK(Math::sigmoid_affine_approx((T)-1.0, (T)3.0, (T)0.5) == doctest::Approx((T)1.4));
+	CHECK(Math::sigmoid_affine_approx((T)1.0, (T)2.0, (T)2.5) == doctest::Approx((T)3.9));
+}
+
 } // namespace TestMath
 
 #endif // TEST_MATH_FUNCS_H

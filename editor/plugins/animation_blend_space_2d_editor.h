@@ -37,7 +37,6 @@
 #include "editor/plugins/editor_plugin.h"
 #include "scene/animation/animation_blend_space_2d.h"
 #include "scene/gui/graph_edit.h"
-#include "scene/gui/popup.h"
 
 class Button;
 class CheckBox;

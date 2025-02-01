@@ -32,7 +32,6 @@
 
 #include "transform_3d.h"
 
-#include "core/math/math_funcs.h"
 #include "core/string/ustring.h"
 
 void Transform3D::affine_invert() {

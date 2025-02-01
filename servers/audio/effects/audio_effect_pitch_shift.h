@@ -79,7 +79,7 @@ class AudioEffectPitchShift : public AudioEffect {
 public:
 	friend class AudioEffectPitchShiftInstance;
 
-	enum FFTSize {
+	enum FFTSize : unsigned int {
 		FFT_SIZE_256,
 		FFT_SIZE_512,
 		FFT_SIZE_1024,

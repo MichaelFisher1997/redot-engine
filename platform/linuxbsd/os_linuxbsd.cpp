@@ -186,7 +186,7 @@ String OS_LinuxBSD::get_processor_name() const {
 
 	while (!f->eof_reached()) {
 		const String line = f->get_line();
-		if (line.contains("model name")) {
+		if (line.to_lower().contains("model name")) {
 			return line.split(":")[1].strip_edges();
 		}
 	}

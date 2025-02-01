@@ -382,7 +382,6 @@ private:
 	Ref<Shortcut> divide_grid_step_shortcut;
 
 	Ref<ViewPanner> panner;
-	bool warped_panning = true;
 	void _pan_callback(Vector2 p_scroll_vec, Ref<InputEvent> p_event);
 	void _zoom_callback(float p_zoom_factor, Vector2 p_origin, Ref<InputEvent> p_event);
 
@@ -405,6 +404,7 @@ private:
 	Vector2 _anchor_to_position(const Control *p_control, Vector2 anchor);
 	Vector2 _position_to_anchor(const Control *p_control, Vector2 position);
 
+	void _prepare_view_menu();
 	void _popup_callback(int p_op);
 	bool updating_scroll = false;
 	void _update_scroll(real_t);
@@ -468,6 +468,7 @@ private:
 
 	void _draw_viewport();
 
+	void _is_hovering_guide(Point2 p_pos, bool p_is_pressed = false);
 	bool _gui_input_anchors(const Ref<InputEvent> &p_event);
 	bool _gui_input_move(const Ref<InputEvent> &p_event);
 	bool _gui_input_open_scene_on_double_click(const Ref<InputEvent> &p_event);
@@ -492,7 +493,9 @@ private:
 	void _project_settings_changed();
 
 	SnapTarget snap_target[2];
+	SnapTarget snap_target2[2];
 	Transform2D snap_transform;
+	Transform2D snap_transform2;
 	void _snap_if_closer_float(
 			const real_t p_value,
 			real_t &r_current_snap, SnapTarget &r_current_snap_target,
@@ -605,7 +608,7 @@ protected:
 	void _notification(int p_what);
 
 public:
-	virtual String get_name() const override { return "2D"; }
+	virtual String get_plugin_name() const override { return "2D"; }
 	bool has_main_screen() const override { return true; }
 	virtual void edit(Object *p_object) override;
 	virtual bool handles(Object *p_object) const override;

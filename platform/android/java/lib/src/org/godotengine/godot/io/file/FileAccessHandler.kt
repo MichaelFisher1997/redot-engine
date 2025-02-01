@@ -2,8 +2,8 @@
 /*  FileAccessHandler.kt                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
 /* Copyright (c) 2024-present Redot Engine contributors                   */
 /*                                          (see REDOT_AUTHORS.md)        */
@@ -30,13 +30,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.io.file
+package org.redotengine.godot.io.file
 
 import android.content.Context
 import android.util.Log
 import android.util.SparseArray
-import org.godotengine.godot.error.Error
-import org.godotengine.godot.io.StorageScope
+import org.redotengine.godot.error.Error
+import org.redotengine.godot.io.StorageScope
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.lang.UnsupportedOperationException
@@ -193,12 +193,12 @@ class FileAccessHandler(val context: Context) {
 		return files[fileId].read(byteBuffer)
 	}
 
-	fun fileWrite(fileId: Int, byteBuffer: ByteBuffer?) {
+	fun fileWrite(fileId: Int, byteBuffer: ByteBuffer?): Boolean {
 		if (!hasFileId(fileId) || byteBuffer == null) {
-			return
+			return false
 		}
 
-		files[fileId].write(byteBuffer)
+		return files[fileId].write(byteBuffer)
 	}
 
 	fun fileFlush(fileId: Int) {

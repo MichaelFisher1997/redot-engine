@@ -30,15 +30,11 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot;
-
-import org.godotengine.godot.input.GodotEditText;
+package org.redotengine.godot;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
@@ -49,7 +45,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.DisplayCutout;
-import android.view.Surface;
 import android.view.WindowInsets;
 
 import androidx.core.content.FileProvider;
@@ -57,6 +52,9 @@ import androidx.core.content.FileProvider;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
+
+import org.redotengine.godot.error.Error;
+import org.redotengine.godot.input.GodotEditText;
 
 // Wrapper for native library
 
@@ -123,15 +121,27 @@ public class GodotIO {
 			}
 
 			activity.startActivity(intent);
-			return 0;
+			return Error.OK.toNativeValue();
 		} catch (Exception e) {
 			Log.e(TAG, "Unable to open uri " + uriString, e);
-			return 1;
+			return Error.FAILED.toNativeValue();
 		}
 	}
 
 	public String getCacheDir() {
 		return activity.getCacheDir().getAbsolutePath();
+	}
+
+	public String getTempDir() {
+		File tempDir = new File(getCacheDir() + "/tmp");
+
+		if (!tempDir.exists()) {
+			if (!tempDir.mkdirs()) {
+				Log.e(TAG, "Unable to create temp dir");
+			}
+		}
+
+		return tempDir.getAbsolutePath();
 	}
 
 	public String getDataDir() {

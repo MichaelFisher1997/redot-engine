@@ -33,7 +33,6 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
-#include "core/error/error_macros.h"
 #include "core/typedefs.h"
 
 #ifdef MINGW_ENABLED

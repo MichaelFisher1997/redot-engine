@@ -33,7 +33,6 @@
 #include "webp_common.h"
 
 #include "core/config/project_settings.h"
-#include "core/os/os.h"
 
 #include <webp/decode.h>
 #include <webp/encode.h>

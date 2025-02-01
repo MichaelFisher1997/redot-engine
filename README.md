@@ -59,7 +59,7 @@ developers. Please visit our [Discord server](https://discord.gg/redot)!
 To get started contributing to the project, see the [contributing guide](CONTRIBUTING.md).
 This document also includes guidelines for reporting bugs.
 
-Follow [Redot on Twitter](https://x.com/redotengine)!
+Follow [Redot on X/Twitter](https://x.com/Redot_Engine)!
 ## Documentation and demos
 
 The class reference is accessible from the Redot editor.

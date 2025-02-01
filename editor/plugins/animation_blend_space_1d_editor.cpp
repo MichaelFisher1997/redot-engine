@@ -430,7 +430,7 @@ void AnimationNodeBlendSpace1DEditor::_add_menu_type(int p_index) {
 		node = Ref<AnimationNode>(an);
 	}
 
-	if (!node.is_valid()) {
+	if (node.is_null()) {
 		EditorNode::get_singleton()->show_warning(TTR("This type of node can't be used. Only root nodes are allowed."));
 		return;
 	}
@@ -636,7 +636,7 @@ void AnimationNodeBlendSpace1DEditor::edit(const Ref<AnimationNode> &p_node) {
 	blend_space = p_node;
 	read_only = false;
 
-	if (!blend_space.is_null()) {
+	if (blend_space.is_valid()) {
 		read_only = EditorNode::get_singleton()->is_resource_read_only(blend_space);
 
 		_update_space();
@@ -663,7 +663,7 @@ AnimationNodeBlendSpace1DEditor::AnimationNodeBlendSpace1DEditor() {
 	bg.instantiate();
 
 	tool_blend = memnew(Button);
-	tool_blend->set_theme_type_variation("FlatButton");
+	tool_blend->set_theme_type_variation(SceneStringName(FlatButton));
 	tool_blend->set_toggle_mode(true);
 	tool_blend->set_button_group(bg);
 	top_hb->add_child(tool_blend);
@@ -672,7 +672,7 @@ AnimationNodeBlendSpace1DEditor::AnimationNodeBlendSpace1DEditor() {
 	tool_blend->connect(SceneStringName(pressed), callable_mp(this, &AnimationNodeBlendSpace1DEditor::_tool_switch).bind(3));
 
 	tool_select = memnew(Button);
-	tool_select->set_theme_type_variation("FlatButton");
+	tool_select->set_theme_type_variation(SceneStringName(FlatButton));
 	tool_select->set_toggle_mode(true);
 	tool_select->set_button_group(bg);
 	top_hb->add_child(tool_select);
@@ -680,7 +680,7 @@ AnimationNodeBlendSpace1DEditor::AnimationNodeBlendSpace1DEditor() {
 	tool_select->connect(SceneStringName(pressed), callable_mp(this, &AnimationNodeBlendSpace1DEditor::_tool_switch).bind(0));
 
 	tool_create = memnew(Button);
-	tool_create->set_theme_type_variation("FlatButton");
+	tool_create->set_theme_type_variation(SceneStringName(FlatButton));
 	tool_create->set_toggle_mode(true);
 	tool_create->set_button_group(bg);
 	top_hb->add_child(tool_create);
@@ -690,7 +690,7 @@ AnimationNodeBlendSpace1DEditor::AnimationNodeBlendSpace1DEditor() {
 	tool_erase_sep = memnew(VSeparator);
 	top_hb->add_child(tool_erase_sep);
 	tool_erase = memnew(Button);
-	tool_erase->set_theme_type_variation("FlatButton");
+	tool_erase->set_theme_type_variation(SceneStringName(FlatButton));
 	top_hb->add_child(tool_erase);
 	tool_erase->set_tooltip_text(TTR("Erase points."));
 	tool_erase->connect(SceneStringName(pressed), callable_mp(this, &AnimationNodeBlendSpace1DEditor::_erase_selected));
@@ -698,7 +698,7 @@ AnimationNodeBlendSpace1DEditor::AnimationNodeBlendSpace1DEditor() {
 	top_hb->add_child(memnew(VSeparator));
 
 	snap = memnew(Button);
-	snap->set_theme_type_variation("FlatButton");
+	snap->set_theme_type_variation(SceneStringName(FlatButton));
 	snap->set_toggle_mode(true);
 	top_hb->add_child(snap);
 	snap->set_pressed(true);

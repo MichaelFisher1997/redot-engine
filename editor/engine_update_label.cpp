@@ -32,13 +32,11 @@
 
 #include "engine_update_label.h"
 
+#include "core/io/dir_access.h"
 #include "core/io/json.h"
 #include "core/os/time.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
-#include "editor/themes/editor_scale.h"
-#include "scene/gui/box_container.h"
-#include "scene/gui/button.h"
 #include "scene/main/http_request.h"
 
 bool EngineUpdateLabel::_can_check_updates() const {
@@ -47,12 +45,57 @@ bool EngineUpdateLabel::_can_check_updates() const {
 }
 
 void EngineUpdateLabel::_check_update() {
+	if (!_can_check_updates()) {
+		_set_status(UpdateStatus::OFFLINE);
+		return;
+	}
+
 	checked_update = true;
+
+	if (ratelimit_remaining == UINT64_MAX && ratelimit_reset == UINT64_MAX) {
+		const String gh_ratelimit_path = OS::get_singleton()->get_data_path().path_join(OS::get_singleton()->get_godot_dir_name()).path_join("gh_ratelimit");
+		Ref<FileAccess> gh_ratelimit_file = FileAccess::open(gh_ratelimit_path, FileAccess::READ);
+		if (gh_ratelimit_file.is_valid() && gh_ratelimit_file->is_open()) {
+			ratelimit_remaining = gh_ratelimit_file->get_64();
+			ratelimit_reset = gh_ratelimit_file->get_64();
+		} else {
+			ratelimit_remaining = UINT64_MAX;
+			ratelimit_reset = 0;
+		}
+	}
+
+	uint64_t current_epoch = Time::get_singleton()->get_unix_time_from_system();
+	if (ratelimit_remaining <= 0 && ratelimit_reset >= current_epoch) {
+		_set_status(UpdateStatus::UP_TO_DATE);
+		get_tree()->create_timer(current_epoch - ratelimit_reset + 1, false, true)->connect("timeout", callable_mp(this, &EngineUpdateLabel::_check_update));
+		return;
+	}
+
 	_set_status(UpdateStatus::BUSY);
-	http->request("https://redotengine.org/versions.json");
+	http->request("https://api.github.com/repos/Redot-Engine/redot-engine/releases", { "Accept: application/vnd.github+json", "X-GitHub-Api-Version:2022-11-28" });
 }
 
 void EngineUpdateLabel::_http_request_completed(int p_result, int p_response_code, const PackedStringArray &p_headers, const PackedByteArray &p_body) {
+	for (const String &header_text : p_headers) {
+		const String header = header_text.to_lower();
+		if (header.begins_with("x-ratelimit-remaining")) {
+			ratelimit_remaining = header.get_slice(":", 1).to_int();
+		} else if (header.begins_with("x-ratelimit-reset") || header.begins_with("retry-after")) {
+			ratelimit_reset = header.get_slice(":", 1).to_int();
+		}
+	}
+
+	const String gh_ratelimit_path = OS::get_singleton()->get_data_path().path_join(OS::get_singleton()->get_godot_dir_name()).path_join("gh_ratelimit");
+	if (ratelimit_remaining == 0) {
+		Ref<FileAccess> gh_ratelimit_file = FileAccess::open(gh_ratelimit_path, FileAccess::WRITE);
+		if (gh_ratelimit_file.is_valid() && gh_ratelimit_file->is_open()) {
+			gh_ratelimit_file->store_64(ratelimit_remaining);
+			gh_ratelimit_file->store_64(ratelimit_reset);
+		}
+	} else if (FileAccess::exists(gh_ratelimit_path)) {
+		DirAccess::remove_absolute(gh_ratelimit_path);
+	}
+
 	if (p_result != OK) {
 		_set_status(UpdateStatus::ERROR);
 		_set_message(vformat(TTR("Failed to check for updates. Error: %d."), p_result), theme_cache.error_color);
@@ -96,7 +139,14 @@ void EngineUpdateLabel::_http_request_completed(int p_result, int p_response_cod
 	for (const Variant &data_bit : version_array) {
 		const Dictionary version_info = data_bit;
 
-		const String base_version_string = version_info.get("name", "");
+		const String bare_tag_name = (String)version_info.get("tag_name", "");
+		const PackedStringArray tag_bits = bare_tag_name.split("-");
+
+		if (tag_bits.size() < 3) {
+			continue;
+		}
+
+		const String base_version_string = tag_bits[1];
 		const PackedStringArray version_bits = base_version_string.split(".");
 
 		if (version_bits.size() < 2) {
@@ -121,15 +171,9 @@ void EngineUpdateLabel::_http_request_completed(int p_result, int p_response_cod
 			continue;
 		}
 
-		const Array releases = version_info.get("releases", Array());
-		if (releases.is_empty()) {
-			continue;
-		}
+		const String release_string = tag_bits[2];
 
-		const Dictionary newest_release = releases[0];
-		const String release_string = newest_release.get("name", "unknown");
-
-		int release_index;
+		int release_index = DEV_VERSION;
 		VersionType release_type = _get_version_type(release_string, &release_index);
 
 		if (minor > current_minor || patch > current_patch) {
@@ -141,7 +185,8 @@ void EngineUpdateLabel::_http_request_completed(int p_result, int p_response_cod
 			break;
 		}
 
-		int current_version_index;
+		int current_version_index = current_version_info.get("status_version", 0);
+		current_version_index = current_version_index > 0 ? current_version_index : DEV_VERSION;
 		VersionType current_version_type = _get_version_type(current_version_info.get("status", "unknown"), &current_version_index);
 
 		if (int(release_type) > int(current_version_type)) {
@@ -231,7 +276,7 @@ EngineUpdateLabel::VersionType EngineUpdateLabel::_get_version_type(const String
 		}
 	}
 
-	if (r_index) {
+	if (r_index && *r_index == DEV_VERSION) {
 		if (index_string.is_empty()) {
 			*r_index = DEV_VERSION;
 		} else {
@@ -273,11 +318,7 @@ void EngineUpdateLabel::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_READY: {
-			if (_can_check_updates()) {
-				_check_update();
-			} else {
-				_set_status(UpdateStatus::OFFLINE);
-			}
+			_check_update();
 		} break;
 	}
 }
@@ -297,7 +338,7 @@ void EngineUpdateLabel::pressed() {
 		} break;
 
 		case UpdateStatus::UPDATE_AVAILABLE: {
-			OS::get_singleton()->shell_open("https://godotengine.org/download/archive/" + available_newer_version);
+			OS::get_singleton()->shell_open("https://github.com/Redot-Engine/redot-engine/releases/tag/redot-" + available_newer_version);
 		} break;
 
 		default: {

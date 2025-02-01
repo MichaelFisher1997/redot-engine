@@ -35,7 +35,6 @@
 #include "editor/editor_node.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
-#include "editor/plugins/node_3d_editor_plugin.h"
 #include "scene/3d/lightmap_gi.h"
 
 LightmapGIGizmoPlugin::LightmapGIGizmoPlugin() {

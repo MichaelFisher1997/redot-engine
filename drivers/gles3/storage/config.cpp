@@ -35,7 +35,6 @@
 #include "config.h"
 
 #include "../rasterizer_gles3.h"
-#include "texture_storage.h"
 
 #ifdef WEB_ENABLED
 #include <emscripten/html5_webgl.h>
@@ -82,7 +81,7 @@ Config::Config() {
 
 	bptc_supported = extensions.has("GL_ARB_texture_compression_bptc") || extensions.has("EXT_texture_compression_bptc");
 	astc_supported = extensions.has("GL_KHR_texture_compression_astc") || extensions.has("GL_OES_texture_compression_astc") || extensions.has("GL_KHR_texture_compression_astc_ldr") || extensions.has("GL_KHR_texture_compression_astc_hdr");
-	astc_hdr_supported = extensions.has("GL_KHR_texture_compression_astc_ldr");
+	astc_hdr_supported = extensions.has("GL_KHR_texture_compression_astc_hdr");
 	astc_layered_supported = extensions.has("GL_KHR_texture_compression_astc_sliced_3d");
 
 	if (RasterizerGLES3::is_gles_over_gl()) {

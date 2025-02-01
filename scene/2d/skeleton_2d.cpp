@@ -615,6 +615,7 @@ int Skeleton2D::get_bone_count() const {
 	ERR_FAIL_COND_V(!is_inside_tree(), 0);
 
 	if (bone_setup_dirty) {
+		// TODO: Is this necessary? It doesn't seem to change bones.size()
 		const_cast<Skeleton2D *>(this)->_update_bone_setup();
 	}
 
@@ -768,7 +769,7 @@ Ref<SkeletonModificationStack2D> Skeleton2D::get_modification_stack() const {
 }
 
 void Skeleton2D::execute_modifications(real_t p_delta, int p_execution_mode) {
-	if (!modification_stack.is_valid()) {
+	if (modification_stack.is_null()) {
 		return;
 	}
 

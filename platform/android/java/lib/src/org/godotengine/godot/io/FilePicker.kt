@@ -28,7 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.io
+package org.redotengine.godot.io
 
 import android.app.Activity
 import android.content.Context
@@ -39,8 +39,8 @@ import android.provider.DocumentsContract
 import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.annotation.RequiresApi
-import org.godotengine.godot.GodotLib
-import org.godotengine.godot.io.file.MediaStoreData
+import org.redotengine.godot.GodotLib
+import org.redotengine.godot.io.file.MediaStoreData
 
 /**
  * Utility class for managing file selection and file picker activities.
@@ -144,14 +144,10 @@ internal class FilePicker {
 			}
 			// ACTION_OPEN_DOCUMENT_TREE does not support intent type
 			if (fileMode != FILE_MODE_OPEN_DIR) {
-				intent.type = "*/*"
-				if (filters.isNotEmpty()) {
-					val resolvedFilters = filters.map { resolveMimeType(it) }.distinct()
-					if (resolvedFilters.size == 1) {
-						intent.type = resolvedFilters[0]
-					} else {
-						intent.putExtra(Intent.EXTRA_MIME_TYPES, resolvedFilters.toTypedArray())
-					}
+				val resolvedFilters = filters.map { resolveMimeType(it) }.distinct()
+				intent.type = resolvedFilters.firstOrNull { it != "application/octet-stream" } ?: "*/*"
+				if (resolvedFilters.size > 1) {
+					intent.putExtra(Intent.EXTRA_MIME_TYPES, resolvedFilters.toTypedArray())
 				}
 				intent.addCategory(Intent.CATEGORY_OPENABLE)
 			}

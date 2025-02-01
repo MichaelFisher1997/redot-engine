@@ -35,7 +35,6 @@
 
 #include "editor/plugins/editor_plugin.h"
 #include "scene/3d/voxel_gi.h"
-#include "scene/resources/material.h"
 
 class EditorFileDialog;
 struct EditorProgress;
@@ -63,7 +62,7 @@ protected:
 	void _notification(int p_what);
 
 public:
-	virtual String get_name() const override { return "VoxelGI"; }
+	virtual String get_plugin_name() const override { return "VoxelGI"; }
 	bool has_main_screen() const override { return false; }
 	virtual void edit(Object *p_object) override;
 	virtual bool handles(Object *p_object) const override;

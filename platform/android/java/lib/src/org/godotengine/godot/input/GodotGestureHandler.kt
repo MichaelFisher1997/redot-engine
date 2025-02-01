@@ -2,8 +2,8 @@
 /*  GodotGestureHandler.kt                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
 /* Copyright (c) 2024-present Redot Engine contributors                   */
 /*                                          (see REDOT_AUTHORS.md)        */
@@ -30,7 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.input
+package org.redotengine.godot.input
 
 import android.os.Build
 import android.view.GestureDetector.SimpleOnGestureListener
@@ -38,7 +38,7 @@ import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
-import org.godotengine.godot.GodotLib
+import org.redotengine.godot.GodotLib
 
 /**
  * Handles regular and scale gesture input related events for the [GodotView] view.

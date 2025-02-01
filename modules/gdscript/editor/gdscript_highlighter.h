@@ -34,7 +34,6 @@
 #define GDSCRIPT_HIGHLIGHTER_H
 
 #include "editor/plugins/script_editor_plugin.h"
-#include "scene/gui/text_edit.h"
 
 class GDScriptSyntaxHighlighter : public EditorSyntaxHighlighter {
 	GDCLASS(GDScriptSyntaxHighlighter, EditorSyntaxHighlighter)

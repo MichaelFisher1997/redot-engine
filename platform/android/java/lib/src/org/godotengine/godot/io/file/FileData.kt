@@ -2,8 +2,8 @@
 /*  FileData.kt                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
 /* Copyright (c) 2024-present Redot Engine contributors                   */
 /*                                          (see REDOT_AUTHORS.md)        */
@@ -30,7 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.io.file
+package org.redotengine.godot.io.file
 
 import java.io.File
 import java.io.FileOutputStream

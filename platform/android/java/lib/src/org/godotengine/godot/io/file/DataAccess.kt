@@ -2,8 +2,8 @@
 /*  DataAccess.kt                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
 /* Copyright (c) 2024-present Redot Engine contributors                   */
 /*                                          (see REDOT_AUTHORS.md)        */
@@ -30,13 +30,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.io.file
+package org.redotengine.godot.io.file
 
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import org.godotengine.godot.error.Error
-import org.godotengine.godot.io.StorageScope
+import org.redotengine.godot.error.Error
+import org.redotengine.godot.io.StorageScope
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
@@ -171,7 +171,7 @@ internal abstract class DataAccess {
 	abstract fun position(): Long
 	abstract fun size(): Long
 	abstract fun read(buffer: ByteBuffer): Int
-	abstract fun write(buffer: ByteBuffer)
+	abstract fun write(buffer: ByteBuffer): Boolean
 
 	fun seekFromEnd(positionFromEnd: Long) {
 		val positionFromBeginning = max(0, size() - positionFromEnd)
@@ -256,14 +256,16 @@ internal abstract class DataAccess {
 			}
 		}
 
-		override fun write(buffer: ByteBuffer) {
+		override fun write(buffer: ByteBuffer): Boolean {
 			try {
 				val writtenBytes = fileChannel.write(buffer)
 				if (writtenBytes > 0) {
 					endOfFile = false
 				}
+				return true
 			} catch (e: IOException) {
 				Log.w(TAG, "Exception while writing to file $filePath.", e)
+				return false
 			}
 		}
 	}

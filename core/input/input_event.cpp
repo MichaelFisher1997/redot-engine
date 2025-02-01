@@ -756,6 +756,8 @@ Ref<InputEvent> InputEventMouseButton::xformed_by(const Transform2D &p_xform, co
 	mb->set_factor(factor);
 	mb->set_button_index(button_index);
 
+	mb->merge_meta_from(this);
+
 	return mb;
 }
 
@@ -975,6 +977,8 @@ Ref<InputEvent> InputEventMouseMotion::xformed_by(const Transform2D &p_xform, co
 	mm->set_relative_screen_position(get_relative_screen_position());
 	mm->set_velocity(p_xform.basis_xform(get_velocity()));
 	mm->set_screen_velocity(get_screen_velocity());
+
+	mm->merge_meta_from(this);
 
 	return mm;
 }
@@ -1368,6 +1372,8 @@ Ref<InputEvent> InputEventScreenTouch::xformed_by(const Transform2D &p_xform, co
 	st->set_canceled(canceled);
 	st->set_double_tap(double_tap);
 
+	st->merge_meta_from(this);
+
 	return st;
 }
 
@@ -1495,6 +1501,8 @@ Ref<InputEvent> InputEventScreenDrag::xformed_by(const Transform2D &p_xform, con
 	sd->set_relative_screen_position(get_relative_screen_position());
 	sd->set_velocity(p_xform.basis_xform(velocity));
 	sd->set_screen_velocity(get_screen_velocity());
+
+	sd->merge_meta_from(this);
 
 	return sd;
 }
@@ -1707,6 +1715,8 @@ Ref<InputEvent> InputEventMagnifyGesture::xformed_by(const Transform2D &p_xform,
 	ev->set_position(p_xform.xform(get_position() + p_local_ofs));
 	ev->set_factor(get_factor());
 
+	ev->merge_meta_from(this);
+
 	return ev;
 }
 
@@ -1746,6 +1756,8 @@ Ref<InputEvent> InputEventPanGesture::xformed_by(const Transform2D &p_xform, con
 
 	ev->set_position(p_xform.xform(get_position() + p_local_ofs));
 	ev->set_delta(get_delta());
+
+	ev->merge_meta_from(this);
 
 	return ev;
 }

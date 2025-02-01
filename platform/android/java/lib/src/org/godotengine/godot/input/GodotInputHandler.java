@@ -30,13 +30,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.input;
+package org.redotengine.godot.input;
 
-import static org.godotengine.godot.utils.GLUtils.DEBUG;
-
-import org.godotengine.godot.Godot;
-import org.godotengine.godot.GodotLib;
-import org.godotengine.godot.GodotRenderView;
+import static org.redotengine.godot.utils.GLUtils.DEBUG;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -60,6 +56,10 @@ import androidx.annotation.NonNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.redotengine.godot.Godot;
+import org.redotengine.godot.GodotLib;
+import org.redotengine.godot.GodotRenderView;
 
 /**
  * Handles input related events for the {@link GodotRenderView} view.
@@ -156,10 +156,6 @@ public class GodotInputHandler implements InputManager.InputDeviceListener, Sens
 	}
 
 	public boolean onKeyUp(final int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			return true;
-		}
-
 		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
 			return false;
 		}
@@ -185,13 +181,6 @@ public class GodotInputHandler implements InputManager.InputDeviceListener, Sens
 	}
 
 	public boolean onKeyDown(final int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			godot.onBackPressed();
-			// press 'back' button should not terminate program
-			//normal handle 'back' event in game logic
-			return true;
-		}
-
 		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
 			return false;
 		}

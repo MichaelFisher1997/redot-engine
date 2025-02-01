@@ -2,8 +2,8 @@
 /*  DirectoryAccessHandler.kt                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
 /* Copyright (c) 2024-present Redot Engine contributors                   */
 /*                                          (see REDOT_AUTHORS.md)        */
@@ -30,13 +30,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.io.directory
+package org.redotengine.godot.io.directory
 
 import android.content.Context
 import android.util.Log
-import org.godotengine.godot.Godot
-import org.godotengine.godot.io.StorageScope
-import org.godotengine.godot.io.directory.DirectoryAccessHandler.AccessType.ACCESS_RESOURCES
+import org.redotengine.godot.Godot
+import org.redotengine.godot.io.StorageScope
+import org.redotengine.godot.io.directory.DirectoryAccessHandler.AccessType.ACCESS_RESOURCES
 
 /**
  * Handles files and directories access and manipulation for the Android platform

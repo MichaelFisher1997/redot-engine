@@ -166,8 +166,8 @@ void fragment() {
 }
 
 //void light() {
-	// Called for every pixel for every light affecting the material.
-	// Uncomment to replace the default light processing function with this one.
+//	// Called for every pixel for every light affecting the material.
+//	// Uncomment to replace the default light processing function with this one.
 //}
 )";
 						break;
@@ -182,8 +182,8 @@ void fragment() {
 }
 
 //void light() {
-	// Called for every pixel for every light affecting the CanvasItem.
-	// Uncomment to replace the default light processing function with this one.
+//	// Called for every pixel for every light affecting the CanvasItem.
+//	// Uncomment to replace the default light processing function with this one.
 //}
 )";
 						break;
@@ -243,7 +243,6 @@ void fog() {
 			alert->popup_centered();
 			return;
 		}
-		EditorNode::get_singleton()->ensure_uid_file(lpath);
 
 		emit_signal(SNAME("shader_include_created"), shader_inc);
 	} else {
@@ -262,7 +261,6 @@ void fog() {
 				alert->popup_centered();
 				return;
 			}
-			EditorNode::get_singleton()->ensure_uid_file(lpath);
 		}
 
 		emit_signal(SNAME("shader_created"), shader);
@@ -294,7 +292,7 @@ void ShaderCreateDialog::_type_changed(int p_language) {
 	String extension = "";
 
 	if (!path.is_empty()) {
-		if (path.contains(".")) {
+		if (path.contains_char('.')) {
 			extension = path.get_extension();
 		}
 		if (extension.length() == 0) {

@@ -35,6 +35,9 @@
 
 #include "scene/2d/node_2d.h"
 
+class NavigationPolygon;
+class NavigationMeshSourceGeometryData2D;
+
 class NavigationObstacle2D : public Node2D {
 	GDCLASS(NavigationObstacle2D, Node2D);
 
@@ -46,6 +49,8 @@ class NavigationObstacle2D : public Node2D {
 	real_t radius = 0.0;
 
 	Vector<Vector2> vertices;
+	bool vertices_are_clockwise = true;
+	bool vertices_are_valid = true;
 
 	bool avoidance_enabled = true;
 	uint32_t avoidance_layers = 1;
@@ -62,6 +67,8 @@ class NavigationObstacle2D : public Node2D {
 #ifdef DEBUG_ENABLED
 private:
 	RID debug_canvas_item;
+	RID debug_mesh_rid;
+
 	void _update_fake_agent_radius_debug();
 	void _update_static_obstacle_debug();
 #endif // DEBUG_ENABLED
@@ -88,6 +95,9 @@ public:
 	void set_vertices(const Vector<Vector2> &p_vertices);
 	const Vector<Vector2> &get_vertices() const { return vertices; }
 
+	bool are_vertices_clockwise() const { return vertices_are_clockwise; }
+	bool are_vertices_valid() const { return vertices_are_valid; }
+
 	void set_avoidance_layers(uint32_t p_layers);
 	uint32_t get_avoidance_layers() const;
 
@@ -109,6 +119,14 @@ public:
 	bool get_carve_navigation_mesh() const;
 
 	PackedStringArray get_configuration_warnings() const override;
+
+private:
+	static Callable _navmesh_source_geometry_parsing_callback;
+	static RID _navmesh_source_geometry_parser;
+
+public:
+	static void navmesh_parse_init();
+	static void navmesh_parse_source_geometry(const Ref<NavigationPolygon> &p_navigation_mesh, Ref<NavigationMeshSourceGeometryData2D> p_source_geometry_data, Node *p_node);
 
 private:
 	void _update_map(RID p_map);

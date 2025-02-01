@@ -34,9 +34,6 @@
 
 #include "nav_map.h"
 
-NavAgent::NavAgent() {
-}
-
 void NavAgent::set_avoidance_enabled(bool p_enabled) {
 	avoidance_enabled = p_enabled;
 	_update_rvo_agent_properties();
@@ -89,12 +86,16 @@ void NavAgent::_update_rvo_agent_properties() {
 		}
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_map(NavMap *p_map) {
 	if (map == p_map) {
 		return;
 	}
+
+	cancel_sync_request();
 
 	if (map) {
 		map->remove_agent(this);
@@ -108,6 +109,8 @@ void NavAgent::set_map(NavMap *p_map) {
 		if (avoidance_enabled) {
 			map->set_agent_as_controlled(this);
 		}
+
+		request_sync();
 	}
 }
 
@@ -158,6 +161,8 @@ void NavAgent::set_neighbor_distance(real_t p_neighbor_distance) {
 		rvo_agent_2d.neighborDist_ = neighbor_distance;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_max_neighbors(int p_max_neighbors) {
@@ -168,6 +173,8 @@ void NavAgent::set_max_neighbors(int p_max_neighbors) {
 		rvo_agent_2d.maxNeighbors_ = max_neighbors;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_time_horizon_agents(real_t p_time_horizon) {
@@ -178,6 +185,8 @@ void NavAgent::set_time_horizon_agents(real_t p_time_horizon) {
 		rvo_agent_2d.timeHorizon_ = time_horizon_agents;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_time_horizon_obstacles(real_t p_time_horizon) {
@@ -188,6 +197,8 @@ void NavAgent::set_time_horizon_obstacles(real_t p_time_horizon) {
 		rvo_agent_2d.timeHorizonObst_ = time_horizon_obstacles;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_radius(real_t p_radius) {
@@ -198,6 +209,8 @@ void NavAgent::set_radius(real_t p_radius) {
 		rvo_agent_2d.radius_ = radius;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_height(real_t p_height) {
@@ -208,6 +221,8 @@ void NavAgent::set_height(real_t p_height) {
 		rvo_agent_2d.height_ = height;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_max_speed(real_t p_max_speed) {
@@ -220,6 +235,8 @@ void NavAgent::set_max_speed(real_t p_max_speed) {
 		}
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_position(const Vector3 p_position) {
@@ -233,6 +250,8 @@ void NavAgent::set_position(const Vector3 p_position) {
 		}
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_target_position(const Vector3 p_target_position) {
@@ -251,6 +270,8 @@ void NavAgent::set_velocity(const Vector3 p_velocity) {
 		}
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_velocity_forced(const Vector3 p_velocity) {
@@ -267,6 +288,8 @@ void NavAgent::set_velocity_forced(const Vector3 p_velocity) {
 		}
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::update() {
@@ -288,6 +311,8 @@ void NavAgent::set_avoidance_mask(uint32_t p_mask) {
 		rvo_agent_2d.avoidance_mask_ = avoidance_mask;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_avoidance_layers(uint32_t p_layers) {
@@ -298,6 +323,8 @@ void NavAgent::set_avoidance_layers(uint32_t p_layers) {
 		rvo_agent_2d.avoidance_layers_ = avoidance_layers;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
 void NavAgent::set_avoidance_priority(real_t p_priority) {
@@ -310,12 +337,16 @@ void NavAgent::set_avoidance_priority(real_t p_priority) {
 		rvo_agent_2d.avoidance_priority_ = avoidance_priority;
 	}
 	agent_dirty = true;
+
+	request_sync();
 }
 
-bool NavAgent::check_dirty() {
-	const bool was_dirty = agent_dirty;
+bool NavAgent::is_dirty() const {
+	return agent_dirty;
+}
+
+void NavAgent::sync() {
 	agent_dirty = false;
-	return was_dirty;
 }
 
 const Dictionary NavAgent::get_avoidance_data() const {
@@ -373,4 +404,24 @@ void NavAgent::set_paused(bool p_paused) {
 
 bool NavAgent::get_paused() const {
 	return paused;
+}
+
+void NavAgent::request_sync() {
+	if (map && !sync_dirty_request_list_element.in_list()) {
+		map->add_agent_sync_dirty_request(&sync_dirty_request_list_element);
+	}
+}
+
+void NavAgent::cancel_sync_request() {
+	if (map && sync_dirty_request_list_element.in_list()) {
+		map->remove_agent_sync_dirty_request(&sync_dirty_request_list_element);
+	}
+}
+
+NavAgent::NavAgent() :
+		sync_dirty_request_list_element(this) {
+}
+
+NavAgent::~NavAgent() {
+	cancel_sync_request();
 }

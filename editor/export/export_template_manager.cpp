@@ -41,7 +41,7 @@
 #include "editor/editor_paths.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
-#include "editor/export/editor_export.h"
+#include "editor/export/editor_export_preset.h"
 #include "editor/progress_dialog.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/file_dialog.h"
@@ -66,10 +66,11 @@ static DownloadsAvailability _get_downloads_availability() {
 	// (which always have a number following their status, e.g. "alpha1").
 	// Therefore, don't display download-related features when using a development version
 	// (whose builds aren't numbered).
-	if (String(VERSION_STATUS) == String("dev") ||
-			String(VERSION_STATUS) == String("alpha") ||
-			String(VERSION_STATUS) == String("beta") ||
-			String(VERSION_STATUS) == String("rc")) {
+	if (VERSION_STATUS_VERSION <= 0 &&
+			(String(VERSION_STATUS) == String("dev") ||
+					String(VERSION_STATUS) == String("alpha") ||
+					String(VERSION_STATUS) == String("beta") ||
+					String(VERSION_STATUS) == String("rc"))) {
 		return DOWNLOADS_NOT_AVAILABLE_FOR_DEV_BUILDS;
 	}
 
@@ -267,7 +268,7 @@ void ExportTemplateManager::_refresh_mirrors() {
 	is_refreshing_mirrors = true;
 
 	String current_version = VERSION_FULL_CONFIG;
-	const String mirrors_metadata_url = "https://redotengine.org/mirrorlist/" + current_version + ".json";
+	const String mirrors_metadata_url = "https://redotengine.org/api/mirrorlists/" + current_version + ".json";
 	request_mirrors->request(mirrors_metadata_url);
 }
 
@@ -439,6 +440,13 @@ bool ExportTemplateManager::_install_file_selected(const String &p_file, bool p_
 		}
 
 		String file = String::utf8(fname);
+
+		// Skip the __MACOSX directory created by macOS's built-in file zipper.
+		if (file.begins_with("__MACOSX")) {
+			ret = unzGoToNextFile(pkg);
+			continue;
+		}
+
 		if (file.ends_with("version.txt")) {
 			Vector<uint8_t> uncomp_data;
 			uncomp_data.resize(info.uncompressed_size);
@@ -514,7 +522,8 @@ bool ExportTemplateManager::_install_file_selected(const String &p_file, bool p_
 
 		String file = file_path.get_file();
 
-		if (file.size() == 0) {
+		// Skip the __MACOSX directory created by macOS's built-in file zipper.
+		if (file.is_empty() || file.begins_with("__MACOSX")) {
 			ret = unzGoToNextFile(pkg);
 			continue;
 		}

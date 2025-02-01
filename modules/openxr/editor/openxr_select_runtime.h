@@ -46,7 +46,7 @@ protected:
 
 private:
 	void _update_items();
-	void _item_selected(int p_which);
+	void _on_item_selected(int p_which);
 };
 
 #endif // OPENXR_SELECT_RUNTIME_H

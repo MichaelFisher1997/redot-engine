@@ -30,9 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.plugin;
-
-import org.godotengine.godot.Godot;
+package org.redotengine.godot.plugin;
 
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
@@ -49,6 +47,8 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.redotengine.godot.Godot;
+
 /**
  * Registry used to load and access the registered Godot Android plugins.
  */
@@ -58,11 +58,11 @@ public final class GodotPluginRegistry {
 	/**
 	 * Prefix used for version 1 of the Godot plugin, mostly compatible with Godot 3.x
 	 */
-	private static final String GODOT_PLUGIN_V1_NAME_PREFIX = "org.godotengine.plugin.v1.";
+	private static final String GODOT_PLUGIN_V1_NAME_PREFIX = "org.redotengine.plugin.v1.";
 	/**
 	 * Prefix used for version 2 of the Godot plugin, compatible with Godot 4.2+
 	 */
-	private static final String GODOT_PLUGIN_V2_NAME_PREFIX = "org.godotengine.plugin.v2.";
+	private static final String GODOT_PLUGIN_V2_NAME_PREFIX = "org.redotengine.plugin.v2.";
 
 	private static GodotPluginRegistry instance;
 	private final ConcurrentHashMap<String, GodotPlugin> registry;

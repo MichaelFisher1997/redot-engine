@@ -35,10 +35,6 @@
 #include "nav_agent.h"
 #include "nav_map.h"
 
-NavObstacle::NavObstacle() {}
-
-NavObstacle::~NavObstacle() {}
-
 void NavObstacle::set_agent(NavAgent *p_agent) {
 	if (agent == p_agent) {
 		return;
@@ -47,6 +43,8 @@ void NavObstacle::set_agent(NavAgent *p_agent) {
 	agent = p_agent;
 
 	internal_update_agent();
+
+	request_sync();
 }
 
 void NavObstacle::set_avoidance_enabled(bool p_enabled) {
@@ -58,6 +56,8 @@ void NavObstacle::set_avoidance_enabled(bool p_enabled) {
 	obstacle_dirty = true;
 
 	internal_update_agent();
+
+	request_sync();
 }
 
 void NavObstacle::set_use_3d_avoidance(bool p_enabled) {
@@ -71,12 +71,16 @@ void NavObstacle::set_use_3d_avoidance(bool p_enabled) {
 	if (agent) {
 		agent->set_use_3d_avoidance(use_3d_avoidance);
 	}
+
+	request_sync();
 }
 
 void NavObstacle::set_map(NavMap *p_map) {
 	if (map == p_map) {
 		return;
 	}
+
+	cancel_sync_request();
 
 	if (map) {
 		map->remove_obstacle(this);
@@ -91,6 +95,8 @@ void NavObstacle::set_map(NavMap *p_map) {
 	if (map) {
 		map->add_obstacle(this);
 		internal_update_agent();
+
+		request_sync();
 	}
 }
 
@@ -105,6 +111,8 @@ void NavObstacle::set_position(const Vector3 p_position) {
 	if (agent) {
 		agent->set_position(position);
 	}
+
+	request_sync();
 }
 
 void NavObstacle::set_radius(real_t p_radius) {
@@ -130,6 +138,8 @@ void NavObstacle::set_height(const real_t p_height) {
 	if (agent) {
 		agent->set_height(height);
 	}
+
+	request_sync();
 }
 
 void NavObstacle::set_velocity(const Vector3 p_velocity) {
@@ -147,6 +157,8 @@ void NavObstacle::set_vertices(const Vector<Vector3> &p_vertices) {
 
 	vertices = p_vertices;
 	obstacle_dirty = true;
+
+	request_sync();
 }
 
 bool NavObstacle::is_map_changed() {
@@ -170,12 +182,16 @@ void NavObstacle::set_avoidance_layers(uint32_t p_layers) {
 	if (agent) {
 		agent->set_avoidance_layers(avoidance_layers);
 	}
+
+	request_sync();
 }
 
-bool NavObstacle::check_dirty() {
-	const bool was_dirty = obstacle_dirty;
+bool NavObstacle::is_dirty() const {
+	return obstacle_dirty;
+}
+
+void NavObstacle::sync() {
 	obstacle_dirty = false;
-	return was_dirty;
 }
 
 void NavObstacle::internal_update_agent() {
@@ -217,4 +233,24 @@ void NavObstacle::set_paused(bool p_paused) {
 
 bool NavObstacle::get_paused() const {
 	return paused;
+}
+
+void NavObstacle::request_sync() {
+	if (map && !sync_dirty_request_list_element.in_list()) {
+		map->add_obstacle_sync_dirty_request(&sync_dirty_request_list_element);
+	}
+}
+
+void NavObstacle::cancel_sync_request() {
+	if (map && sync_dirty_request_list_element.in_list()) {
+		map->remove_obstacle_sync_dirty_request(&sync_dirty_request_list_element);
+	}
+}
+
+NavObstacle::NavObstacle() :
+		sync_dirty_request_list_element(this) {
+}
+
+NavObstacle::~NavObstacle() {
+	cancel_sync_request();
 }

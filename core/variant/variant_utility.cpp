@@ -641,6 +641,22 @@ double VariantUtilityFunctions::pingpong(double value, double length) {
 	return Math::pingpong(value, length);
 }
 
+double VariantUtilityFunctions::sigmoid(double x) {
+	return Math::sigmoid_affine(x, 1.0, 0.0);
+}
+
+double VariantUtilityFunctions::sigmoid_approx(double x) {
+	return Math::sigmoid_affine_approx(x, 1.0, 0.0);
+}
+
+double VariantUtilityFunctions::sigmoid_affine(double x, double amplitude, double y_translation) {
+	return Math::sigmoid_affine(x, amplitude, y_translation);
+}
+
+double VariantUtilityFunctions::sigmoid_affine_approx(double x, double amplitude, double y_translation) {
+	return Math::sigmoid_affine_approx(x, amplitude, y_translation);
+}
+
 Variant VariantUtilityFunctions::max(const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
 	if (p_argcount < 2) {
 		r_error.error = Callable::CallError::CALL_ERROR_TOO_FEW_ARGUMENTS;
@@ -1372,8 +1388,12 @@ static _FORCE_INLINE_ Variant::Type get_ret_type_helper(void (*p_func)(P...)) {
 		static bool has_return_type() {                                                                          \
 			return true;                                                                                         \
 		}                                                                                                        \
-		static bool is_vararg() { return false; }                                                                \
-		static Variant::UtilityFunctionType get_type() { return m_category; }                                    \
+		static bool is_vararg() {                                                                                \
+			return false;                                                                                        \
+		}                                                                                                        \
+		static Variant::UtilityFunctionType get_type() {                                                         \
+			return m_category;                                                                                   \
+		}                                                                                                        \
 	};                                                                                                           \
 	register_utility_function<Func_##m_func>(#m_func, m_args)
 
@@ -1404,8 +1424,12 @@ static _FORCE_INLINE_ Variant::Type get_ret_type_helper(void (*p_func)(P...)) {
 		static bool has_return_type() {                                                                                 \
 			return true;                                                                                                \
 		}                                                                                                               \
-		static bool is_vararg() { return false; }                                                                       \
-		static Variant::UtilityFunctionType get_type() { return m_category; }                                           \
+		static bool is_vararg() {                                                                                       \
+			return false;                                                                                               \
+		}                                                                                                               \
+		static Variant::UtilityFunctionType get_type() {                                                                \
+			return m_category;                                                                                          \
+		}                                                                                                               \
 	};                                                                                                                  \
 	register_utility_function<Func_##m_func>(#m_func, m_args)
 
@@ -1438,8 +1462,12 @@ static _FORCE_INLINE_ Variant::Type get_ret_type_helper(void (*p_func)(P...)) {
 		static bool has_return_type() {                                                                                            \
 			return true;                                                                                                           \
 		}                                                                                                                          \
-		static bool is_vararg() { return false; }                                                                                  \
-		static Variant::UtilityFunctionType get_type() { return m_category; }                                                      \
+		static bool is_vararg() {                                                                                                  \
+			return false;                                                                                                          \
+		}                                                                                                                          \
+		static Variant::UtilityFunctionType get_type() {                                                                           \
+			return m_category;                                                                                                     \
+		}                                                                                                                          \
 	};                                                                                                                             \
 	register_utility_function<Func_##m_func>(#m_func, m_args)
 
@@ -1472,8 +1500,12 @@ static _FORCE_INLINE_ Variant::Type get_ret_type_helper(void (*p_func)(P...)) {
 		static bool has_return_type() {                                                                                                                                   \
 			return true;                                                                                                                                                  \
 		}                                                                                                                                                                 \
-		static bool is_vararg() { return false; }                                                                                                                         \
-		static Variant::UtilityFunctionType get_type() { return m_category; }                                                                                             \
+		static bool is_vararg() {                                                                                                                                         \
+			return false;                                                                                                                                                 \
+		}                                                                                                                                                                 \
+		static Variant::UtilityFunctionType get_type() {                                                                                                                  \
+			return m_category;                                                                                                                                            \
+		}                                                                                                                                                                 \
 	};                                                                                                                                                                    \
 	register_utility_function<Func_##m_func>(#m_func, m_args)
 
@@ -1635,8 +1667,12 @@ static _FORCE_INLINE_ Variant::Type get_ret_type_helper(void (*p_func)(P...)) {
 		static bool has_return_type() {                                                                          \
 			return false;                                                                                        \
 		}                                                                                                        \
-		static bool is_vararg() { return false; }                                                                \
-		static Variant::UtilityFunctionType get_type() { return m_category; }                                    \
+		static bool is_vararg() {                                                                                \
+			return false;                                                                                        \
+		}                                                                                                        \
+		static Variant::UtilityFunctionType get_type() {                                                         \
+			return m_category;                                                                                   \
+		}                                                                                                        \
 	};                                                                                                           \
 	register_utility_function<Func_##m_func>(#m_func, m_args)
 
@@ -1788,6 +1824,11 @@ void Variant::_register_variant_utility_functions() {
 
 	FUNCBINDR(nearest_po2, sarray("value"), Variant::UTILITY_FUNC_TYPE_MATH);
 	FUNCBINDR(pingpong, sarray("value", "length"), Variant::UTILITY_FUNC_TYPE_MATH);
+
+	FUNCBINDR(sigmoid, sarray("x"), Variant::UTILITY_FUNC_TYPE_MATH);
+	FUNCBINDR(sigmoid_approx, sarray("x"), Variant::UTILITY_FUNC_TYPE_MATH);
+	FUNCBINDR(sigmoid_affine, sarray("x", "amplitude", "y_translation"), Variant::UTILITY_FUNC_TYPE_MATH);
+	FUNCBINDR(sigmoid_affine_approx, sarray("x", "amplitude", "y_translation"), Variant::UTILITY_FUNC_TYPE_MATH);
 
 	// Random
 

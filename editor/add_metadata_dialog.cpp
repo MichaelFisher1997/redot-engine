@@ -32,6 +32,8 @@
 
 #include "add_metadata_dialog.h"
 
+#include "editor/themes/editor_scale.h"
+
 AddMetadataDialog::AddMetadataDialog() {
 	VBoxContainer *vbc = memnew(VBoxContainer);
 	add_child(vbc);

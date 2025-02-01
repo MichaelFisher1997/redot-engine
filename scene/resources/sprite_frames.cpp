@@ -95,7 +95,7 @@ void SpriteFrames::clear(const StringName &p_anim) {
 
 void SpriteFrames::clear_all() {
 	animations.clear();
-	add_animation("default");
+	add_animation(SceneStringName(default_));
 }
 
 void SpriteFrames::add_animation(const StringName &p_anim) {

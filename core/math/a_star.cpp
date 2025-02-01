@@ -34,7 +34,6 @@
 #include "a_star.compat.inc"
 
 #include "core/math/geometry_3d.h"
-#include "core/object/script_language.h"
 
 int64_t AStar3D::get_available_point_id() const {
 	if (points.has(last_free_id)) {
@@ -42,7 +41,7 @@ int64_t AStar3D::get_available_point_id() const {
 		while (points.has(cur_new_id)) {
 			cur_new_id++;
 		}
-		const_cast<int64_t &>(last_free_id) = cur_new_id;
+		last_free_id = cur_new_id;
 	}
 
 	return last_free_id;

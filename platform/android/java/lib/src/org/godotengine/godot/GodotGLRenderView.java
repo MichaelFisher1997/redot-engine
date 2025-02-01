@@ -30,18 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot;
-
-import org.godotengine.godot.gl.GLSurfaceView;
-import org.godotengine.godot.gl.GodotRenderer;
-import org.godotengine.godot.input.GodotInputHandler;
-import org.godotengine.godot.xr.XRMode;
-import org.godotengine.godot.xr.ovr.OvrConfigChooser;
-import org.godotengine.godot.xr.ovr.OvrContextFactory;
-import org.godotengine.godot.xr.ovr.OvrWindowSurfaceFactory;
-import org.godotengine.godot.xr.regular.RegularConfigChooser;
-import org.godotengine.godot.xr.regular.RegularContextFactory;
-import org.godotengine.godot.xr.regular.RegularFallbackConfigChooser;
+package org.redotengine.godot;
 
 import android.annotation.SuppressLint;
 import android.content.res.AssetManager;
@@ -59,6 +48,17 @@ import android.view.SurfaceView;
 import androidx.annotation.Keep;
 
 import java.io.InputStream;
+
+import org.redotengine.godot.gl.GLSurfaceView;
+import org.redotengine.godot.gl.GodotRenderer;
+import org.redotengine.godot.input.GodotInputHandler;
+import org.redotengine.godot.xr.XRMode;
+import org.redotengine.godot.xr.ovr.OvrConfigChooser;
+import org.redotengine.godot.xr.ovr.OvrContextFactory;
+import org.redotengine.godot.xr.ovr.OvrWindowSurfaceFactory;
+import org.redotengine.godot.xr.regular.RegularConfigChooser;
+import org.redotengine.godot.xr.regular.RegularContextFactory;
+import org.redotengine.godot.xr.regular.RegularFallbackConfigChooser;
 
 /**
  * A simple GLSurfaceView sub-class that demonstrate how to perform

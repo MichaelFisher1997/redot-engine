@@ -182,7 +182,7 @@ void AudioStreamImportSettingsDialog::_preview_changed(ObjectID p_which) {
 }
 
 void AudioStreamImportSettingsDialog::_preview_zoom_in() {
-	if (!stream.is_valid()) {
+	if (stream.is_null()) {
 		return;
 	}
 	float page_size = zoom_bar->get_page();
@@ -194,7 +194,7 @@ void AudioStreamImportSettingsDialog::_preview_zoom_in() {
 }
 
 void AudioStreamImportSettingsDialog::_preview_zoom_out() {
-	if (!stream.is_valid()) {
+	if (stream.is_null()) {
 		return;
 	}
 	float page_size = zoom_bar->get_page();
@@ -206,7 +206,7 @@ void AudioStreamImportSettingsDialog::_preview_zoom_out() {
 }
 
 void AudioStreamImportSettingsDialog::_preview_zoom_reset() {
-	if (!stream.is_valid()) {
+	if (stream.is_null()) {
 		return;
 	}
 	zoom_bar->set_max(stream->get_length());
@@ -264,7 +264,7 @@ void AudioStreamImportSettingsDialog::_on_finished() {
 }
 
 void AudioStreamImportSettingsDialog::_draw_indicator() {
-	if (!stream.is_valid()) {
+	if (stream.is_null()) {
 		return;
 	}
 
@@ -403,7 +403,7 @@ void AudioStreamImportSettingsDialog::_seek_to(real_t p_x) {
 }
 
 void AudioStreamImportSettingsDialog::edit(const String &p_path, const String &p_importer, const Ref<AudioStream> &p_stream) {
-	if (!stream.is_null()) {
+	if (stream.is_valid()) {
 		stream->disconnect_changed(callable_mp(this, &AudioStreamImportSettingsDialog::_audio_changed));
 	}
 
@@ -416,7 +416,7 @@ void AudioStreamImportSettingsDialog::edit(const String &p_path, const String &p
 	String text = String::num(stream->get_length(), 2).pad_decimals(2) + "s";
 	_duration_label->set_text(text);
 
-	if (!stream.is_null()) {
+	if (stream.is_valid()) {
 		stream->connect_changed(callable_mp(this, &AudioStreamImportSettingsDialog::_audio_changed));
 		_preview->queue_redraw();
 		_indicator->queue_redraw();

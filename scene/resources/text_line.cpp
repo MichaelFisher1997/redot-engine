@@ -106,7 +106,7 @@ void TextLine::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("hit_test", "coords"), &TextLine::hit_test);
 }
 
-void TextLine::_shape() {
+void TextLine::_shape() const {
 	// When a shaped text is invalidated by an external source, we want to reshape it.
 	if (!TS->shaped_text_is_ready(rid)) {
 		dirty = true;
@@ -219,7 +219,7 @@ bool TextLine::add_object(Variant p_key, const Size2 &p_size, InlineAlignment p_
 }
 
 bool TextLine::resize_object(Variant p_key, const Size2 &p_size, InlineAlignment p_inline_align, float p_baseline) {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 	return TS->shaped_text_resize_object(rid, p_key, p_size, p_inline_align, p_baseline);
 }
 
@@ -343,37 +343,37 @@ float TextLine::get_width() const {
 }
 
 Size2 TextLine::get_size() const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 	return TS->shaped_text_get_size(rid);
 }
 
 float TextLine::get_line_ascent() const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 	return TS->shaped_text_get_ascent(rid);
 }
 
 float TextLine::get_line_descent() const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 	return TS->shaped_text_get_descent(rid);
 }
 
 float TextLine::get_line_width() const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 	return TS->shaped_text_get_width(rid);
 }
 
 float TextLine::get_line_underline_position() const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 	return TS->shaped_text_get_underline_position(rid);
 }
 
 float TextLine::get_line_underline_thickness() const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 	return TS->shaped_text_get_underline_thickness(rid);
 }
 
 void TextLine::draw(RID p_canvas, const Vector2 &p_pos, const Color &p_color) const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 
 	Vector2 ofs = p_pos;
 
@@ -420,7 +420,7 @@ void TextLine::draw(RID p_canvas, const Vector2 &p_pos, const Color &p_color) co
 }
 
 void TextLine::draw_outline(RID p_canvas, const Vector2 &p_pos, int p_outline_size, const Color &p_color) const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 
 	Vector2 ofs = p_pos;
 
@@ -467,7 +467,7 @@ void TextLine::draw_outline(RID p_canvas, const Vector2 &p_pos, int p_outline_si
 }
 
 int TextLine::hit_test(float p_coords) const {
-	const_cast<TextLine *>(this)->_shape();
+	_shape();
 
 	return TS->shaped_text_hit_test_position(rid, p_coords);
 }

@@ -30,13 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot;
-
-import org.godotengine.godot.gl.GodotRenderer;
-import org.godotengine.godot.io.directory.DirectoryAccessHandler;
-import org.godotengine.godot.io.file.FileAccessHandler;
-import org.godotengine.godot.tts.GodotTTS;
-import org.godotengine.godot.utils.GodotNetUtils;
+package org.redotengine.godot;
 
 import android.app.Activity;
 import android.content.res.AssetManager;
@@ -44,6 +38,13 @@ import android.hardware.SensorEvent;
 import android.view.Surface;
 
 import javax.microedition.khronos.opengles.GL10;
+
+import org.redotengine.godot.gl.GodotRenderer;
+import org.redotengine.godot.io.directory.DirectoryAccessHandler;
+import org.redotengine.godot.io.file.FileAccessHandler;
+import org.redotengine.godot.tts.GodotTTS;
+import org.redotengine.godot.utils.GodotNetUtils;
+import org.redotengine.godot.variant.Callable;
 
 /**
  * Wrapper for native library
@@ -82,7 +83,7 @@ public class GodotLib {
 	 * @param p_surface
 	 * @param p_width
 	 * @param p_height
-	 * @see org.godotengine.godot.gl.GLSurfaceView.Renderer#onSurfaceChanged(GL10, int, int)
+	 * @see org.redotengine.godot.gl.GLSurfaceView.Renderer#onSurfaceChanged(GL10, int, int)
 	 */
 	public static native void resize(Surface p_surface, int p_width, int p_height);
 
@@ -99,7 +100,7 @@ public class GodotLib {
 
 	/**
 	 * Invoked on the GL thread to draw the current frame.
-	 * @see org.godotengine.godot.gl.GLSurfaceView.Renderer#onDrawFrame(GL10)
+	 * @see org.redotengine.godot.gl.GLSurfaceView.Renderer#onDrawFrame(GL10)
 	 */
 	public static native boolean step();
 
@@ -202,16 +203,26 @@ public class GodotLib {
 	 * @param p_id Id of the Godot object to invoke
 	 * @param p_method Name of the method to invoke
 	 * @param p_params Parameters to use for method invocation
+	 *
+	 * @deprecated Use {@link Callable#call(long, String, Object...)} instead.
 	 */
-	public static native void callobject(long p_id, String p_method, Object[] p_params);
+	@Deprecated
+	public static void callobject(long p_id, String p_method, Object[] p_params) {
+		Callable.call(p_id, p_method, p_params);
+	}
 
 	/**
 	 * Invoke method |p_method| on the Godot object specified by |p_id| during idle time.
 	 * @param p_id Id of the Godot object to invoke
 	 * @param p_method Name of the method to invoke
 	 * @param p_params Parameters to use for method invocation
+	 *
+	 * @deprecated Use {@link Callable#callDeferred(long, String, Object...)} instead.
 	 */
-	public static native void calldeferred(long p_id, String p_method, Object[] p_params);
+	@Deprecated
+	public static void calldeferred(long p_id, String p_method, Object[] p_params) {
+		Callable.callDeferred(p_id, p_method, p_params);
+	}
 
 	/**
 	 * Forward the results from a permission request.
@@ -225,11 +236,6 @@ public class GodotLib {
 	 * Invoked on the theme light/dark mode change.
 	 */
 	public static native void onNightModeChanged();
-
-	/**
-	 * Invoked on the input dialog submitted.
-	 */
-	public static native void inputDialogCallback(String p_text);
 
 	/**
 	 * Invoked on the file picker closed.

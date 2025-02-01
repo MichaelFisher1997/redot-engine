@@ -47,6 +47,7 @@
 #include "drivers/windows/file_access_windows_pipe.h"
 #include "drivers/windows/ip_windows.h"
 #include "drivers/windows/net_socket_winsock.h"
+#include "drivers/windows/thread_windows.h"
 #include "main/main.h"
 #include "servers/audio_server.h"
 #include "servers/rendering/rendering_server_default.h"
@@ -251,6 +252,10 @@ void OS_Windows::initialize() {
 	add_error_handler(&error_handlers);
 #endif
 
+#ifdef THREADS_ENABLED
+	init_thread_win();
+#endif
+
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_RESOURCES);
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_USERDATA);
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_FILESYSTEM);
@@ -267,7 +272,15 @@ void OS_Windows::initialize() {
 
 	// set minimum resolution for periodic timers, otherwise Sleep(n) may wait at least as
 	//  long as the windows scheduler resolution (~16-30ms) even for calls like Sleep(1)
-	timeBeginPeriod(1);
+	TIMECAPS time_caps;
+	if (timeGetDevCaps(&time_caps, sizeof(time_caps)) == MMSYSERR_NOERROR) {
+		delay_resolution = time_caps.wPeriodMin * 1000;
+		timeBeginPeriod(time_caps.wPeriodMin);
+	} else {
+		ERR_PRINT("Unable to detect sleep timer resolution.");
+		delay_resolution = 1000;
+		timeBeginPeriod(1);
+	}
 
 	process_map = memnew((HashMap<ProcessID, ProcessInfo>));
 
@@ -576,13 +589,71 @@ String OS_Windows::get_distribution_name() const {
 String OS_Windows::get_version() const {
 	RtlGetVersionPtr version_ptr = (RtlGetVersionPtr)GetProcAddress(GetModuleHandle("ntdll.dll"), "RtlGetVersion");
 	if (version_ptr != nullptr) {
-		RTL_OSVERSIONINFOW fow;
+		RTL_OSVERSIONINFOEXW fow;
 		ZeroMemory(&fow, sizeof(fow));
 		fow.dwOSVersionInfoSize = sizeof(fow);
 		if (version_ptr(&fow) == 0x00000000) {
 			return vformat("%d.%d.%d", (int64_t)fow.dwMajorVersion, (int64_t)fow.dwMinorVersion, (int64_t)fow.dwBuildNumber);
 		}
 	}
+	return "";
+}
+
+String OS_Windows::get_version_alias() const {
+	RtlGetVersionPtr version_ptr = (RtlGetVersionPtr)GetProcAddress(GetModuleHandle("ntdll.dll"), "RtlGetVersion");
+	if (version_ptr != nullptr) {
+		RTL_OSVERSIONINFOEXW fow;
+		ZeroMemory(&fow, sizeof(fow));
+		fow.dwOSVersionInfoSize = sizeof(fow);
+		if (version_ptr(&fow) == 0x00000000) {
+			String windows_string;
+			if (fow.wProductType != VER_NT_WORKSTATION && fow.dwMajorVersion == 10 && fow.dwBuildNumber >= 26100) {
+				windows_string = "Server 2025";
+			} else if (fow.dwMajorVersion == 10 && fow.dwBuildNumber >= 20348) {
+				// Builds above 20348 correspond to Windows 11 / Windows Server 2022.
+				// Their major version numbers are still 10 though, not 11.
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string += "Server 2022";
+				} else {
+					windows_string += "11";
+				}
+			} else if (fow.dwMajorVersion == 10) {
+				if (fow.wProductType != VER_NT_WORKSTATION && fow.dwBuildNumber >= 17763) {
+					windows_string += "Server 2019";
+				} else {
+					if (fow.wProductType != VER_NT_WORKSTATION) {
+						windows_string += "Server 2016";
+					} else {
+						windows_string += "10";
+					}
+				}
+			} else if (fow.dwMajorVersion == 6 && fow.dwMinorVersion == 3) {
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string = "Server 2012 R2";
+				} else {
+					windows_string += "8.1";
+				}
+			} else if (fow.dwMajorVersion == 6 && fow.dwMinorVersion == 2) {
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string += "Server 2012";
+				} else {
+					windows_string += "8";
+				}
+			} else if (fow.dwMajorVersion == 6 && fow.dwMinorVersion == 1) {
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string = "Server 2008 R2";
+				} else {
+					windows_string += "7";
+				}
+			} else {
+				windows_string += "Unknown";
+			}
+			// Windows versions older than 7 cannot run Godot.
+
+			return vformat("%s (build %d)", windows_string, (int64_t)fow.dwBuildNumber);
+		}
+	}
+
 	return "";
 }
 
@@ -1721,7 +1792,7 @@ String OS_Windows::get_environment(const String &p_var) const {
 }
 
 void OS_Windows::set_environment(const String &p_var, const String &p_value) const {
-	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains("="), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
+	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains_char('='), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
 	Char16String var = p_var.utf16();
 	Char16String value = p_value.utf16();
 	ERR_FAIL_COND_MSG(var.length() + value.length() + 2 > 32767, vformat("Invalid definition for environment variable '%s', cannot exceed 32767 characters.", p_var));
@@ -1729,7 +1800,7 @@ void OS_Windows::set_environment(const String &p_var, const String &p_value) con
 }
 
 void OS_Windows::unset_environment(const String &p_var) const {
-	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains("="), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
+	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains_char('='), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
 	SetEnvironmentVariableW((LPCWSTR)(p_var.utf16().get_data()), nullptr); // Null to delete.
 }
 
@@ -2071,14 +2142,35 @@ String OS_Windows::get_cache_path() const {
 		if (has_environment("LOCALAPPDATA")) {
 			cache_path_cache = get_environment("LOCALAPPDATA").replace("\\", "/");
 		}
-		if (cache_path_cache.is_empty() && has_environment("TEMP")) {
-			cache_path_cache = get_environment("TEMP").replace("\\", "/");
-		}
 		if (cache_path_cache.is_empty()) {
-			cache_path_cache = get_config_path();
+			cache_path_cache = get_temp_path();
 		}
 	}
 	return cache_path_cache;
+}
+
+String OS_Windows::get_temp_path() const {
+	static String temp_path_cache;
+	if (temp_path_cache.is_empty()) {
+		{
+			Vector<WCHAR> temp_path;
+			// The maximum possible size is MAX_PATH+1 (261) + terminating null character.
+			temp_path.resize(MAX_PATH + 2);
+			DWORD temp_path_length = GetTempPathW(temp_path.size(), temp_path.ptrw());
+			if (temp_path_length > 0 && temp_path_length < temp_path.size()) {
+				temp_path_cache = String::utf16((const char16_t *)temp_path.ptr());
+				// Let's try to get the long path instead of the short path (with tildes ~).
+				DWORD temp_path_long_length = GetLongPathNameW(temp_path.ptr(), temp_path.ptrw(), temp_path.size());
+				if (temp_path_long_length > 0 && temp_path_long_length < temp_path.size()) {
+					temp_path_cache = String::utf16((const char16_t *)temp_path.ptr());
+				}
+			}
+		}
+		if (temp_path_cache.is_empty()) {
+			temp_path_cache = get_config_path();
+		}
+	}
+	return temp_path_cache;
 }
 
 // Get properly capitalized engine name for system paths
@@ -2124,22 +2216,8 @@ String OS_Windows::get_system_dir(SystemDir p_dir, bool p_shared_storage) const 
 	return path;
 }
 
-String OS_Windows::get_user_data_dir() const {
-	String appname = get_safe_dir_name(GLOBAL_GET("application/config/name"));
-	if (!appname.is_empty()) {
-		bool use_custom_dir = GLOBAL_GET("application/config/use_custom_user_dir");
-		if (use_custom_dir) {
-			String custom_dir = get_safe_dir_name(GLOBAL_GET("application/config/custom_user_dir_name"), true);
-			if (custom_dir.is_empty()) {
-				custom_dir = appname;
-			}
-			return get_data_path().path_join(custom_dir).replace("\\", "/");
-		} else {
-			return get_data_path().path_join(get_godot_dir_name()).path_join("app_userdata").path_join(appname).replace("\\", "/");
-		}
-	}
-
-	return get_data_path().path_join(get_godot_dir_name()).path_join("app_userdata").path_join("[unnamed project]");
+String OS_Windows::get_user_data_dir(const String &p_user_dir) const {
+	return get_data_path().path_join(p_user_dir).replace("\\", "/");
 }
 
 String OS_Windows::get_unique_id() const {
@@ -2223,6 +2301,51 @@ String OS_Windows::get_system_ca_certificates() {
 	}
 	CertCloseStore(cert_store, 0);
 	return certs;
+}
+
+void OS_Windows::add_frame_delay(bool p_can_draw) {
+	const uint32_t frame_delay = Engine::get_singleton()->get_frame_delay();
+	if (frame_delay) {
+		// Add fixed frame delay to decrease CPU/GPU usage. This doesn't take
+		// the actual frame time into account.
+		// Due to the high fluctuation of the actual sleep duration, it's not recommended
+		// to use this as a FPS limiter.
+		delay_usec(frame_delay * 1000);
+	}
+
+	// Add a dynamic frame delay to decrease CPU/GPU usage. This takes the
+	// previous frame time into account for a smoother result.
+	uint64_t dynamic_delay = 0;
+	if (is_in_low_processor_usage_mode() || !p_can_draw) {
+		dynamic_delay = get_low_processor_usage_mode_sleep_usec();
+	}
+	const int max_fps = Engine::get_singleton()->get_max_fps();
+	if (max_fps > 0 && !Engine::get_singleton()->is_editor_hint()) {
+		// Override the low processor usage mode sleep delay if the target FPS is lower.
+		dynamic_delay = MAX(dynamic_delay, (uint64_t)(1000000 / max_fps));
+	}
+
+	if (dynamic_delay > 0) {
+		target_ticks += dynamic_delay;
+		uint64_t current_ticks = get_ticks_usec();
+
+		if (target_ticks > current_ticks + delay_resolution) {
+			uint64_t delay_time = target_ticks - current_ticks - delay_resolution;
+			// Make sure we always sleep for a multiple of delay_resolution to avoid overshooting.
+			// Refer to: https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleep#remarks
+			delay_time = (delay_time / delay_resolution) * delay_resolution;
+			if (delay_time > 0) {
+				delay_usec(delay_time);
+			}
+		}
+		// Busy wait for the remainder of time.
+		while (get_ticks_usec() < target_ticks) {
+			YieldProcessor();
+		}
+
+		current_ticks = get_ticks_usec();
+		target_ticks = MIN(MAX(target_ticks, current_ticks - dynamic_delay), current_ticks + dynamic_delay);
+	}
 }
 
 OS_Windows::OS_Windows(HINSTANCE _hInstance) {

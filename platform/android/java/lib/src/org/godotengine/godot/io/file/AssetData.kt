@@ -2,8 +2,8 @@
 /*  AssetData.kt                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
 /**************************************************************************/
 /* Copyright (c) 2024-present Redot Engine contributors                   */
 /*                                          (see REDOT_AUTHORS.md)        */
@@ -30,13 +30,13 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.io.file
+package org.redotengine.godot.io.file
 
 import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
-import org.godotengine.godot.error.Error
-import org.godotengine.godot.io.directory.AssetsDirectoryAccess
+import org.redotengine.godot.error.Error
+import org.redotengine.godot.io.directory.AssetsDirectoryAccess
 import java.io.IOException
 import java.io.InputStream
 import java.lang.UnsupportedOperationException
@@ -147,7 +147,8 @@ internal class AssetData(context: Context, private val filePath: String, accessF
 		}
 	}
 
-	override fun write(buffer: ByteBuffer) {
+	override fun write(buffer: ByteBuffer): Boolean {
 		Log.w(TAG, "write() is not supported.")
+		return false
 	}
 }

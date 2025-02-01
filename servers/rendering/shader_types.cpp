@@ -31,7 +31,6 @@
 /**************************************************************************/
 
 #include "shader_types.h"
-#include "core/math/math_defs.h"
 
 const HashMap<StringName, ShaderLanguage::FunctionInfo> &ShaderTypes::get_functions(RS::ShaderMode p_mode) const {
 	return shader_modes[p_mode].functions;

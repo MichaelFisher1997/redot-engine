@@ -30,10 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot;
-
-import org.godotengine.godot.error.Error;
-import org.godotengine.godot.plugin.GodotPlugin;
+package org.redotengine.godot;
 
 import android.app.Activity;
 
@@ -42,6 +39,9 @@ import androidx.annotation.NonNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import org.redotengine.godot.error.Error;
+import org.redotengine.godot.plugin.GodotPlugin;
 
 /**
  * Denotate a component (e.g: Activity, Fragment) that hosts the {@link Godot} engine.

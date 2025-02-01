@@ -39,6 +39,8 @@
 #include "scene/resources/shader.h"
 #include "scene/resources/texture.h"
 
+class ColorChannelSelector;
+
 class TextureLayeredEditor : public Control {
 	GDCLASS(TextureLayeredEditor, Control);
 
@@ -55,6 +57,8 @@ class TextureLayeredEditor : public Control {
 
 	bool setting = false;
 
+	ColorChannelSelector *channel_selector = nullptr;
+
 	void _make_shaders();
 	void _update_material(bool p_texture_changed);
 
@@ -70,6 +74,8 @@ class TextureLayeredEditor : public Control {
 	void _texture_rect_draw();
 
 	void _update_gui();
+
+	void on_selected_channels_changed();
 
 protected:
 	void _notification(int p_what);
@@ -94,7 +100,7 @@ class TextureLayeredEditorPlugin : public EditorPlugin {
 	GDCLASS(TextureLayeredEditorPlugin, EditorPlugin);
 
 public:
-	virtual String get_name() const override { return "TextureLayered"; }
+	virtual String get_plugin_name() const override { return "TextureLayered"; }
 
 	TextureLayeredEditorPlugin();
 };

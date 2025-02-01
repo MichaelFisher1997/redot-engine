@@ -74,7 +74,7 @@ String _remove_symlink(const String &dir) {
 class AndroidLogger : public Logger {
 public:
 	virtual void logv(const char *p_format, va_list p_list, bool p_err) {
-		__android_log_vprint(p_err ? ANDROID_LOG_ERROR : ANDROID_LOG_INFO, "godot", p_format, p_list);
+		__android_log_vprint(p_err ? ANDROID_LOG_ERROR : ANDROID_LOG_INFO, "redot", p_format, p_list);
 	}
 
 	virtual ~AndroidLogger() {}
@@ -170,7 +170,7 @@ bool OS_Android::copy_dynamic_library(const String &p_library_path, const String
 	}
 
 	Ref<DirAccess> da_ref = DirAccess::create_for_path(p_library_path);
-	if (!da_ref.is_valid()) {
+	if (da_ref.is_null()) {
 		return false;
 	}
 
@@ -415,10 +415,10 @@ String OS_Android::get_model_name() const {
 }
 
 String OS_Android::get_data_path() const {
-	return get_user_data_dir();
+	return OS::get_user_data_dir();
 }
 
-void OS_Android::_load_system_font_config() {
+void OS_Android::_load_system_font_config() const {
 	font_aliases.clear();
 	fonts.clear();
 	font_names.clear();
@@ -543,7 +543,7 @@ void OS_Android::_load_system_font_config() {
 
 Vector<String> OS_Android::get_system_fonts() const {
 	if (!font_config_loaded) {
-		const_cast<OS_Android *>(this)->_load_system_font_config();
+		_load_system_font_config();
 	}
 	Vector<String> ret;
 	for (const String &E : font_names) {
@@ -554,7 +554,7 @@ Vector<String> OS_Android::get_system_fonts() const {
 
 Vector<String> OS_Android::get_system_font_path_for_text(const String &p_font_name, const String &p_text, const String &p_locale, const String &p_script, int p_weight, int p_stretch, bool p_italic) const {
 	if (!font_config_loaded) {
-		const_cast<OS_Android *>(this)->_load_system_font_config();
+		_load_system_font_config();
 	}
 	String font_name = p_font_name.to_lower();
 	if (font_aliases.has(font_name)) {
@@ -606,7 +606,7 @@ Vector<String> OS_Android::get_system_font_path_for_text(const String &p_font_na
 
 String OS_Android::get_system_font_path(const String &p_font_name, int p_weight, int p_stretch, bool p_italic) const {
 	if (!font_config_loaded) {
-		const_cast<OS_Android *>(this)->_load_system_font_config();
+		_load_system_font_config();
 	}
 	String font_name = p_font_name.to_lower();
 	if (font_aliases.has(font_name)) {
@@ -649,12 +649,12 @@ String OS_Android::get_executable_path() const {
 	return OS::get_executable_path();
 }
 
-String OS_Android::get_user_data_dir() const {
+String OS_Android::get_user_data_dir(const String &p_user_dir) const {
 	if (!data_dir_cache.is_empty()) {
 		return data_dir_cache;
 	}
 
-	String data_dir = godot_io_java->get_user_data_dir();
+	String data_dir = godot_io_java->get_user_data_dir(p_user_dir);
 	if (!data_dir.is_empty()) {
 		data_dir_cache = _remove_symlink(data_dir);
 		return data_dir_cache;
@@ -675,6 +675,19 @@ String OS_Android::get_cache_path() const {
 	if (!cache_dir.is_empty()) {
 		cache_dir_cache = _remove_symlink(cache_dir);
 		return cache_dir_cache;
+	}
+	return ".";
+}
+
+String OS_Android::get_temp_path() const {
+	if (!temp_dir_cache.is_empty()) {
+		return temp_dir_cache;
+	}
+
+	String temp_dir = godot_io_java->get_temp_dir();
+	if (!temp_dir.is_empty()) {
+		temp_dir_cache = _remove_symlink(temp_dir);
+		return temp_dir_cache;
 	}
 	return ".";
 }
@@ -753,7 +766,7 @@ void OS_Android::vibrate_handheld(int p_duration_ms, float p_amplitude) {
 }
 
 String OS_Android::get_config_path() const {
-	return get_user_data_dir().path_join("config");
+	return OS::get_user_data_dir().path_join("config");
 }
 
 void OS_Android::benchmark_begin_measure(const String &p_context, const String &p_what) {
@@ -886,7 +899,7 @@ String OS_Android::get_system_ca_certificates() {
 }
 
 Error OS_Android::setup_remote_filesystem(const String &p_server_host, int p_port, const String &p_password, String &r_project_path) {
-	r_project_path = get_user_data_dir();
+	r_project_path = OS::get_user_data_dir();
 	Error err = OS_Unix::setup_remote_filesystem(p_server_host, p_port, p_password, r_project_path);
 	if (err == OK) {
 		remote_fs_dir = r_project_path;

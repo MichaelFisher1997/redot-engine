@@ -35,7 +35,6 @@
 #include "core/input/input_event.h"
 #include "core/object/class_db.h"
 #include "core/os/keyboard.h"
-#include "core/templates/hash_set.h"
 #include "core/variant/variant.h"
 
 struct _CoreConstant {

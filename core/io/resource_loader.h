@@ -36,8 +36,11 @@
 #include "core/io/resource.h"
 #include "core/object/gdvirtual.gen.inc"
 #include "core/object/worker_thread_pool.h"
-#include "core/os/semaphore.h"
 #include "core/os/thread.h"
+
+namespace core_bind {
+class ResourceLoader;
+}
 
 class ConditionVariable;
 
@@ -104,6 +107,7 @@ typedef void (*ResourceLoadedCallback)(Ref<Resource> p_resource, const String &p
 
 class ResourceLoader {
 	friend class LoadToken;
+	friend class core_bind::ResourceLoader;
 
 	enum {
 		MAX_LOADERS = 64
@@ -219,6 +223,8 @@ private:
 	static float _dependency_get_progress(const String &p_path);
 
 	static bool _ensure_load_progress();
+
+	static String _validate_local_path(const String &p_path);
 
 public:
 	static Error load_threaded_request(const String &p_path, const String &p_type_hint = "", bool p_use_sub_threads = false, ResourceFormatLoader::CacheMode p_cache_mode = ResourceFormatLoader::CACHE_MODE_REUSE);

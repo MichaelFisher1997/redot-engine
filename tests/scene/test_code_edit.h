@@ -850,7 +850,7 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 	SceneTree::get_singleton()->get_root()->add_child(code_edit);
 	code_edit->grab_focus();
 
-	const Point2 OUTSIDE_DELIMETER = Point2(-1, -1);
+	const Point2 OUTSIDE_DELIMITER = Point2(-1, -1);
 
 	code_edit->clear_string_delimiters();
 	code_edit->clear_comment_delimiters();
@@ -1049,13 +1049,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in string. */
 			CHECK(code_edit->is_in_string(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in string. */
 			CHECK(code_edit->is_in_string(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column after start key is in string and start / end positions are correct. */
 			CHECK(code_edit->is_in_string(1, 1) != -1);
@@ -1064,8 +1064,8 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line after is not in string. */
 			CHECK(code_edit->is_in_string(2, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMITER);
 
 			/* Check region metadata. */
 			int idx = code_edit->is_in_string(1, 1);
@@ -1077,13 +1077,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in string. */
 			CHECK(code_edit->is_in_string(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before first start key is not in string. */
 			CHECK(code_edit->is_in_string(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column after the first start key is in string and start / end positions are correct. */
 			CHECK(code_edit->is_in_string(1, 1) != -1);
@@ -1097,8 +1097,8 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line after is not in string. */
 			CHECK(code_edit->is_in_string(2, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMITER);
 
 			/* Check is in string with no column returns true if entire line is comment excluding whitespace. */
 			code_edit->set_text(" \n  #  # \n ");
@@ -1140,13 +1140,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column after start key is in comment and start / end positions are correct. */
 			CHECK(code_edit->is_in_comment(1, 1) != -1);
@@ -1155,8 +1155,8 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(2, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMITER);
 
 			/* Check region metadata. */
 			int idx = code_edit->is_in_comment(1, 1);
@@ -1168,13 +1168,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before first start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column after the first start key is in comment and start / end positions are correct. */
 			CHECK(code_edit->is_in_comment(1, 1) != -1);
@@ -1188,8 +1188,8 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(2, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMITER);
 
 			/* Check is in comment with no column returns true if entire line is comment excluding whitespace. */
 			code_edit->set_text(" \n  #  # \n ");
@@ -1237,13 +1237,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before first start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column after the first start key is in comment and start / end positions are correct. */
 			CHECK(code_edit->is_in_comment(1, 1) != -1);
@@ -1258,8 +1258,8 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(2, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMITER);
 
 			/* Remove the comment delimiter. */
 			code_edit->remove_comment_delimiter("#");
@@ -1268,8 +1268,8 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* The "first" comment region is no longer valid. */
 			CHECK(code_edit->is_in_comment(1, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 1) == OUTSIDE_DELIMITER);
 
 			/* The "second" region as string is now valid. */
 			CHECK(code_edit->is_in_string(1, 5) != -1);
@@ -1293,13 +1293,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in string. */
 			CHECK(code_edit->is_in_string(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in string. */
 			CHECK(code_edit->is_in_string(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column before closing delimiter is in string. */
 			CHECK(code_edit->is_in_string(1, 2) != -1);
@@ -1308,13 +1308,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in string. */
 			CHECK(code_edit->is_in_string(1, 6) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 6) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 6) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 6) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 6) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in string. */
 			CHECK(code_edit->is_in_string(2, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMITER);
 
 			/* Check the region metadata. */
 			int idx = code_edit->is_in_string(1, 2);
@@ -1326,13 +1326,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in string. */
 			CHECK(code_edit->is_in_string(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in string. */
 			CHECK(code_edit->is_in_string(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column just after start key is in string. */
 			CHECK(code_edit->is_in_string(1, 2) != -1);
@@ -1351,26 +1351,26 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in string. */
 			CHECK(code_edit->is_in_string(3, 3) == -1);
-			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in string. */
 			CHECK(code_edit->is_in_string(4, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMITER);
 
 			/* Next test over a multiple non-blank lines. */
 			code_edit->set_text(" \n # \n \n # \n ");
 
 			/* Check line above is not in string. */
 			CHECK(code_edit->is_in_string(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in string. */
 			CHECK(code_edit->is_in_string(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column just after start key is in string. */
 			CHECK(code_edit->is_in_string(1, 2) != -1);
@@ -1389,13 +1389,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in string. */
 			CHECK(code_edit->is_in_string(3, 3) == -1);
-			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in string. */
 			CHECK(code_edit->is_in_string(4, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMITER);
 
 			/* check the region metadata. */
 			idx = code_edit->is_in_string(1, 2);
@@ -1411,13 +1411,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in string. */
 			CHECK(code_edit->is_in_string(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in string. */
 			CHECK(code_edit->is_in_string(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column just after start key is in string. */
 			CHECK(code_edit->is_in_string(1, 2) != -1);
@@ -1436,13 +1436,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in string. */
 			CHECK(code_edit->is_in_string(3, 3) == -1);
-			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in string. */
 			CHECK(code_edit->is_in_string(4, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMITER);
 
 			/* check the region metadata. */
 			idx = code_edit->is_in_string(1, 2);
@@ -1495,13 +1495,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column before closing delimiter is in comment. */
 			CHECK(code_edit->is_in_comment(1, 2) != -1);
@@ -1510,13 +1510,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 6) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 6) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 6) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 6) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 6) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(2, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(2, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(2, 1) == OUTSIDE_DELIMITER);
 
 			/* Check the region metadata. */
 			int idx = code_edit->is_in_comment(1, 2);
@@ -1528,13 +1528,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column just after start key is in comment. */
 			CHECK(code_edit->is_in_comment(1, 2) != -1);
@@ -1553,26 +1553,26 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in comment. */
 			CHECK(code_edit->is_in_comment(3, 3) == -1);
-			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(4, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMITER);
 
 			/* Next test over a multiple non-blank lines. */
 			code_edit->set_text(" \n # \n \n # \n ");
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column just after start key is in comment. */
 			CHECK(code_edit->is_in_comment(1, 2) != -1);
@@ -1591,13 +1591,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in comment. */
 			CHECK(code_edit->is_in_comment(3, 3) == -1);
-			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(4, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMITER);
 
 			/* check the region metadata. */
 			idx = code_edit->is_in_comment(1, 2);
@@ -1613,13 +1613,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column just after start key is in comment. */
 			CHECK(code_edit->is_in_comment(1, 2) != -1);
@@ -1638,13 +1638,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in comment. */
 			CHECK(code_edit->is_in_comment(3, 3) == -1);
-			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(4, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMITER);
 
 			/* check the region metadata. */
 			idx = code_edit->is_in_comment(1, 2);
@@ -1702,13 +1702,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check line above is not in comment. */
 			CHECK(code_edit->is_in_comment(0, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(0, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(0, 1) == OUTSIDE_DELIMITER);
 
 			/* Check column before start key is not in comment. */
 			CHECK(code_edit->is_in_comment(1, 0) == -1);
-			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(1, 0) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(1, 0) == OUTSIDE_DELIMITER);
 
 			/* Check column just after start key is in comment. */
 			CHECK(code_edit->is_in_comment(1, 2) != -1);
@@ -1727,13 +1727,13 @@ TEST_CASE("[SceneTree][CodeEdit] delimiters") {
 
 			/* Check column after end key is not in comment. */
 			CHECK(code_edit->is_in_comment(3, 3) == -1);
-			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(3, 3) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(3, 3) == OUTSIDE_DELIMITER);
 
 			/* Check line after is not in comment. */
 			CHECK(code_edit->is_in_comment(4, 1) == -1);
-			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMETER);
-			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMETER);
+			CHECK(code_edit->get_delimiter_start_position(4, 1) == OUTSIDE_DELIMITER);
+			CHECK(code_edit->get_delimiter_end_position(4, 1) == OUTSIDE_DELIMITER);
 
 			/* check the region metadata. */
 			int idx = code_edit->is_in_comment(1, 2);

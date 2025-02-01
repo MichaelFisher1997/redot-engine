@@ -34,7 +34,6 @@
 
 #include "core/math/geometry_2d.h"
 #include "core/os/mutex.h"
-#include "servers/navigation_server_2d.h"
 
 #include "thirdparty/misc/polypartition.h"
 
