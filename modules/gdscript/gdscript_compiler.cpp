@@ -131,7 +131,7 @@ GDScriptDataType GDScriptCompiler::_gdtype_from_datatype(const GDScriptParser::D
 			if (p_handle_metatype && p_datatype.is_meta_type) {
 				result.kind = GDScriptDataType::NATIVE;
 				result.builtin_type = Variant::OBJECT;
-				result.native_type = p_datatype.script_type.is_valid() ? p_datatype.script_type->get_class() : Script::get_class_static();
+				result.native_type = p_datatype.script_type.is_valid() ? p_datatype.script_type->get_class_name() : Script::get_class_static();
 				break;
 			}
 
@@ -245,9 +245,8 @@ static bool _can_use_validate_call(const MethodBind *p_method, const Vector<GDSc
 	}
 	MethodInfo info;
 	ClassDB::get_method_info(p_method->get_instance_class(), p_method->get_name(), &info);
-	int i = 0;
-	for (List<PropertyInfo>::ConstIterator itr = info.arguments.begin(); itr != info.arguments.end(); ++itr, ++i) {
-		if (!_is_exact_type(*itr, p_arguments[i].type)) {
+	for (int64_t i = 0; i < info.arguments.size(); ++i) {
+		if (!_is_exact_type(info.arguments[i], p_arguments[i].type)) {
 			return false;
 		}
 	}
@@ -2662,6 +2661,8 @@ Error GDScriptCompiler::_prepare_compilation(GDScript *p_script, const GDScriptP
 
 	p_script->clearing = true;
 
+	p_script->cancel_pending_functions(true);
+
 	p_script->native = Ref<GDScriptNativeClass>();
 	p_script->base = Ref<GDScript>();
 	p_script->_base = nullptr;
@@ -2711,6 +2712,7 @@ Error GDScriptCompiler::_prepare_compilation(GDScript *p_script, const GDScriptP
 	p_script->clearing = false;
 
 	p_script->tool = parser->is_tool();
+	p_script->_is_abstract = p_class->is_abstract;
 
 	if (p_script->local_name != StringName()) {
 		if (ClassDB::class_exists(p_script->local_name) && ClassDB::is_class_exposed(p_script->local_name)) {

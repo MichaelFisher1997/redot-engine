@@ -30,8 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef COMPRESSED_TEXTURE_H
-#define COMPRESSED_TEXTURE_H
+#pragma once
 
 #include "core/io/resource_loader.h"
 #include "scene/resources/texture.h"
@@ -110,7 +109,6 @@ public:
 
 	virtual Ref<Image> get_image() const override;
 
-	CompressedTexture2D();
 	~CompressedTexture2D();
 };
 
@@ -261,7 +259,6 @@ public:
 
 	virtual Vector<Ref<Image>> get_data() const override;
 
-	CompressedTexture3D();
 	~CompressedTexture3D();
 };
 
@@ -272,5 +269,3 @@ public:
 	virtual bool handles_type(const String &p_type) const override;
 	virtual String get_resource_type(const String &p_path) const override;
 };
-
-#endif // COMPRESSED_TEXTURE_H

@@ -30,10 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef JOLT_SPACE_3D_H
-#define JOLT_SPACE_3D_H
-
-#include "jolt_body_accessor_3d.h"
+#pragma once
 
 #include "servers/physics_server_3d.h"
 
@@ -47,8 +44,6 @@
 #include "Jolt/Physics/Constraints/Constraint.h"
 #include "Jolt/Physics/PhysicsSystem.h"
 
-#include <stdint.h>
-
 class JoltArea3D;
 class JoltBody3D;
 class JoltContactListener3D;
@@ -57,10 +52,12 @@ class JoltLayers;
 class JoltObject3D;
 class JoltPhysicsDirectSpaceState3D;
 class JoltShapedObject3D;
+class JoltSoftBody3D;
 
 class JoltSpace3D {
 	SelfList<JoltBody3D>::List body_call_queries_list;
 	SelfList<JoltArea3D>::List area_call_queries_list;
+	SelfList<JoltShapedObject3D>::List shapes_changed_list;
 	SelfList<JoltShapedObject3D>::List needs_optimization_list;
 
 	RID rid;
@@ -116,14 +113,12 @@ public:
 	JPH::ObjectLayer map_to_object_layer(JPH::BroadPhaseLayer p_broad_phase_layer, uint32_t p_collision_layer, uint32_t p_collision_mask);
 	void map_from_object_layer(JPH::ObjectLayer p_object_layer, JPH::BroadPhaseLayer &r_broad_phase_layer, uint32_t &r_collision_layer, uint32_t &r_collision_mask) const;
 
-	JoltReadableBody3D read_body(const JPH::BodyID &p_body_id) const;
-	JoltReadableBody3D read_body(const JoltObject3D &p_object) const;
-
-	JoltWritableBody3D write_body(const JPH::BodyID &p_body_id) const;
-	JoltWritableBody3D write_body(const JoltObject3D &p_object) const;
-
-	JoltReadableBodies3D read_bodies(const JPH::BodyID *p_body_ids, int p_body_count) const;
-	JoltWritableBodies3D write_bodies(const JPH::BodyID *p_body_ids, int p_body_count) const;
+	JPH::Body *try_get_jolt_body(const JPH::BodyID &p_body_id) const;
+	JoltObject3D *try_get_object(const JPH::BodyID &p_body_id) const;
+	JoltShapedObject3D *try_get_shaped(const JPH::BodyID &p_body_id) const;
+	JoltBody3D *try_get_body(const JPH::BodyID &p_body_id) const;
+	JoltArea3D *try_get_area(const JPH::BodyID &p_body_id) const;
+	JoltSoftBody3D *try_get_soft_body(const JPH::BodyID &p_body_id) const;
 
 	JoltPhysicsDirectSpaceState3D *get_direct_state();
 
@@ -132,8 +127,8 @@ public:
 
 	float get_last_step() const { return last_step; }
 
-	JPH::BodyID add_rigid_body(const JoltObject3D &p_object, const JPH::BodyCreationSettings &p_settings, bool p_sleeping = false);
-	JPH::BodyID add_soft_body(const JoltObject3D &p_object, const JPH::SoftBodyCreationSettings &p_settings, bool p_sleeping = false);
+	JPH::Body *add_rigid_body(const JoltObject3D &p_object, const JPH::BodyCreationSettings &p_settings, bool p_sleeping = false);
+	JPH::Body *add_soft_body(const JoltObject3D &p_object, const JPH::SoftBodyCreationSettings &p_settings, bool p_sleeping = false);
 
 	void remove_body(const JPH::BodyID &p_body_id);
 
@@ -143,6 +138,9 @@ public:
 	void enqueue_call_queries(SelfList<JoltArea3D> *p_area);
 	void dequeue_call_queries(SelfList<JoltBody3D> *p_body);
 	void dequeue_call_queries(SelfList<JoltArea3D> *p_area);
+
+	void enqueue_shapes_changed(SelfList<JoltShapedObject3D> *p_object);
+	void dequeue_shapes_changed(SelfList<JoltShapedObject3D> *p_object);
 
 	void enqueue_needs_optimization(SelfList<JoltShapedObject3D> *p_object);
 	void dequeue_needs_optimization(SelfList<JoltShapedObject3D> *p_object);
@@ -160,5 +158,3 @@ public:
 	void set_max_debug_contacts(int p_count);
 #endif
 };
-
-#endif // JOLT_SPACE_3D_H

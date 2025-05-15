@@ -30,8 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TRANSLATION_SERVER_H
-#define TRANSLATION_SERVER_H
+#pragma once
 
 #include "core/string/translation.h"
 #include "core/string/translation_domain.h"
@@ -53,7 +52,6 @@ class TranslationServer : public Object {
 	bool enabled = true;
 
 	static inline TranslationServer *singleton = nullptr;
-	bool _load_translations(const String &p_from);
 
 	static void _bind_methods();
 
@@ -162,5 +160,3 @@ public:
 
 	TranslationServer();
 };
-
-#endif // TRANSLATION_SERVER_H

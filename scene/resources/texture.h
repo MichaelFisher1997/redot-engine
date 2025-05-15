@@ -30,8 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#pragma once
 
 #include "core/io/resource.h"
 #include "core/math/rect2.h"
@@ -42,9 +41,6 @@
 
 class Texture : public Resource {
 	GDCLASS(Texture, Resource);
-
-public:
-	Texture() {}
 };
 
 class Texture2D : public Texture {
@@ -111,8 +107,6 @@ public:
 	virtual int get_layers() const;
 	virtual bool has_mipmaps() const;
 	virtual Ref<Image> get_layer_data(int p_layer) const;
-
-	TextureLayered() {}
 };
 
 VARIANT_ENUM_CAST(TextureLayered::LayeredType)
@@ -140,5 +134,3 @@ public:
 	virtual Vector<Ref<Image>> get_data() const;
 	virtual Ref<Resource> create_placeholder() const;
 };
-
-#endif // TEXTURE_H

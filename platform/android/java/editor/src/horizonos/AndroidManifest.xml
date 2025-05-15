@@ -37,6 +37,12 @@
     <!-- Temp removal of the 'REQUEST_INSTALL_PACKAGES' permission as it's currently forbidden by the Horizon OS store -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
 
+    <!-- Passthrough feature -->
+    <uses-feature
+            android:name="android.hardware.camera2.any"
+            android:required="false"/>
+    <uses-permission android:name="horizonos.permission.HEADSET_CAMERA"/>
+
     <application>
 
         <activity
@@ -89,6 +95,8 @@
         <meta-data android:name="com.oculus.ossplash" android:value="true"/>
         <!-- Enable passthrough background during the splash screen -->
         <meta-data android:name="com.oculus.ossplash.background" android:value="passthrough-contextual"/>
+
+        <meta-data android:name="com.oculus.handtracking.version" android:value="V2.0" />
 
     </application>
 

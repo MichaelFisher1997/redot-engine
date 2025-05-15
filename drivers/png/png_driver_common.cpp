@@ -35,7 +35,6 @@
 #include "core/config/engine.h"
 
 #include <png.h>
-#include <string.h>
 
 namespace PNGDriverCommon {
 

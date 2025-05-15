@@ -30,19 +30,12 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef GDSCRIPT_TOKENIZER_H
-#define GDSCRIPT_TOKENIZER_H
+#pragma once
 
 #include "core/templates/hash_map.h"
 #include "core/templates/list.h"
 #include "core/templates/vector.h"
 #include "core/variant/variant.h"
-
-#ifdef MINGW_ENABLED
-#undef CONST
-#undef IN
-#undef VOID
-#endif
 
 class GDScriptTokenizer {
 public:
@@ -114,17 +107,18 @@ public:
 			MATCH,
 			WHEN,
 			// Keywords
+			ABSTRACT,
 			AS,
 			ASSERT,
 			AWAIT,
 			BREAKPOINT,
 			CLASS,
 			CLASS_NAME,
-			CONST,
+			TK_CONST, // Conflict with WinAPI.
 			ENUM,
 			EXTENDS,
 			FUNC,
-			IN,
+			TK_IN, // Conflict with WinAPI.
 			IS,
 			NAMESPACE,
 			PRELOAD,
@@ -134,7 +128,7 @@ public:
 			SUPER,
 			TRAIT,
 			VAR,
-			VOID,
+			TK_VOID, // Conflict with WinAPI.
 			YIELD,
 			// Punctuation
 			BRACKET_OPEN,
@@ -314,5 +308,3 @@ public:
 
 	GDScriptTokenizerText();
 };
-
-#endif // GDSCRIPT_TOKENIZER_H

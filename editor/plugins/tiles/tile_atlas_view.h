@@ -30,8 +30,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TILE_ATLAS_VIEW_H
-#define TILE_ATLAS_VIEW_H
+#pragma once
 
 #include "editor/gui/editor_zoom_widget.h"
 #include "scene/gui/box_container.h"
@@ -61,7 +60,7 @@ private:
 	Button *button_center_view = nullptr;
 	CenterContainer *center_container = nullptr;
 	Vector2 panning;
-	void _update_zoom_and_panning(bool p_zoom_on_mouse_pos = false);
+	void _update_zoom_and_panning(bool p_zoom_on_mouse_pos = false, const Vector2 &p_mouse_pos = Vector2());
 	void _zoom_widget_changed();
 	void _center_view();
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
@@ -172,5 +171,3 @@ public:
 	TileAtlasView();
 	~TileAtlasView();
 };
-
-#endif // TILE_ATLAS_VIEW_H

@@ -30,17 +30,15 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef GODOT_JS_H
-#define GODOT_JS_H
+#pragma once
 
 #define WASM_EXPORT __attribute__((visibility("default")))
+
+#include <cstdint>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stddef.h>
-#include <stdint.h>
 
 // Config
 extern void godot_js_config_locale_get(char *p_ptr, int p_ptr_max);
@@ -138,5 +136,3 @@ extern void godot_js_display_vk_hide();
 #ifdef __cplusplus
 }
 #endif
-
-#endif // GODOT_JS_H
