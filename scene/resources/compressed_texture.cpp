@@ -271,8 +271,8 @@ bool CompressedTexture2D::is_pixel_opaque(int p_x, int p_y) const {
 		int x = p_x * aw / w;
 		int y = p_y * ah / h;
 
-		x = CLAMP(x, 0, aw);
-		y = CLAMP(y, 0, ah);
+		x = CLAMP(x, 0, aw - 1);
+		y = CLAMP(y, 0, ah - 1);
 
 		return alpha_cache->get_bit(x, y);
 	}
@@ -293,9 +293,6 @@ void CompressedTexture2D::reload_from_file() {
 	}
 
 	load(path);
-}
-
-void CompressedTexture2D::_validate_property(PropertyInfo &p_property) const {
 }
 
 Ref<Image> CompressedTexture2D::load_image_from_file(Ref<FileAccess> f, int p_size_limit) {
@@ -636,9 +633,6 @@ void CompressedTexture3D::reload_from_file() {
 	load(path);
 }
 
-void CompressedTexture3D::_validate_property(PropertyInfo &p_property) const {
-}
-
 void CompressedTexture3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("load", "path"), &CompressedTexture3D::load);
 	ClassDB::bind_method(D_METHOD("get_load_path"), &CompressedTexture3D::get_load_path);
@@ -826,9 +820,6 @@ void CompressedTextureLayered::reload_from_file() {
 	}
 
 	load(path);
-}
-
-void CompressedTextureLayered::_validate_property(PropertyInfo &p_property) const {
 }
 
 void CompressedTextureLayered::_bind_methods() {

@@ -975,7 +975,7 @@ bool JavaClassWrapper::_get_type_sig(JNIEnv *env, jobject obj, uint32_t &sig, St
 	} else if (str_type == "java.lang.CharSequence") {
 		t |= JavaClass::ARG_TYPE_CHARSEQUENCE;
 		strsig += "Ljava/lang/CharSequence;";
-	} else if (str_type == "org.godotengine.godot.variant.Callable") {
+	} else if (str_type == "org.redotengine.godot.variant.Callable") {
 		t |= JavaClass::ARG_TYPE_CALLABLE;
 		strsig += "Lorg/godotengine/godot/variant/Callable;";
 	} else if (str_type == "java.lang.Boolean") {
@@ -1080,7 +1080,7 @@ bool JavaClass::_convert_object_to_variant(JNIEnv *env, jobject obj, Variant &va
 
 			if (java_class_wrapped.is_valid()) {
 				String cn = java_class_wrapped->get_java_class_name();
-				if (cn == "org.godotengine.godot.Dictionary" || cn == "java.util.HashMap") {
+				if (cn == "org.redotengine.godot.Dictionary" || cn == "java.util.HashMap") {
 					var = _jobject_to_variant(env, obj);
 				} else {
 					Ref<JavaObject> ret = Ref<JavaObject>(memnew(JavaObject(java_class_wrapped, obj)));
@@ -1444,7 +1444,7 @@ bool JavaClass::_convert_object_to_variant(JNIEnv *env, jobject obj, Variant &va
 
 					if (java_class_wrapped.is_valid()) {
 						String cn = java_class_wrapped->get_java_class_name();
-						if (cn == "org.godotengine.godot.Dictionary" || cn == "java.util.HashMap") {
+						if (cn == "org.redotengine.godot.Dictionary" || cn == "java.util.HashMap") {
 							ret[i] = _jobject_to_variant(env, obj);
 						} else {
 							Ref<JavaObject> java_obj_wrapped = Ref<JavaObject>(memnew(JavaObject(java_class_wrapped, obj)));
@@ -1602,9 +1602,12 @@ Ref<JavaClass> JavaClassWrapper::_wrap(const String &p_class, bool p_allow_priva
 				if (_new != existing) {
 					this_valid = false;
 					break;
+				} else if ((_new == Variant::OBJECT || _new == Variant::ARRAY) && E->get().param_sigs[j] != mi.param_sigs[j]) {
+					this_valid = false;
+					break;
 				}
 				new_likeliness += new_l;
-				existing_likeliness = existing_l;
+				existing_likeliness += existing_l;
 			}
 
 			if (!this_valid) {

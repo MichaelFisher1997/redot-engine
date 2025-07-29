@@ -1117,8 +1117,8 @@ bool Image::is_size_po2() const {
 void Image::resize_to_po2(bool p_square, Interpolation p_interpolation) {
 	ERR_FAIL_COND_MSG(is_compressed(), "Cannot resize in compressed image formats.");
 
-	int w = next_power_of_2(width);
-	int h = next_power_of_2(height);
+	int w = next_power_of_2((uint32_t)width);
+	int h = next_power_of_2((uint32_t)height);
 	if (p_square) {
 		w = h = MAX(w, h);
 	}
@@ -2453,22 +2453,22 @@ bool Image::is_invisible() const {
 		} break;
 		case FORMAT_RGBAH: {
 			// The alpha mask accounts for the sign bit.
-			const int pixel_count = len / 4;
+			const int pixel_count = len / 8;
 			const uint16_t *pixeldata = reinterpret_cast<const uint16_t *>(data.ptr());
 
-			for (int i = 0; i < pixel_count; i += 4) {
-				if ((pixeldata[i + 3] & 0x7FFF) != 0) {
+			for (int i = 0; i < pixel_count; i++) {
+				if ((pixeldata[i * 4 + 3] & 0x7FFF) != 0) {
 					return false;
 				}
 			}
 		} break;
 		case FORMAT_RGBAF: {
 			// The alpha mask accounts for the sign bit.
-			const int pixel_count = len / 4;
+			const int pixel_count = len / 16;
 			const uint32_t *pixeldata = reinterpret_cast<const uint32_t *>(data.ptr());
 
-			for (int i = 0; i < pixel_count; i += 4) {
-				if ((pixeldata[i + 3] & 0x7FFFFFFF) != 0) {
+			for (int i = 0; i < pixel_count; i++) {
+				if ((pixeldata[i * 4 + 3] & 0x7FFFFFFF) != 0) {
 					return false;
 				}
 			}
@@ -3466,18 +3466,24 @@ Image::UsedChannels Image::detect_used_channels(CompressSource p_source) const {
 
 	UsedChannels used_channels;
 
-	if (!c && !a) {
-		used_channels = USED_CHANNELS_L;
-	} else if (!c && a) {
-		used_channels = USED_CHANNELS_LA;
-	} else if (r && !g && !b && !a) {
-		used_channels = USED_CHANNELS_R;
-	} else if (r && g && !b && !a) {
-		used_channels = USED_CHANNELS_RG;
-	} else if (r && g && b && !a) {
-		used_channels = USED_CHANNELS_RGB;
+	if (!c) {
+		// Uniform RGB (grayscale).
+		if (a) {
+			used_channels = USED_CHANNELS_LA;
+		} else {
+			used_channels = USED_CHANNELS_L;
+		}
 	} else {
-		used_channels = USED_CHANNELS_RGBA;
+		// Colored image.
+		if (a) {
+			used_channels = USED_CHANNELS_RGBA;
+		} else if (b) {
+			used_channels = USED_CHANNELS_RGB;
+		} else if (g) {
+			used_channels = USED_CHANNELS_RG;
+		} else {
+			used_channels = USED_CHANNELS_R;
+		}
 	}
 
 	if (p_source == COMPRESS_SOURCE_SRGB && (used_channels == USED_CHANNELS_R || used_channels == USED_CHANNELS_RG)) {
@@ -3608,6 +3614,7 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("load_bmp_from_buffer", "buffer"), &Image::load_bmp_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_ktx_from_buffer", "buffer"), &Image::load_ktx_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_dds_from_buffer", "buffer"), &Image::load_dds_from_buffer);
+	ClassDB::bind_method(D_METHOD("load_gif_from_buffer", "buffer"), &Image::load_gif_from_buffer);
 
 	ClassDB::bind_method(D_METHOD("load_svg_from_buffer", "buffer", "scale"), &Image::load_svg_from_buffer, DEFVAL(1.0));
 	ClassDB::bind_method(D_METHOD("load_svg_from_string", "svg_str", "scale"), &Image::load_svg_from_string, DEFVAL(1.0));
@@ -4141,6 +4148,14 @@ Error Image::load_ktx_from_buffer(const Vector<uint8_t> &p_array) {
 	return _load_from_buffer(p_array, _ktx_mem_loader_func);
 }
 
+Error Image::load_gif_from_buffer(const Vector<uint8_t> &p_array) {
+	ERR_FAIL_NULL_V_MSG(
+			_gif_mem_loader_func,
+			ERR_UNAVAILABLE,
+			"The GIF module isn't enabled. Recompile the Redot editor or export template binary with the `module_gif_enabled=yes` SCons option.");
+	return _load_from_buffer(p_array, _gif_mem_loader_func);
+}
+
 void Image::convert_rg_to_ra_rgba8() {
 	ERR_FAIL_COND(format != FORMAT_RGBA8);
 	ERR_FAIL_COND(data.is_empty());
@@ -4264,7 +4279,7 @@ Image::Image(const uint8_t *p_mem_png_jpg, int p_len) {
 	}
 }
 
-Ref<Resource> Image::duplicate(bool p_subresources) const {
+Ref<Resource> Image::_duplicate(const DuplicateParams &p_params) const {
 	Ref<Image> copy;
 	copy.instantiate();
 	copy->_copy_internals_from(*this);

@@ -869,8 +869,11 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 
 			ERR_FAIL_COND_V_MSG(p_depth > Variant::MAX_RECURSION_DEPTH, ret, "Variant is too deep. Bailing.");
 
-			for (int i = 0; i < arr.size(); i++) {
-				args.push_back(_from_native(arr[i], p_full_objects, p_depth + 1));
+			size_t arr_size = arr.size();
+			args.resize(arr_size);
+
+			for (size_t i = 0; i < arr_size; i++) {
+				args[i] = _from_native(arr[i], p_full_objects, p_depth + 1);
 			}
 
 			return ret;
@@ -880,8 +883,10 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedByteArray arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
-				args.push_back(arr[i]);
+			size_t arr_size = arr.size();
+			args.resize(arr_size);
+			for (size_t i = 0; i < arr_size; i++) {
+				args[i] = arr[i];
 			}
 
 			RETURN_ARGS;
@@ -890,8 +895,10 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedInt32Array arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
-				args.push_back(arr[i]);
+			size_t arr_size = arr.size();
+			args.resize(arr_size);
+			for (size_t i = 0; i < arr_size; i++) {
+				args[i] = arr[i];
 			}
 
 			RETURN_ARGS;
@@ -900,8 +907,10 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedInt64Array arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
-				args.push_back(arr[i]);
+			size_t arr_size = arr.size();
+			args.resize(arr_size);
+			for (size_t i = 0; i < arr_size; i++) {
+				args[i] = arr[i];
 			}
 
 			RETURN_ARGS;
@@ -910,8 +919,10 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedFloat32Array arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
-				args.push_back(arr[i]);
+			size_t arr_size = arr.size();
+			args.resize(arr_size);
+			for (size_t i = 0; i < arr_size; i++) {
+				args[i] = arr[i];
 			}
 
 			RETURN_ARGS;
@@ -920,8 +931,10 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedFloat64Array arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
-				args.push_back(arr[i]);
+			size_t arr_size = arr.size();
+			args.resize(arr_size);
+			for (size_t i = 0; i < arr_size; i++) {
+				args[i] = arr[i];
 			}
 
 			RETURN_ARGS;
@@ -930,8 +943,10 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedStringArray arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
-				args.push_back(arr[i]);
+			size_t arr_size = arr.size();
+			args.resize(arr_size);
+			for (size_t i = 0; i < arr_size; i++) {
+				args[i] = arr[i];
 			}
 
 			RETURN_ARGS;
@@ -940,10 +955,13 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedVector2Array arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
+			size_t arr_size = arr.size();
+			args.resize(arr_size * 2);
+			size_t nice_index = 0;
+			for (size_t i = 0; i < arr_size; i++) {
 				Vector2 v = arr[i];
-				args.push_back(v.x);
-				args.push_back(v.y);
+				args[nice_index++] = v.x;
+				args[nice_index++] = v.y;
 			}
 
 			RETURN_ARGS;
@@ -952,11 +970,14 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedVector3Array arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
+			size_t arr_size = arr.size();
+			args.resize(arr_size * 3);
+			size_t nice_index = 0;
+			for (size_t i = 0; i < arr_size; i++) {
 				Vector3 v = arr[i];
-				args.push_back(v.x);
-				args.push_back(v.y);
-				args.push_back(v.z);
+				args[nice_index++] = v.x;
+				args[nice_index++] = v.y;
+				args[nice_index++] = v.z;
 			}
 
 			RETURN_ARGS;
@@ -965,12 +986,15 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedColorArray arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
+			size_t arr_size = arr.size();
+			args.resize(arr_size * 4);
+			size_t nice_index = 0;
+			for (size_t i = 0; i < arr_size; i++) {
 				Color v = arr[i];
-				args.push_back(v.r);
-				args.push_back(v.g);
-				args.push_back(v.b);
-				args.push_back(v.a);
+				args[nice_index++] = v.r;
+				args[nice_index++] = v.g;
+				args[nice_index++] = v.b;
+				args[nice_index++] = v.a;
 			}
 
 			RETURN_ARGS;
@@ -979,12 +1003,15 @@ Variant JSON::_from_native(const Variant &p_variant, bool p_full_objects, int p_
 			const PackedVector4Array arr = p_variant;
 
 			Array args;
-			for (int i = 0; i < arr.size(); i++) {
+			size_t arr_size = arr.size();
+			args.resize(arr_size * 4);
+			size_t nice_index = 0;
+			for (size_t i = 0; i < arr_size; i++) {
 				Vector4 v = arr[i];
-				args.push_back(v.x);
-				args.push_back(v.y);
-				args.push_back(v.z);
-				args.push_back(v.w);
+				args[nice_index++] = v.x;
+				args[nice_index++] = v.y;
+				args[nice_index++] = v.z;
+				args[nice_index++] = v.w;
 			}
 
 			RETURN_ARGS;
@@ -1314,8 +1341,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 
 					ERR_FAIL_COND_V_MSG(p_depth > Variant::MAX_RECURSION_DEPTH, ret, "Variant is too deep. Bailing.");
 
-					ret.resize(args.size());
-					for (int i = 0; i < args.size(); i++) {
+					size_t args_size = args.size();
+					ret.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						ret[i] = _to_native(args[i], p_allow_objects, p_depth + 1);
 					}
 
@@ -1326,8 +1354,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS();
 
 					PackedByteArray arr;
-					arr.resize(args.size());
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size();
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = args[i];
 					}
 
@@ -1337,8 +1366,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS();
 
 					PackedInt32Array arr;
-					arr.resize(args.size());
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size();
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = args[i];
 					}
 
@@ -1348,8 +1378,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS();
 
 					PackedInt64Array arr;
-					arr.resize(args.size());
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size();
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = args[i];
 					}
 
@@ -1359,8 +1390,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS();
 
 					PackedFloat32Array arr;
-					arr.resize(args.size());
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size();
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = args[i];
 					}
 
@@ -1370,8 +1402,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS();
 
 					PackedFloat64Array arr;
-					arr.resize(args.size());
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size();
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = args[i];
 					}
 
@@ -1381,8 +1414,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS();
 
 					PackedStringArray arr;
-					arr.resize(args.size());
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size();
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = args[i];
 					}
 
@@ -1392,8 +1426,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS_CHECK_FACTOR(2);
 
 					PackedVector2Array arr;
-					arr.resize(args.size() / 2);
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size() / 2;
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = Vector2(args[i * 2 + 0], args[i * 2 + 1]);
 					}
 
@@ -1403,8 +1438,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS_CHECK_FACTOR(3);
 
 					PackedVector3Array arr;
-					arr.resize(args.size() / 3);
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size() / 3;
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = Vector3(args[i * 3 + 0], args[i * 3 + 1], args[i * 3 + 2]);
 					}
 
@@ -1414,8 +1450,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS_CHECK_FACTOR(4);
 
 					PackedColorArray arr;
-					arr.resize(args.size() / 4);
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size() / 4;
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = Color(args[i * 4 + 0], args[i * 4 + 1], args[i * 4 + 2], args[i * 4 + 3]);
 					}
 
@@ -1425,8 +1462,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 					LOAD_ARGS_CHECK_FACTOR(4);
 
 					PackedVector4Array arr;
-					arr.resize(args.size() / 4);
-					for (int i = 0; i < arr.size(); i++) {
+					size_t args_size = args.size() / 4;
+					arr.resize(args_size);
+					for (size_t i = 0; i < args_size; i++) {
 						arr.write[i] = Vector4(args[i * 4 + 0], args[i * 4 + 1], args[i * 4 + 2], args[i * 4 + 3]);
 					}
 
@@ -1497,8 +1535,9 @@ Variant JSON::_to_native(const Variant &p_json, bool p_allow_objects, int p_dept
 			const Array arr = p_json;
 
 			Array ret;
-			ret.resize(arr.size());
-			for (int i = 0; i < arr.size(); i++) {
+			size_t arr_size = arr.size();
+			ret.resize(arr_size);
+			for (size_t i = 0; i < arr_size; i++) {
 				ret[i] = _to_native(arr[i], p_allow_objects, p_depth + 1);
 			}
 

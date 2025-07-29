@@ -134,6 +134,8 @@ private:
 	String code_region_start_tag = "region";
 	String code_region_end_tag = "endregion";
 	void _update_code_region_tags();
+	bool _fold_line(int p_line);
+	bool _unfold_line(int p_line);
 
 	/* Delimiters */
 	enum DelimiterType {
@@ -325,6 +327,8 @@ protected:
 
 	virtual void _unhide_carets() override;
 
+	virtual void _draw_guidelines() override;
+
 	/* Text manipulation */
 
 	// Overridable actions
@@ -428,6 +432,7 @@ public:
 	void toggle_foldable_line(int p_line);
 	void toggle_foldable_lines_at_carets();
 
+	int get_folded_line_header(int p_line) const;
 	bool is_line_folded(int p_line) const;
 	TypedArray<int> get_folded_lines() const;
 
@@ -503,6 +508,7 @@ public:
 
 	String get_text_for_symbol_lookup() const;
 	String get_text_with_cursor_char(int p_line, int p_column) const;
+	String get_lookup_word(int p_line, int p_column) const;
 
 	void set_symbol_lookup_word_as_valid(bool p_valid);
 

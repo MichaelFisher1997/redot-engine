@@ -58,7 +58,7 @@ private:
 
 	static Mutex shader_mutex;
 	static RID shader_cache[4];
-	static void _update_shader();
+	static void _update_shader(bool p_use_debanding, bool p_use_sky_cover);
 	mutable bool shader_set = false;
 
 	RID get_shader_cache() const;
@@ -132,7 +132,7 @@ private:
 
 	static Mutex shader_mutex;
 	static RID shader_cache[2];
-	static void _update_shader();
+	static void _update_shader(bool p_filter);
 	mutable bool shader_set = false;
 
 	bool filter = true;
@@ -183,7 +183,7 @@ private:
 	float energy_multiplier = 1.0f;
 	bool use_debanding = true;
 	Ref<Texture2D> night_sky;
-	static void _update_shader();
+	static void _update_shader(bool p_use_debanding, bool p_use_night_sky);
 	mutable bool shader_set = false;
 
 protected:

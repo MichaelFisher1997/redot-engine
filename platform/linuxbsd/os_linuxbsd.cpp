@@ -34,6 +34,9 @@
 
 #include "core/io/certs_compressed.gen.h"
 #include "core/io/dir_access.h"
+#ifdef SDL_ENABLED
+#include "drivers/sdl/joypad_sdl.h"
+#endif
 #include "main/main.h"
 #include "servers/display_server.h"
 #include "servers/rendering_server.h"
@@ -160,8 +163,13 @@ void OS_LinuxBSD::initialize() {
 }
 
 void OS_LinuxBSD::initialize_joypads() {
-#ifdef JOYDEV_ENABLED
-	joypad = memnew(JoypadLinux(Input::get_singleton()));
+#ifdef SDL_ENABLED
+	joypad_sdl = memnew(JoypadSDL());
+	if (joypad_sdl->initialize() != OK) {
+		ERR_PRINT("Couldn't initialize SDL joypad input driver.");
+		memdelete(joypad_sdl);
+		joypad_sdl = nullptr;
+	}
 #endif
 }
 
@@ -243,9 +251,9 @@ void OS_LinuxBSD::finalize() {
 	driver_alsamidi.close();
 #endif
 
-#ifdef JOYDEV_ENABLED
-	if (joypad) {
-		memdelete(joypad);
+#ifdef SDL_ENABLED
+	if (joypad_sdl) {
+		memdelete(joypad_sdl);
 	}
 #endif
 }
@@ -975,8 +983,10 @@ void OS_LinuxBSD::run() {
 
 	while (true) {
 		DisplayServer::get_singleton()->process_events(); // get rid of pending events
-#ifdef JOYDEV_ENABLED
-		joypad->process_joypads();
+#ifdef SDL_ENABLED
+		if (joypad_sdl) {
+			joypad_sdl->process_events();
+		}
 #endif
 		if (Main::iteration()) {
 			break;
@@ -1199,6 +1209,7 @@ String OS_LinuxBSD::get_system_ca_certificates() {
 	return f->get_as_text();
 }
 
+#ifdef TOOLS_ENABLED
 bool OS_LinuxBSD::_test_create_rendering_device(const String &p_display_driver) const {
 	// Tests Rendering Device creation.
 
@@ -1265,6 +1276,7 @@ bool OS_LinuxBSD::_test_create_rendering_device_and_gl(const String &p_display_d
 #endif
 	return _test_create_rendering_device(p_display_driver);
 }
+#endif
 
 OS_LinuxBSD::OS_LinuxBSD() {
 	main_loop = nullptr;

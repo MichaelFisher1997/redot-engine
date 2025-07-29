@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include "core/io/image_frames.h"
 #include "scene/resources/sprite_frames.h"
 
 #include "tests/test_macros.h"
@@ -243,5 +244,62 @@ TEST_CASE("[SpriteFrames] Frame addition, removal, and retrieval") {
 	CHECK_MESSAGE(
 			frames.get_frame_count(test_animation_name) == 0,
 			"Clears frames.");
+}
+
+TEST_CASE("[SpriteFrames] ImageFrames Animation getter and setter") {
+	Ref<Texture2D> dummy_frame1;
+	dummy_frame1.instantiate();
+
+	SpriteFrames frames;
+	frames.add_animation(test_animation_name);
+
+	frames.add_frame(test_animation_name, dummy_frame1, 1.0, 0);
+	frames.add_frame(test_animation_name, dummy_frame1, 2.0, 1);
+	frames.add_frame(test_animation_name, dummy_frame1, 3.0, 2);
+
+	Ref<ImageFrames> image_frames = frames.make_image_frames(test_animation_name);
+
+	CHECK_MESSAGE(
+			image_frames->get_frame_count() == 3,
+			"ImageFrames frame count is set");
+
+	CHECK_MESSAGE(
+			image_frames->get_loop_count() == 0,
+			"ImageFrames loop count is set");
+
+	for (int i = 0; i < image_frames->get_frame_count(); i++) {
+		CHECK_MESSAGE(
+				image_frames->get_frame_image(i) == dummy_frame1,
+				"ImageFrames image is set");
+		CHECK_MESSAGE(
+				image_frames->get_frame_delay(i) == float(i + 1),
+				"ImageFrames delay is set");
+	}
+
+	Ref<SpriteFrames> new_frames;
+	new_frames.instantiate();
+
+	// These error handling cases should not crash.
+	ERR_PRINT_OFF;
+	new_frames->set_from_image_frames(image_frames, test_animation_name);
+	ERR_PRINT_ON;
+
+	CHECK_MESSAGE(
+			new_frames->has_animation(test_animation_name),
+			"SpriteFrames Animation is set");
+
+	CHECK_MESSAGE(
+			new_frames->get_frame_count(test_animation_name) == 3,
+			"SpriteFrames frame count is set");
+
+	CHECK_MESSAGE(
+			new_frames->get_animation_loop(test_animation_name),
+			"SpriteFrames loop is set");
+
+	for (int i = 0; i < image_frames->get_frame_count(); i++) {
+		CHECK_MESSAGE(
+				new_frames->get_frame_duration(test_animation_name, i) == float(i + 1),
+				"SpriteFrames delay is set");
+	}
 }
 } // namespace TestSpriteFrames

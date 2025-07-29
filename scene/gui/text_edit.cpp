@@ -257,7 +257,7 @@ inline bool is_inline_info_valid(const Variant &p_info) {
 		return false;
 	}
 	Dictionary info = p_info;
-	if (!info.get_valid("column").is_num() || !info.get_valid("line").is_num() || !info.get_valid("width_ratio").is_num()) {
+	if (!info.get_valid("column").is_num() || !info.get_valid("width_ratio").is_num()) {
 		return false;
 	}
 	return true;
@@ -302,7 +302,7 @@ void TextEdit::Text::invalidate_cache(int p_line, bool p_text_changed) {
 		int from = 0;
 		if (inline_object_parser.is_valid()) {
 			// Insert inline object.
-			Variant parsed_result = inline_object_parser.call(text_with_ime, p_line);
+			Variant parsed_result = inline_object_parser.call(text_with_ime);
 			if (parsed_result.is_array()) {
 				Array object_infos = parsed_result;
 				for (Variant val : object_infos) {
@@ -1305,6 +1305,9 @@ void TextEdit::_notification(int p_what) {
 				top_limit_y += theme_cache.style_normal->get_margin(SIDE_TOP);
 				bottom_limit_y -= theme_cache.style_normal->get_margin(SIDE_BOTTOM);
 			}
+
+			// Draw guidelines.
+			_draw_guidelines();
 
 			// Draw main text.
 			line_drawing_cache.clear();
@@ -2388,12 +2391,13 @@ void TextEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 					float wrap_indent = wrap_i > first_indent_line ? MIN(text.get_indent_offset(pos.y, is_layout_rtl()), wrap_at_column * 0.6) : 0.0;
 
 					Ref<TextParagraph> ldata = text.get_line_data(line);
-					for (Variant k : ldata->get_line_objects(wrap_i)) {
-						if (!is_inline_info_valid(k)) {
+					for (const Variant &inline_key : ldata->get_line_objects(wrap_i)) {
+						if (!is_inline_info_valid(inline_key)) {
 							continue;
 						}
-						Dictionary info = k;
-						Rect2 obj_rect = ldata->get_line_object_rect(wrap_i, k);
+						Dictionary info = inline_key.duplicate();
+						info["line"] = line;
+						Rect2 obj_rect = ldata->get_line_object_rect(wrap_i, inline_key);
 						obj_rect.position.x += xmargin_beg + wrap_indent - first_visible_col;
 
 						if (mpos.x > obj_rect.position.x && mpos.x < obj_rect.get_end().x) {
@@ -3429,6 +3433,8 @@ void TextEdit::_update_ime_window_position() {
 	if (get_window()->get_embedder()) {
 		pos += get_viewport()->get_popup_base_transform().get_origin();
 	}
+	// Take into account the window's transform.
+	pos = get_window()->get_screen_transform().xform(pos);
 	// The window will move to the updated position the next time the IME is updated, not immediately.
 	DisplayServer::get_singleton()->window_set_ime_position(pos, wid);
 }
@@ -3633,22 +3639,24 @@ String TextEdit::get_tooltip(const Point2 &p_pos) const {
 		return Control::get_tooltip(p_pos);
 	}
 	Point2i pos = get_line_column_at_pos(p_pos);
-	int row = pos.y;
+	int line = pos.y;
 	int col = pos.x;
 
-	String s = text[row];
-	if (s.length() == 0) {
+	const String &text_line = text[line];
+	if (text_line.is_empty()) {
 		return Control::get_tooltip(p_pos);
 	}
-	int beg, end;
-	if (select_word(s, col, beg, end)) {
-		Variant args[1] = { s.substr(beg, end - beg) };
-		const Variant *argp[] = { &args[0] };
-		Callable::CallError ce;
-		Variant ret;
-		tooltip_callback.callp(argp, 1, ret, ce);
-		ERR_FAIL_COND_V_MSG(ce.error != Callable::CallError::CALL_OK, "", "Failed to call custom tooltip.");
-		return ret;
+	const PackedInt32Array words = TS->shaped_text_get_word_breaks(text.get_line_data(line)->get_rid());
+	for (int i = 0; i < words.size(); i = i + 2) {
+		if (words[i] <= col && words[i + 1] >= col) {
+			Variant args[1] = { text_line.substr(words[i], words[i + 1] - words[i]) };
+			const Variant *argp[] = { &args[0] };
+			Callable::CallError ce;
+			Variant ret;
+			tooltip_callback.callp(argp, 1, ret, ce);
+			ERR_FAIL_COND_V_MSG(ce.error != Callable::CallError::CALL_OK, "", "Failed to call custom tooltip.");
+			return ret;
+		}
 	}
 
 	return Control::get_tooltip(p_pos);
@@ -4924,43 +4932,29 @@ Point2 TextEdit::get_local_mouse_pos() const {
 
 String TextEdit::get_word_at_pos(const Vector2 &p_pos) const {
 	Point2i pos = get_line_column_at_pos(p_pos, false, false);
-	int row = pos.y;
+	int line = pos.y;
 	int col = pos.x;
-	if (row < 0 || col < 0) {
-		return "";
-	}
+	return get_word(line, col);
+}
 
-	String s = text[row];
-	if (s.length() == 0) {
-		return "";
+String TextEdit::get_word(int p_line, int p_column) const {
+	if (p_line < 0 || p_column < 0) {
+		return String();
 	}
-	int beg, end;
-	if (select_word(s, col, beg, end)) {
-		bool inside_quotes = false;
-		char32_t selected_quote = '\0';
-		int qbegin = 0, qend = 0;
-		for (int i = 0; i < s.length(); i++) {
-			if (s[i] == '"' || s[i] == '\'') {
-				if (i == 0 || s[i - 1] != '\\') {
-					if (inside_quotes && selected_quote == s[i]) {
-						qend = i;
-						inside_quotes = false;
-						selected_quote = '\0';
-						if (col >= qbegin && col <= qend) {
-							return s.substr(qbegin, qend - qbegin);
-						}
-					} else if (!inside_quotes) {
-						qbegin = i + 1;
-						inside_quotes = true;
-						selected_quote = s[i];
-					}
-				}
-			}
+	ERR_FAIL_INDEX_V(p_line, text.size(), String());
+
+	const String &text_line = text[p_line];
+	if (text_line.is_empty()) {
+		return String();
+	}
+	ERR_FAIL_INDEX_V(p_column, text_line.size() + 1, String());
+
+	const PackedInt32Array words = TS->shaped_text_get_word_breaks(text.get_line_data(p_line)->get_rid());
+	for (int i = 0; i < words.size(); i = i + 2) {
+		if (words[i] <= p_column && words[i + 1] >= p_column) {
+			return text_line.substr(words[i], words[i + 1] - words[i]);
 		}
-
-		return s.substr(beg, end - beg);
 	}
-
 	return String();
 }
 
@@ -7631,6 +7625,12 @@ void TextEdit::_bind_methods() {
 	/* Settings. */
 	GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "gui/timers/text_edit_idle_detect_sec", PROPERTY_HINT_RANGE, "0,10,0.01,or_greater"), 3);
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "gui/common/text_edit_undo_stack_max_size", PROPERTY_HINT_RANGE, "0,10000,1,or_greater"), 1024);
+
+	/* Dependencies */
+	ADD_CLASS_DEPENDENCY("HScrollBar");
+	ADD_CLASS_DEPENDENCY("PopupMenu");
+	ADD_CLASS_DEPENDENCY("Timer");
+	ADD_CLASS_DEPENDENCY("VScrollBar");
 }
 
 /* Internal API for CodeEdit. */
@@ -8409,7 +8409,7 @@ void TextEdit::_update_selection_mode_word(bool p_initial) {
 	int end = beg;
 	PackedInt32Array words = TS->shaped_text_get_word_breaks(text.get_line_data(line)->get_rid());
 	for (int i = 0; i < words.size(); i = i + 2) {
-		if ((words[i] < caret_pos && words[i + 1] > caret_pos) || (i == words.size() - 2 && caret_pos == words[i + 1])) {
+		if ((p_initial && words[i] <= caret_pos && words[i + 1] >= caret_pos) || (!p_initial && words[i] < caret_pos && words[i + 1] > caret_pos)) {
 			beg = words[i];
 			end = words[i + 1];
 			break;
@@ -8428,7 +8428,10 @@ void TextEdit::_update_selection_mode_word(bool p_initial) {
 		int origin_col = is_new_selection_dir_right ? carets[caret_index].selection.word_begin_column : carets[caret_index].selection.word_end_column;
 		int caret_col = is_new_selection_dir_right ? end : beg;
 
-		select(origin_line, origin_col, line, caret_col, caret_index);
+		// Expand the word selection only if the caret is not at the start of the selection.
+		if (column != carets[caret_index].selection.word_begin_column || line != origin_line || carets[caret_index].selection.word_begin_column == carets[caret_index].selection.word_end_column) {
+			select(origin_line, origin_col, line, caret_col, caret_index);
+		}
 	}
 	adjust_viewport_to_caret(caret_index);
 

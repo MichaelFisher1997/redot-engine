@@ -227,6 +227,11 @@ public:
 	FUNC3(body_apply_force, RID, const Vector3 &, const Vector3 &);
 	FUNC2(body_apply_torque, RID, const Vector3 &);
 
+	FUNC3(soft_body_apply_point_impulse, RID, int, const Vector3 &);
+	FUNC3(soft_body_apply_point_force, RID, int, const Vector3 &);
+	FUNC2(soft_body_apply_central_impulse, RID, const Vector3 &);
+	FUNC2(soft_body_apply_central_force, RID, const Vector3 &);
+
 	FUNC2(body_add_constant_central_force, RID, const Vector3 &);
 	FUNC3(body_add_constant_force, RID, const Vector3 &, const Vector3 &);
 	FUNC2(body_add_constant_torque, RID, const Vector3 &);
@@ -305,6 +310,9 @@ public:
 
 	FUNC2(soft_body_set_linear_stiffness, RID, real_t);
 	FUNC1RC(real_t, soft_body_get_linear_stiffness, RID);
+
+	FUNC2(soft_body_set_shrinking_factor, RID, real_t);
+	FUNC1RC(real_t, soft_body_get_shrinking_factor, RID);
 
 	FUNC2(soft_body_set_pressure_coefficient, RID, real_t);
 	FUNC1RC(real_t, soft_body_get_pressure_coefficient, RID);

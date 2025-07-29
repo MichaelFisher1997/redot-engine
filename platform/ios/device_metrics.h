@@ -34,7 +34,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface GodotDeviceMetrics : NSObject
+@interface GDTDeviceMetrics : NSObject
 
 @property(nonatomic, class, readonly, strong) NSDictionary<NSArray *, NSNumber *> *dpiList;
 

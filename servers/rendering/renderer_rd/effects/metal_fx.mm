@@ -125,6 +125,8 @@ MFXSpatialContext *MFXSpatialEffect::create_context(CreateParams p_params) const
 	return context;
 }
 
+#ifdef METAL_MFXTEMPORAL_ENABLED
+
 #pragma mark - Temporal Scaler
 
 MFXTemporalContext::~MFXTemporalContext() {}
@@ -221,3 +223,5 @@ void MFXTemporalEffect::callback(RDD *p_driver, RDD::CommandBufferID p_command_b
 
 	GODOT_CLANG_WARNING_POP
 }
+
+#endif

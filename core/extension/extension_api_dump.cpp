@@ -41,7 +41,7 @@
 #include "core/version.h"
 
 #ifdef TOOLS_ENABLED
-#include "editor/editor_help.h"
+#include "editor/doc/editor_help.h"
 
 static String get_builtin_or_variant_type_name(const Variant::Type p_type) {
 	if (p_type == Variant::NIL) {
@@ -1129,9 +1129,11 @@ Dictionary GDExtensionAPIDump::generate_extension_api(bool p_include_docs) {
 
 						Vector<uint32_t> compat_hashes = ClassDB::get_method_compatibility_hashes(class_name, method_name);
 						Array compatibility;
-						if (compat_hashes.size()) {
-							for (int i = 0; i < compat_hashes.size(); i++) {
-								compatibility.push_back(compat_hashes[i]);
+						size_t compat_hashes_size = compat_hashes.size();
+						if (compat_hashes_size) {
+							compatibility.resize(compat_hashes_size);
+							for (size_t i = 0; i < compat_hashes_size; i++) {
+								compatibility[i] = compat_hashes[i];
 							}
 						}
 

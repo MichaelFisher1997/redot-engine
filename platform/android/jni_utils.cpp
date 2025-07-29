@@ -201,6 +201,22 @@ jvalret _variant_to_jvalue(JNIEnv *env, Variant::Type p_type, const Variant *p_a
 			v.obj = jdict;
 		} break;
 
+		case Variant::ARRAY: {
+			Array array = *p_arg;
+			jobjectArray arr = env->NewObjectArray(array.size(), env->FindClass("java/lang/Object"), nullptr);
+
+			for (int j = 0; j < array.size(); j++) {
+				Variant var = array[j];
+				jvalret valret = _variant_to_jvalue(env, var.get_type(), &var, true);
+				env->SetObjectArrayElement(arr, j, valret.val.l);
+				if (valret.obj) {
+					env->DeleteLocalRef(valret.obj);
+				}
+			}
+			v.val.l = arr;
+			v.obj = arr;
+		} break;
+
 		case Variant::PACKED_INT32_ARRAY: {
 			Vector<int> array = *p_arg;
 			jintArray arr = env->NewIntArray(array.size());
@@ -447,7 +463,7 @@ Variant _jobject_to_variant(JNIEnv *env, jobject obj) {
 		return ret;
 	}
 
-	if (name == "org.godotengine.godot.variant.Callable") {
+	if (name == "org.redotengine.godot.variant.Callable") {
 		return jcallable_to_callable(env, obj);
 	}
 
