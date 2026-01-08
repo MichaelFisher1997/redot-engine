@@ -97,24 +97,31 @@ void OpenCodeEditorPlugin::_on_model_selected(int p_index) {
 
 void OpenCodeEditorPlugin::_populate_models() {
 	List<String> args;
-	args.push_back("-c");
-	args.push_back("opencode models");
+	args.push_back("models");
 	String output;
 	int exit_code = 0;
 
-	String opencode_path = "/bin/sh";
+	// Try absolute path first since we know it
+	String opencode_path = "/home/micqdf/.npm-global/bin/opencode";
 	Error err = OS::get_singleton()->execute(opencode_path, args, &output, &exit_code, true);
 
 	if (err != OK || exit_code != 0) {
+		// Fallback to PATH
+		opencode_path = "opencode";
+		err = OS::get_singleton()->execute(opencode_path, args, &output, &exit_code, true);
+	}
+
+	if (err != OK || exit_code != 0) {
+		// Try shell wrapping
+		opencode_path = "/bin/sh";
 		args.clear();
 		args.push_back("-c");
-		args.push_back("/home/micqdf/.npm-global/bin/opencode models");
+		args.push_back("opencode models");
 		err = OS::get_singleton()->execute(opencode_path, args, &output, &exit_code, true);
 	}
 
 	if (err != OK) {
-		chat_log->add_text("\nError: Could not execute 'opencode' via /bin/sh. (Error: " + itos(err) + ")\n");
-		chat_log->add_text("PATH: " + OS::get_singleton()->get_environment("PATH") + "\n");
+		chat_log->add_text("\nError: Could not execute 'opencode'. (Error: " + itos(err) + ")\n");
 		return;
 	}
 
@@ -128,7 +135,7 @@ void OpenCodeEditorPlugin::_populate_models() {
 	model_selector->clear();
 	for (int i = 0; i < lines.size(); i++) {
 		String m = lines[i].strip_edges();
-		// Remove ANSI escape codes if any
+		// Remove ANSI escape codes
 		while (m.contains("\x1b[")) {
 			int start = m.find("\x1b[");
 			int end = m.find("m", start);
@@ -146,7 +153,7 @@ void OpenCodeEditorPlugin::_populate_models() {
 
 	if (model_selector->get_item_count() == 0) {
 		chat_log->add_text("\nWarning: No valid models found in output.\n");
-		chat_log->add_text("Full Output (escaped):\n" + output.json_escape() + "\n");
+		chat_log->add_text("Raw Output (first 100 chars): " + output.left(100).json_escape() + "\n");
 	}
 }
 

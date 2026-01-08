@@ -45,19 +45,43 @@ void OpenCodeACPClient::_thread_func(void *p_userdata) {
 		if (self->pipe.is_valid() && !self->pipe->eof_reached()) {
 			String line = self->pipe->get_line();
 			if (!line.is_empty()) {
-				Variant msg = JSON::parse_string(line);
-				if (msg.get_type() == Variant::DICTIONARY) {
-					Dictionary d = msg;
-					if (d.has("method")) {
-						if (d.has("id")) {
-							self->call_deferred(SNAME("_handle_rpc_request"), d);
-						} else {
-							self->call_deferred(SNAME("_handle_rpc_notification"), d);
-						}
-					} else if (d.has("result") || d.has("error")) {
-						self->call_deferred(SNAME("_handle_rpc_response"), d);
+				bool is_json = false;
+				for (int i = 0; i < line.length(); i++) {
+					char32_t c = line[i];
+					if (c <= 32) {
+						continue;
 					}
-				} else {
+					if (c == '{') {
+						is_json = true;
+					}
+					break;
+				}
+
+				if (is_json) {
+					Ref<JSON> json;
+					json.instantiate();
+					if (json->parse(line) == OK) {
+						Variant msg = json->get_data();
+						if (msg.get_type() == Variant::DICTIONARY) {
+							Dictionary d = msg;
+							if (d.has("method")) {
+								if (d.has("id")) {
+									self->call_deferred(SNAME("_handle_rpc_request"), d);
+								} else {
+									self->call_deferred(SNAME("_handle_rpc_notification"), d);
+								}
+							} else if (d.has("result") || d.has("error")) {
+								self->call_deferred(SNAME("_handle_rpc_response"), d);
+							}
+						} else {
+							is_json = false;
+						}
+					} else {
+						is_json = false;
+					}
+				}
+
+				if (!is_json) {
 					// Not a JSON dictionary, could be a log or banner
 					Dictionary log_msg;
 					log_msg["method"] = "window/logMessage";
@@ -142,11 +166,23 @@ Error OpenCodeACPClient::start() {
 		args.push_back(selected_model);
 	}
 
-	String opencode_path = "opencode";
+	String opencode_path = "/home/micqdf/.npm-global/bin/opencode";
 	Dictionary res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
 
 	if (!res.has("pid") || int(res["pid"]) == 0) {
-		opencode_path = "/home/micqdf/.npm-global/bin/opencode";
+		opencode_path = "opencode";
+		res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
+	}
+
+	if (!res.has("pid") || int(res["pid"]) == 0) {
+		opencode_path = "/bin/sh";
+		args.clear();
+		args.push_back("-c");
+		String cmd = "opencode acp";
+		if (!selected_model.is_empty()) {
+			cmd += " --model " + selected_model;
+		}
+		args.push_back(cmd);
 		res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
 	}
 
