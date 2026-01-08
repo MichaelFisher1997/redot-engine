@@ -83,6 +83,10 @@ void OpenCodeEditorPlugin::_on_client_message(const Dictionary &p_message) {
 	}
 }
 
+void OpenCodeEditorPlugin::_on_client_connection_lost(const String &p_reason) {
+	chat_log->add_text("\n[Error] Connection to OpenCode lost: " + p_reason + "\n");
+}
+
 void OpenCodeEditorPlugin::_on_model_selected(int p_index) {
 	String model = model_selector->get_item_text(p_index);
 	client->set_model(model);
@@ -93,18 +97,56 @@ void OpenCodeEditorPlugin::_on_model_selected(int p_index) {
 
 void OpenCodeEditorPlugin::_populate_models() {
 	List<String> args;
-	args.push_back("models");
+	args.push_back("-c");
+	args.push_back("opencode models");
 	String output;
-	Error err = OS::get_singleton()->execute("opencode", args, &output);
-	if (err == OK) {
-		Vector<String> lines = output.split("\n");
-		model_selector->clear();
-		for (int i = 0; i < lines.size(); i++) {
-			String m = lines[i].strip_edges();
-			if (!m.is_empty()) {
-				model_selector->add_item(m);
+	int exit_code = 0;
+
+	String opencode_path = "/bin/sh";
+	Error err = OS::get_singleton()->execute(opencode_path, args, &output, &exit_code, true);
+
+	if (err != OK || exit_code != 0) {
+		args.clear();
+		args.push_back("-c");
+		args.push_back("/home/micqdf/.npm-global/bin/opencode models");
+		err = OS::get_singleton()->execute(opencode_path, args, &output, &exit_code, true);
+	}
+
+	if (err != OK) {
+		chat_log->add_text("\nError: Could not execute 'opencode' via /bin/sh. (Error: " + itos(err) + ")\n");
+		chat_log->add_text("PATH: " + OS::get_singleton()->get_environment("PATH") + "\n");
+		return;
+	}
+
+	if (exit_code != 0) {
+		chat_log->add_text("\nError: 'opencode models' exited with code " + itos(exit_code) + "\n");
+		chat_log->add_text("Output: " + output + "\n");
+		return;
+	}
+
+	Vector<String> lines = output.split("\n");
+	model_selector->clear();
+	for (int i = 0; i < lines.size(); i++) {
+		String m = lines[i].strip_edges();
+		// Remove ANSI escape codes if any
+		while (m.contains("\x1b[")) {
+			int start = m.find("\x1b[");
+			int end = m.find("m", start);
+			if (end != -1) {
+				m = m.erase(start, end - start + 1);
+			} else {
+				break;
 			}
 		}
+
+		if (!m.is_empty() && !m.contains(" ") && m.contains("/")) {
+			model_selector->add_item(m);
+		}
+	}
+
+	if (model_selector->get_item_count() == 0) {
+		chat_log->add_text("\nWarning: No valid models found in output.\n");
+		chat_log->add_text("Full Output (escaped):\n" + output.json_escape() + "\n");
 	}
 }
 
@@ -115,6 +157,7 @@ void OpenCodeEditorPlugin::_notification(int p_what) {
 void OpenCodeEditorPlugin::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_on_input_submitted", "text"), &OpenCodeEditorPlugin::_on_input_submitted);
 	ClassDB::bind_method(D_METHOD("_on_client_message", "message"), &OpenCodeEditorPlugin::_on_client_message);
+	ClassDB::bind_method(D_METHOD("_on_client_connection_lost", "reason"), &OpenCodeEditorPlugin::_on_client_connection_lost);
 	ClassDB::bind_method(D_METHOD("_on_model_selected", "index"), &OpenCodeEditorPlugin::_on_model_selected);
 }
 
@@ -152,6 +195,7 @@ OpenCodeEditorPlugin::OpenCodeEditorPlugin() {
 
 	client.instantiate();
 	client->connect("message_received", callable_mp(this, &OpenCodeEditorPlugin::_on_client_message));
+	client->connect("connection_lost", callable_mp(this, &OpenCodeEditorPlugin::_on_client_connection_lost));
 
 	_populate_models();
 	if (model_selector->get_item_count() > 0) {

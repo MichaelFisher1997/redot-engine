@@ -57,11 +57,30 @@ void OpenCodeACPClient::_thread_func(void *p_userdata) {
 					} else if (d.has("result") || d.has("error")) {
 						self->call_deferred(SNAME("_handle_rpc_response"), d);
 					}
+				} else {
+					// Not a JSON dictionary, could be a log or banner
+					Dictionary log_msg;
+					log_msg["method"] = "window/logMessage";
+					Dictionary params;
+					params["message"] = line;
+					log_msg["params"] = params;
+					self->call_deferred(SNAME("_handle_rpc_notification"), log_msg);
 				}
 			}
 		}
+
+		if (self->process_id != 0 && !OS::get_singleton()->is_process_running(self->process_id)) {
+			self->call_deferred(SNAME("_on_process_exited"));
+			break;
+		}
+
 		OS::get_singleton()->delay_usec(10000);
 	}
+}
+
+void OpenCodeACPClient::_on_process_exited() {
+	process_id = 0;
+	emit_signal(SNAME("connection_lost"), "Process exited unexpectedly.");
 }
 
 void OpenCodeACPClient::_handle_rpc_notification(const Dictionary &p_notification) {
@@ -109,8 +128,10 @@ void OpenCodeACPClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_handle_rpc_notification", "notification"), &OpenCodeACPClient::_handle_rpc_notification);
 	ClassDB::bind_method(D_METHOD("_handle_rpc_request", "request"), &OpenCodeACPClient::_handle_rpc_request);
 	ClassDB::bind_method(D_METHOD("_handle_rpc_response", "response"), &OpenCodeACPClient::_handle_rpc_response);
+	ClassDB::bind_method(D_METHOD("_on_process_exited"), &OpenCodeACPClient::_on_process_exited);
 
 	ADD_SIGNAL(MethodInfo("message_received", PropertyInfo(Variant::DICTIONARY, "message")));
+	ADD_SIGNAL(MethodInfo("connection_lost", PropertyInfo(Variant::STRING, "reason")));
 }
 
 Error OpenCodeACPClient::start() {
@@ -121,8 +142,15 @@ Error OpenCodeACPClient::start() {
 		args.push_back(selected_model);
 	}
 
-	Dictionary res = OS::get_singleton()->execute_with_pipe("opencode", args);
-	if (res.has("pid")) {
+	String opencode_path = "opencode";
+	Dictionary res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
+
+	if (!res.has("pid") || int(res["pid"]) == 0) {
+		opencode_path = "/home/micqdf/.npm-global/bin/opencode";
+		res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
+	}
+
+	if (res.has("pid") && int(res["pid"]) != 0) {
 		process_id = res["pid"];
 		pipe = res["stdio"];
 
@@ -147,6 +175,7 @@ Error OpenCodeACPClient::start() {
 		return OK;
 	}
 
+	ERR_PRINT("OpenCodeACPClient: Failed to execute 'opencode'.");
 	return ERR_CANT_FORK;
 }
 

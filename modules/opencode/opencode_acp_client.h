@@ -55,12 +55,16 @@ class OpenCodeACPClient : public RefCounted {
 	void _handle_rpc_request(const Dictionary &p_request);
 	void _handle_rpc_response(const Dictionary &p_response);
 
+	void _on_process_exited();
+
 protected:
 	static void _bind_methods();
 
 public:
 	Error start();
 	void stop();
+
+	bool is_running() const { return process_id != 0; }
 
 	void set_model(const String &p_model) { selected_model = p_model; }
 	String get_model() const { return selected_model; }

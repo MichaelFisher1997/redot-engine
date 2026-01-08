@@ -53,6 +53,7 @@ class OpenCodeEditorPlugin : public EditorPlugin {
 
 	void _on_input_submitted(const String &p_text);
 	void _on_client_message(const Dictionary &p_message);
+	void _on_client_connection_lost(const String &p_reason);
 	void _on_model_selected(int p_index);
 	void _populate_models();
 
