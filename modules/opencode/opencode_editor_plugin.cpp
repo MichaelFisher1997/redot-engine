@@ -1,0 +1,114 @@
+/**************************************************************************/
+/*  opencode_editor_plugin.cpp                                            */
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                             REDOT ENGINE                               */
+/*                        https://redotengine.org                         */
+/**************************************************************************/
+/* Copyright (c) 2024-present Redot Engine contributors                   */
+/*                                          (see REDOT_AUTHORS.md)        */
+/* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
+/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#include "opencode_editor_plugin.h"
+
+#include "editor/editor_node.h"
+
+void OpenCodeEditorPlugin::_on_input_submitted(const String &p_text) {
+	if (p_text.strip_edges().is_empty()) {
+		return;
+	}
+
+	chat_log->add_text("\nUser: " + p_text + "\n");
+	input_field->set_text("");
+
+	Dictionary params;
+	params["prompt"] = p_text;
+	client->send_request("chat", params);
+}
+
+void OpenCodeEditorPlugin::_on_client_message(const Dictionary &p_message) {
+	if (p_message.has("method")) {
+		String method = p_message["method"];
+		if (method == "window/logMessage") {
+			Dictionary params = p_message["params"];
+			chat_log->add_text("\nAgent Log: " + String(params["message"]) + "\n");
+		}
+	} else if (p_message.has("result")) {
+		Variant result = p_message["result"];
+		if (result.get_type() == Variant::DICTIONARY) {
+			Dictionary d = result;
+			if (d.has("content")) {
+				chat_log->add_text("\nAgent: " + String(d["content"]) + "\n");
+			} else if (d.has("capabilities")) {
+				chat_log->add_text("\nAgent Connected and Ready.\n");
+				client->send_notification("initialized", Dictionary());
+			}
+		} else {
+			chat_log->add_text("\nAgent: " + result.get_construct_string() + "\n");
+		}
+	}
+}
+
+void OpenCodeEditorPlugin::_notification(int p_what) {
+	// Handled in constructor
+}
+
+void OpenCodeEditorPlugin::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("_on_input_submitted", "text"), &OpenCodeEditorPlugin::_on_input_submitted);
+	ClassDB::bind_method(D_METHOD("_on_client_message", "message"), &OpenCodeEditorPlugin::_on_client_message);
+}
+
+void OpenCodeEditorPlugin::initialize() {
+	EditorNode::add_editor_plugin(memnew(OpenCodeEditorPlugin));
+}
+
+OpenCodeEditorPlugin::OpenCodeEditorPlugin() {
+	main_control = memnew(VBoxContainer);
+	main_control->set_name("OpenCode");
+
+	chat_log = memnew(RichTextLabel);
+	chat_log->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+	chat_log->set_scroll_follow(true);
+	chat_log->set_selection_enabled(true);
+	chat_log->set_context_menu_enabled(true);
+	main_control->add_child(chat_log);
+
+	input_field = memnew(LineEdit);
+	input_field->set_placeholder("Ask OpenCode...");
+	input_field->connect("text_submitted", callable_mp(this, &OpenCodeEditorPlugin::_on_input_submitted));
+	main_control->add_child(input_field);
+
+	// Add to bottom panel
+	add_control_to_bottom_panel(main_control, "OpenCode");
+
+	client.instantiate();
+	client->connect("message_received", callable_mp(this, &OpenCodeEditorPlugin::_on_client_message));
+	client->start();
+
+	chat_log->add_text("OpenCode ACP Client starting...\n");
+}
+
+OpenCodeEditorPlugin::~OpenCodeEditorPlugin() {
+	// Cleanup if needed
+}

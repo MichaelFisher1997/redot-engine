@@ -1,0 +1,13 @@
+# SCsub for OpenCode module
+Import('env')
+
+module_env = env.Clone()
+
+# Add source files
+sources = [
+    "register_types.cpp",
+    "opencode_acp_client.cpp",
+    "opencode_editor_plugin.cpp",
+]
+
+module_env.add_source_files(env.modules_sources, sources)
