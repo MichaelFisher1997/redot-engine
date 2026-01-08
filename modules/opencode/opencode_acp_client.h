@@ -48,6 +48,8 @@ class OpenCodeACPClient : public RefCounted {
 	static void _thread_func(void *p_userdata);
 
 	JSONRPC *rpc;
+	String sessionId;
+	String selected_model;
 
 	void _handle_rpc_notification(const Dictionary &p_notification);
 	void _handle_rpc_request(const Dictionary &p_request);
@@ -59,6 +61,11 @@ protected:
 public:
 	Error start();
 	void stop();
+
+	void set_model(const String &p_model) { selected_model = p_model; }
+	String get_model() const { return selected_model; }
+
+	String get_sessionId() const { return sessionId; }
 
 	void send_request(const String &p_method, const Dictionary &p_params);
 	void send_notification(const String &p_method, const Dictionary &p_params);

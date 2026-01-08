@@ -32,6 +32,7 @@
 
 #include "opencode_acp_client.h"
 
+#include "core/config/project_settings.h"
 #include "core/io/file_access.h"
 #include "core/io/json.h"
 #include "core/object/message_queue.h"
@@ -72,6 +73,27 @@ void OpenCodeACPClient::_handle_rpc_request(const Dictionary &p_request) {
 }
 
 void OpenCodeACPClient::_handle_rpc_response(const Dictionary &p_response) {
+	if (p_response.has("id")) {
+		int id = p_response["id"];
+		if (id == 0) { // initialize response
+			Dictionary result = p_response["result"];
+			send_notification("initialized", Dictionary());
+
+			// Create session
+			Dictionary session_params;
+			String resource_path = ProjectSettings::get_singleton()->get_resource_path();
+			if (resource_path.is_empty()) {
+				resource_path = OS::get_singleton()->get_executable_path().get_base_dir();
+			}
+			session_params["cwd"] = ProjectSettings::get_singleton()->globalize_path(resource_path);
+			send_request("session/new", session_params);
+		} else if (id == 1) { // session/new response
+			Dictionary result = p_response["result"];
+			if (result.has("sessionId")) {
+				sessionId = result["sessionId"];
+			}
+		}
+	}
 	emit_signal(SNAME("message_received"), p_response);
 }
 
@@ -80,6 +102,9 @@ void OpenCodeACPClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("stop"), &OpenCodeACPClient::stop);
 	ClassDB::bind_method(D_METHOD("send_request", "method", "params"), &OpenCodeACPClient::send_request);
 	ClassDB::bind_method(D_METHOD("send_notification", "method", "params"), &OpenCodeACPClient::send_notification);
+
+	ClassDB::bind_method(D_METHOD("set_model", "model"), &OpenCodeACPClient::set_model);
+	ClassDB::bind_method(D_METHOD("get_model"), &OpenCodeACPClient::get_model);
 
 	ClassDB::bind_method(D_METHOD("_handle_rpc_notification", "notification"), &OpenCodeACPClient::_handle_rpc_notification);
 	ClassDB::bind_method(D_METHOD("_handle_rpc_request", "request"), &OpenCodeACPClient::_handle_rpc_request);
@@ -91,6 +116,10 @@ void OpenCodeACPClient::_bind_methods() {
 Error OpenCodeACPClient::start() {
 	List<String> args;
 	args.push_back("acp");
+	if (!selected_model.is_empty()) {
+		args.push_back("--model");
+		args.push_back(selected_model);
+	}
 
 	Dictionary res = OS::get_singleton()->execute_with_pipe("opencode", args);
 	if (res.has("pid")) {
@@ -102,7 +131,17 @@ Error OpenCodeACPClient::start() {
 
 		// Send initialize request
 		Dictionary params;
-		params["capabilities"] = Dictionary();
+		params["protocolVersion"] = 1;
+
+		Dictionary client_info;
+		client_info["name"] = "redot-engine";
+		client_info["title"] = "Redot Engine";
+		client_info["version"] = "1.0.0";
+		params["clientInfo"] = client_info;
+
+		Dictionary capabilities;
+		params["clientCapabilities"] = capabilities;
+
 		send_request("initialize", params);
 
 		return OK;
@@ -125,7 +164,13 @@ void OpenCodeACPClient::stop() {
 
 void OpenCodeACPClient::send_request(const String &p_method, const Dictionary &p_params) {
 	if (pipe.is_valid()) {
-		Dictionary req = rpc->make_request(p_method, p_params, 1); // TODO: Unique ID
+		int id = 2; // Default for chat
+		if (p_method == "initialize") {
+			id = 0;
+		} else if (p_method == "session/new") {
+			id = 1;
+		}
+		Dictionary req = rpc->make_request(p_method, p_params, id);
 		String json = JSON::stringify(req);
 		pipe->store_line(json);
 	}

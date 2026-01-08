@@ -34,7 +34,9 @@
 
 #include "editor/plugins/editor_plugin.h"
 #include "scene/gui/box_container.h"
+#include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
+#include "scene/gui/option_button.h"
 #include "scene/gui/rich_text_label.h"
 
 #include "opencode_acp_client.h"
@@ -45,11 +47,14 @@ class OpenCodeEditorPlugin : public EditorPlugin {
 	Control *main_control;
 	RichTextLabel *chat_log;
 	LineEdit *input_field;
+	OptionButton *model_selector;
 
 	Ref<OpenCodeACPClient> client;
 
 	void _on_input_submitted(const String &p_text);
 	void _on_client_message(const Dictionary &p_message);
+	void _on_model_selected(int p_index);
+	void _populate_models();
 
 protected:
 	void _notification(int p_what);
