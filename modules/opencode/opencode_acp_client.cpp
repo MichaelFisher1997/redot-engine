@@ -18,9 +18,6 @@
 /* permit persons to whom the Software is furnished to do so, subject to  */
 /* the following conditions:                                              */
 /*                                                                        */
-/* The above copyright notice and this permission notice shall be         */
-/* included in all copies or substantial portions of the Software.        */
-/*                                                                        */
 /* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
 /* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
 /* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
@@ -33,23 +30,26 @@
 #include "opencode_acp_client.h"
 
 #include "core/config/project_settings.h"
+#include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/io/json.h"
+#include "core/io/resource_loader.h"
 #include "core/object/message_queue.h"
 #include "core/os/os.h"
+#include "editor/editor_interface.h"
+#include "editor/editor_node.h"
+#include "scene/main/node.h"
 
 void OpenCodeACPClient::_thread_func(void *p_userdata) {
 	OpenCodeACPClient *self = static_cast<OpenCodeACPClient *>(p_userdata);
 
 	while (self->thread_running.is_set()) {
 		if (self->pipe.is_valid()) {
-			// Check if process is still running
 			if (self->process_id != 0 && !OS::get_singleton()->is_process_running(self->process_id)) {
 				self->call_deferred(SNAME("_on_process_exited"));
 				break;
 			}
 
-			// Check if there's data available to read
 			uint64_t available = self->pipe->get_length();
 			if (available > 0) {
 				String line = self->pipe->get_line();
@@ -91,7 +91,6 @@ void OpenCodeACPClient::_thread_func(void *p_userdata) {
 					}
 
 					if (!is_json) {
-						// Not a JSON dictionary, could be a log or banner
 						Dictionary log_msg;
 						log_msg["method"] = "window/logMessage";
 						Dictionary params;
@@ -102,7 +101,6 @@ void OpenCodeACPClient::_thread_func(void *p_userdata) {
 				}
 			}
 		}
-
 		OS::get_singleton()->delay_usec(10000);
 	}
 }
@@ -120,10 +118,11 @@ void OpenCodeACPClient::_handle_rpc_request(const Dictionary &p_request) {
 	if (!p_request.has("method") || !p_request.has("id")) {
 		return;
 	}
-
 	String method = p_request["method"];
 	Variant id = p_request["id"];
 	Dictionary params = p_request.has("params") ? Dictionary(p_request["params"]) : Dictionary();
+
+	print_line("OpenCodeACPClient: Tool Request: " + method);
 
 	Dictionary result;
 	Dictionary error;
@@ -132,23 +131,24 @@ void OpenCodeACPClient::_handle_rpc_request(const Dictionary &p_request) {
 		result = _handle_fs_read_text_file(params);
 	} else if (method == "fs/writeTextFile") {
 		result = _handle_fs_write_text_file(params);
+	} else if (method == "fs/listDirectory") {
+		result = _handle_fs_list_directory(params);
 	} else if (method == "terminal/execute") {
 		result = _handle_terminal_execute(params);
+	} else if (method == "editor/showNotification") {
+		result = _handle_editor_show_notification(params);
+	} else if (method == "editor/createNode") {
+		result = _handle_editor_create_node(params);
+	} else if (method == "editor/createAndOpenScript") {
+		result = _handle_editor_create_and_open_script(params);
+	} else if (method == "editor/openFile" || method == "window/showDocument") {
+		result = _handle_editor_open_file(params);
 	} else {
-		// Method not found
-		error["code"] = -32601; // Method not found
+		error["code"] = -32601;
 		error["message"] = "Method not found: " + method;
 	}
 
-	if (error.is_empty() && result.is_empty() && method != "fs/readTextFile") {
-		// If no result and no error, but also not a successful void return (readTextFile returns content)
-		// Actually, successful write/execute usually return something or empty dict.
-		// Let's assume tool handlers set result or error.
-	}
-
 	send_response(id, result, error);
-
-	// Still emit signal for UI updates/logging
 	emit_signal(SNAME("message_received"), p_request);
 }
 
@@ -156,49 +156,104 @@ void OpenCodeACPClient::send_response(const Variant &p_id, const Dictionary &p_r
 	if (pipe.is_valid()) {
 		Dictionary response;
 		if (!p_error.is_empty()) {
-			int code = p_error.has("code") ? int(p_error["code"]) : -32603; // Internal error default
+			int code = p_error.has("code") ? int(p_error["code"]) : -32603;
 			String message = p_error.has("message") ? String(p_error["message"]) : "Unknown error";
 			response = rpc->make_response_error(code, message, p_id);
 		} else {
 			response = rpc->make_response(p_result, p_id);
 		}
-
-		String json = JSON::stringify(response);
-		pipe->store_line(json);
+		pipe->store_line(JSON::stringify(response));
 	}
+}
+
+String OpenCodeACPClient::_sanitize_path(const String &p_path) {
+	String path = p_path.strip_edges();
+	int last_protocol = path.rfind("res:/");
+	if (last_protocol != -1) {
+		int offset = 5;
+		if (path.length() > last_protocol + offset && path[last_protocol + offset] == '/') {
+			offset++;
+		}
+		path = "res://" + path.substr(last_protocol + offset).lstrip("/");
+	} else if (path.begins_with("file://")) {
+		path = path.substr(7);
+	}
+	String project_path = ProjectSettings::get_singleton()->get_resource_path();
+	if (!project_path.is_empty() && path.begins_with(project_path)) {
+		path = "res://" + path.substr(project_path.length()).lstrip("/");
+	}
+	if (path.begins_with("res:/") && !path.begins_with("res://")) {
+		path = "res://" + path.substr(5).lstrip("/");
+	}
+	print_line("OpenCodeACPClient: Sanitized path '" + p_path + "' -> '" + path + "'");
+	return path;
 }
 
 Dictionary OpenCodeACPClient::_handle_fs_read_text_file(const Dictionary &p_params) {
 	Dictionary result;
-	if (!p_params.has("path")) {
-		// Error handling should ideally return an error dict, but for now empty result implies failure?
-		// ACP expects text content.
+	String path;
+	if (p_params.has("path")) {
+		path = p_params["path"];
+	} else if (p_params.has("uri")) {
+		path = p_params["uri"];
+	} else {
 		return result;
 	}
-	String path = p_params["path"];
+	path = _sanitize_path(path);
 	Error err;
 	Ref<FileAccess> f = FileAccess::open(path, FileAccess::READ, &err);
 	if (f.is_valid()) {
 		result["text"] = f->get_as_text();
-	} else {
-		// Return error? Or just null? ACP fs/readTextFile returns { text: string } | null
-		// We'll return empty which results in null
 	}
 	return result;
 }
 
 Dictionary OpenCodeACPClient::_handle_fs_write_text_file(const Dictionary &p_params) {
 	Dictionary result;
-	if (!p_params.has("path") || !p_params.has("content")) {
+	String path;
+	if (p_params.has("path")) {
+		path = p_params["path"];
+	} else if (p_params.has("uri")) {
+		path = p_params["uri"];
+	} else {
 		return result;
 	}
-	String path = p_params["path"];
-	String content = p_params["content"];
+	if (!p_params.has("content")) {
+		return result;
+	}
+	path = _sanitize_path(path);
 	Error err;
 	Ref<FileAccess> f = FileAccess::open(path, FileAccess::WRITE, &err);
 	if (f.is_valid()) {
-		f->store_string(content);
-		result["success"] = true; // Convention
+		f->store_string(p_params["content"]);
+		result["success"] = true;
+	}
+	return result;
+}
+
+Dictionary OpenCodeACPClient::_handle_fs_list_directory(const Dictionary &p_params) {
+	Dictionary result;
+	String path;
+	if (p_params.has("path")) {
+		path = p_params["path"];
+	} else if (p_params.has("uri")) {
+		path = p_params["uri"];
+	} else {
+		return result;
+	}
+	path = _sanitize_path(path);
+	Ref<DirAccess> d = DirAccess::open(path);
+	if (d.is_valid()) {
+		Array files;
+		d->list_dir_begin();
+		String f = d->get_next();
+		while (!f.is_empty()) {
+			if (f != "." && f != "..") {
+				files.push_back(f);
+			}
+			f = d->get_next();
+		}
+		result["files"] = files;
 	}
 	return result;
 }
@@ -210,56 +265,147 @@ Dictionary OpenCodeACPClient::_handle_terminal_execute(const Dictionary &p_param
 	}
 	String command = p_params["command"];
 	String cwd = p_params.has("cwd") ? String(p_params["cwd"]) : "";
-
-	// Security warning: executing arbitrary commands
-	print_line("OpenCodeACPClient: Executing command: " + command);
-
 	List<String> args;
 	args.push_back("-c");
-
 	String final_cmd = command;
 	if (!cwd.is_empty()) {
 		final_cmd = "cd \"" + cwd + "\" && " + command;
 	}
 	args.push_back(final_cmd);
-
 	String output;
 	int exit_code = 0;
-	Error err = OS::get_singleton()->execute("/bin/sh", args, &output, &exit_code, true);
-	if (err != OK) {
-		result["error"] = "Failed to execute command: " + itos(err);
-	}
-
+	OS::get_singleton()->execute("/bin/sh", args, &output, &exit_code, true);
 	result["stdout"] = output;
-	result["stderr"] = ""; // execute captures both in output usually unless separated
 	result["exitCode"] = exit_code;
+	return result;
+}
 
+Dictionary OpenCodeACPClient::_handle_editor_show_notification(const Dictionary &p_params) {
+	Dictionary result;
+	if (!p_params.has("message")) {
+		return result;
+	}
+	EditorNode::get_singleton()->show_warning(p_params["message"]);
+	result["success"] = true;
+	return result;
+}
+
+Dictionary OpenCodeACPClient::_handle_editor_create_node(const Dictionary &p_params) {
+	Dictionary result;
+	if (!p_params.has("type")) {
+		return result;
+	}
+	String type = p_params["type"];
+	String name = p_params.has("name") ? String(p_params["name"]) : type;
+	Node *root = EditorInterface::get_singleton()->get_edited_scene_root();
+	if (!root) {
+		result["error"] = "No edited scene root.";
+		return result;
+	}
+	Object *obj = ClassDB::instantiate(type);
+	if (!obj) {
+		result["error"] = "Could not instantiate: " + type;
+		return result;
+	}
+	Node *node = Object::cast_to<Node>(obj);
+	if (!node) {
+		memdelete(obj);
+		result["error"] = "Not a Node: " + type;
+		return result;
+	}
+	node->set_name(name);
+	if (p_params.has("properties")) {
+		Dictionary props = p_params["properties"];
+		Array keys = props.keys();
+		for (int i = 0; i < keys.size(); i++) {
+			node->set(keys[i], props[keys[i]]);
+		}
+	}
+	root->add_child(node);
+	node->set_owner(root);
+	result["success"] = true;
+	return result;
+}
+
+Dictionary OpenCodeACPClient::_handle_editor_create_and_open_script(const Dictionary &p_params) {
+	Dictionary result;
+	String path;
+	if (p_params.has("path")) {
+		path = p_params["path"];
+	} else if (p_params.has("uri")) {
+		path = p_params["uri"];
+	} else {
+		return result;
+	}
+	if (!p_params.has("content")) {
+		return result;
+	}
+	path = _sanitize_path(path);
+	Error err;
+	Ref<FileAccess> f = FileAccess::open(path, FileAccess::WRITE, &err);
+	if (f.is_valid()) {
+		f->store_string(p_params["content"]);
+		f.unref();
+		EditorInterface::get_singleton()->select_file(path);
+		EditorInterface::get_singleton()->edit_resource(ResourceLoader::load(path));
+		result["success"] = true;
+	} else {
+		result["error"] = "Failed to create script.";
+	}
+	return result;
+}
+
+Dictionary OpenCodeACPClient::_handle_editor_open_file(const Dictionary &p_params) {
+	Dictionary result;
+	String path;
+	if (p_params.has("path")) {
+		path = p_params["path"];
+	} else if (p_params.has("uri")) {
+		path = p_params["uri"];
+	} else {
+		return result;
+	}
+	path = _sanitize_path(path);
+	EditorInterface::get_singleton()->select_file(path);
+	EditorInterface::get_singleton()->edit_resource(ResourceLoader::load(path));
+	result["success"] = true;
 	return result;
 }
 
 void OpenCodeACPClient::_handle_rpc_response(const Dictionary &p_response) {
 	if (p_response.has("id")) {
 		int id = p_response["id"];
-		if (id == 0) { // initialize response
-			// Skip "initialized" notification - OpenCode ACP v1.1.6 doesn't support it
-
-			// Create session
+		if (id == 0) {
 			Dictionary session_params;
 			String resource_path = ProjectSettings::get_singleton()->get_resource_path();
 			if (resource_path.is_empty()) {
 				resource_path = OS::get_singleton()->get_executable_path().get_base_dir();
 			}
 			session_params["cwd"] = ProjectSettings::get_singleton()->globalize_path(resource_path);
-
-			// OpenCode ACP v1.1.6 requires mcpServers as an array
 			Array mcp_servers;
 			session_params["mcpServers"] = mcp_servers;
-
 			send_request("session/new", session_params);
-		} else if (id == 1) { // session/new response
+		} else if (id == 1) {
 			Dictionary result = p_response["result"];
 			if (result.has("sessionId")) {
 				sessionId = result["sessionId"];
+				Dictionary update_params;
+				update_params["sessionId"] = sessionId;
+				Dictionary update_obj;
+				update_obj["sessionUpdate"] = "available_commands_update";
+				Array cmds;
+				cmds.push_back("fs/readTextFile");
+				cmds.push_back("fs/writeTextFile");
+				cmds.push_back("fs/listDirectory");
+				cmds.push_back("terminal/execute");
+				cmds.push_back("editor/openFile");
+				cmds.push_back("editor/createAndOpenScript");
+				cmds.push_back("editor/createNode");
+				cmds.push_back("editor/showNotification");
+				cmds.push_back("window/showDocument");
+				update_obj["commands"] = cmds;
+				update_params["update"] = update_obj;
+				send_notification("session/update", update_params);
 			}
 		}
 	}
@@ -271,15 +417,12 @@ void OpenCodeACPClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("stop"), &OpenCodeACPClient::stop);
 	ClassDB::bind_method(D_METHOD("send_request", "method", "params"), &OpenCodeACPClient::send_request);
 	ClassDB::bind_method(D_METHOD("send_notification", "method", "params"), &OpenCodeACPClient::send_notification);
-
 	ClassDB::bind_method(D_METHOD("set_model", "model"), &OpenCodeACPClient::set_model);
 	ClassDB::bind_method(D_METHOD("get_model"), &OpenCodeACPClient::get_model);
-
 	ClassDB::bind_method(D_METHOD("_handle_rpc_notification", "notification"), &OpenCodeACPClient::_handle_rpc_notification);
 	ClassDB::bind_method(D_METHOD("_handle_rpc_request", "request"), &OpenCodeACPClient::_handle_rpc_request);
 	ClassDB::bind_method(D_METHOD("_handle_rpc_response", "response"), &OpenCodeACPClient::_handle_rpc_response);
 	ClassDB::bind_method(D_METHOD("_on_process_exited"), &OpenCodeACPClient::_on_process_exited);
-
 	ADD_SIGNAL(MethodInfo("message_received", PropertyInfo(Variant::DICTIONARY, "message")));
 	ADD_SIGNAL(MethodInfo("connection_lost", PropertyInfo(Variant::STRING, "reason")));
 }
@@ -287,27 +430,18 @@ void OpenCodeACPClient::_bind_methods() {
 Error OpenCodeACPClient::start() {
 	List<String> args;
 	args.push_back("acp");
-	// Note: opencode acp doesn't accept --model flag
-	// Model selection is done via session/setModel RPC call after session creation
-
-	// Try to find opencode in common locations
-	Vector<String> paths_to_try;
-	paths_to_try.push_back("/home/micqdf/.npm-global/bin/opencode");
-	paths_to_try.push_back("/usr/local/bin/opencode");
-	paths_to_try.push_back("/usr/bin/opencode");
-
-	// Also check if there's an OPENCODE_PATH environment variable
-	String env_path = OS::get_singleton()->get_environment("OPENCODE_PATH");
-	if (!env_path.is_empty()) {
-		paths_to_try.insert(0, env_path);
+	Vector<String> paths;
+	paths.push_back("/home/micqdf/.npm-global/bin/opencode");
+	paths.push_back("/usr/local/bin/opencode");
+	paths.push_back("/usr/bin/opencode");
+	String env = OS::get_singleton()->get_environment("OPENCODE_PATH");
+	if (!env.is_empty()) {
+		paths.insert(0, env);
 	}
-
 	String opencode_path;
 	Dictionary res;
-
-	// Try each path
-	for (int i = 0; i < paths_to_try.size(); i++) {
-		opencode_path = paths_to_try[i];
+	for (int i = 0; i < paths.size(); i++) {
+		opencode_path = paths[i];
 		if (FileAccess::exists(opencode_path)) {
 			res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
 			if (res.has("pid") && int(res["pid"]) != 0) {
@@ -315,66 +449,86 @@ Error OpenCodeACPClient::start() {
 			}
 		}
 	}
-
-	// Fallback: try PATH lookup
 	if (!res.has("pid") || int(res["pid"]) == 0) {
 		opencode_path = "opencode";
 		res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
 	}
-
-	// Last resort: use shell wrapper with explicit PATH
 	if (!res.has("pid") || int(res["pid"]) == 0) {
 		opencode_path = "/bin/sh";
 		args.clear();
-		args.push_back("-lc"); // Login shell to source profile
-		String cmd = "opencode acp";
-		args.push_back(cmd);
+		args.push_back("-lc");
+		args.push_back("opencode acp");
 		res = OS::get_singleton()->execute_with_pipe(opencode_path, args);
 	}
 
 	if (res.has("pid") && int(res["pid"]) != 0) {
 		process_id = res["pid"];
 		pipe = res["stdio"];
-
 		thread_running.set();
 		thread.start(_thread_func, this);
 
-		// Send initialize request with proper capabilities (matching Zed's implementation)
 		Dictionary params;
 		params["protocolVersion"] = 1;
+		Dictionary ci;
+		ci["name"] = "redot-engine";
+		ci["version"] = "1.0.0";
+		params["clientInfo"] = ci;
 
-		Dictionary client_info;
-		client_info["name"] = "redot-engine";
-		client_info["title"] = "Redot Engine";
-		client_info["version"] = "1.0.0";
-		params["clientInfo"] = client_info;
+		Array cmds;
+		cmds.push_back("fs/readTextFile");
+		cmds.push_back("fs/writeTextFile");
+		cmds.push_back("fs/listDirectory");
+		cmds.push_back("terminal/execute");
+		cmds.push_back("editor/openFile");
+		cmds.push_back("editor/createAndOpenScript");
+		cmds.push_back("editor/createNode");
+		cmds.push_back("editor/showNotification");
+		cmds.push_back("window/showDocument");
 
-		// Client capabilities - declare what we support
-		Dictionary capabilities;
+		Array tools;
+		{
+			Dictionary t;
+			t["name"] = "editor/openFile";
+			t["description"] = "Open a file in editor.";
+			Dictionary p;
+			Dictionary ph;
+			ph["type"] = "string";
+			p["path"] = ph;
+			Dictionary po;
+			po["type"] = "object";
+			po["properties"] = p;
+			Array r;
+			r.push_back("path");
+			po["required"] = r;
+			t["parameters"] = po;
+			tools.push_back(t);
+		}
 
-		// File system capabilities
-		Dictionary fs_caps;
-		fs_caps["readTextFile"] = true;
-		fs_caps["writeTextFile"] = true;
-		capabilities["fs"] = fs_caps;
-
-		// Terminal capability
-		capabilities["terminal"] = true;
-
-		// Meta capabilities (experimental features)
-		Dictionary meta;
-		meta["terminal_output"] = true;
-		meta["terminal-auth"] = true;
-		capabilities["_meta"] = meta;
-
-		params["clientCapabilities"] = capabilities;
+		Dictionary cap;
+		Dictionary fs;
+		fs["readTextFile"] = true;
+		fs["writeTextFile"] = true;
+		fs["listDirectory"] = true;
+		cap["fs"] = fs;
+		cap["terminal"] = true;
+		Dictionary win;
+		win["showDocument"] = true;
+		cap["window"] = win;
+		Dictionary ed;
+		ed["showNotification"] = true;
+		ed["createNode"] = true;
+		ed["createAndOpenScript"] = true;
+		ed["openFile"] = true;
+		cap["editor"] = ed;
+		cap["available_commands"] = cmds;
+		cap["tools"] = tools;
+		params["clientCapabilities"] = cap;
+		params["commands"] = cmds;
+		params["tools"] = tools;
 
 		send_request("initialize", params);
-
 		return OK;
 	}
-
-	ERR_PRINT("OpenCodeACPClient: Failed to execute 'opencode'.");
 	return ERR_CANT_FORK;
 }
 
@@ -383,7 +537,6 @@ void OpenCodeACPClient::stop() {
 		thread_running.clear();
 		thread.wait_to_finish();
 	}
-
 	if (process_id != 0) {
 		OS::get_singleton()->kill(process_id);
 		process_id = 0;
@@ -392,30 +545,20 @@ void OpenCodeACPClient::stop() {
 
 void OpenCodeACPClient::send_request(const String &p_method, const Dictionary &p_params) {
 	if (pipe.is_valid()) {
-		int id = 2; // Default for chat
-		if (p_method == "initialize") {
-			id = 0;
-		} else if (p_method == "session/new") {
-			id = 1;
-		}
-		Dictionary req = rpc->make_request(p_method, p_params, id);
-		String json = JSON::stringify(req);
-		pipe->store_line(json);
+		int id = (p_method == "initialize") ? 0 : ((p_method == "session/new") ? 1 : 2);
+		pipe->store_line(JSON::stringify(rpc->make_request(p_method, p_params, id)));
 	}
 }
 
 void OpenCodeACPClient::send_notification(const String &p_method, const Dictionary &p_params) {
 	if (pipe.is_valid()) {
-		Dictionary req = rpc->make_notification(p_method, p_params);
-		String json = JSON::stringify(req);
-		pipe->store_line(json);
+		pipe->store_line(JSON::stringify(rpc->make_notification(p_method, p_params)));
 	}
 }
 
 OpenCodeACPClient::OpenCodeACPClient() {
 	rpc = memnew(JSONRPC);
 }
-
 OpenCodeACPClient::~OpenCodeACPClient() {
 	stop();
 	if (rpc) {

@@ -48,7 +48,6 @@ void OpenCodeEditorPlugin::_create_toolbar() {
 	toolbar = memnew(HBoxContainer);
 	toolbar->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 
-	// Model selector
 	Label *model_label = memnew(Label);
 	model_label->set_text("Model:");
 	toolbar->add_child(model_label);
@@ -59,20 +58,16 @@ void OpenCodeEditorPlugin::_create_toolbar() {
 	model_selector->connect("item_selected", callable_mp(this, &OpenCodeEditorPlugin::_on_model_selected));
 	toolbar->add_child(model_selector);
 
-	// Spacer
 	Control *spacer = memnew(Control);
 	spacer->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	toolbar->add_child(spacer);
 
-	// Status label
 	status_label = memnew(Label);
 	status_label->set_text("Connecting...");
 	status_label->add_theme_color_override("font_color", Color(0.6, 0.6, 0.6));
 	toolbar->add_child(status_label);
 
 	main_control->add_child(toolbar);
-
-	// Separator
 	HSeparator *sep = memnew(HSeparator);
 	main_control->add_child(sep);
 }
@@ -92,11 +87,10 @@ void OpenCodeEditorPlugin::_create_chat_area() {
 }
 
 void OpenCodeEditorPlugin::_create_input_area() {
-	// Floating input area container
 	PanelContainer *input_bg = memnew(PanelContainer);
 	Ref<StyleBoxFlat> input_style;
 	input_style.instantiate();
-	input_style->set_bg_color(Color(0.1, 0.1, 0.1, 0.0)); // Transparent background
+	input_style->set_bg_color(Color(0.1, 0.1, 0.1, 0.0));
 	input_style->set_content_margin_all(10 * EDSCALE);
 	input_bg->add_theme_style_override("panel", input_style);
 	main_control->add_child(input_bg);
@@ -105,7 +99,6 @@ void OpenCodeEditorPlugin::_create_input_area() {
 	input_container->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	input_bg->add_child(input_container);
 
-	// Rounded input field
 	input_field = memnew(LineEdit);
 	input_field->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	input_field->set_placeholder("Ask OpenCode... (Enter to send)");
@@ -113,14 +106,12 @@ void OpenCodeEditorPlugin::_create_input_area() {
 	input_field->connect("text_submitted", callable_mp(this, &OpenCodeEditorPlugin::_on_input_submitted));
 	input_container->add_child(input_field);
 
-	// Send button
 	send_button = memnew(Button);
 	send_button->set_text("Send");
 	send_button->set_disabled(true);
 	send_button->connect("pressed", callable_mp(this, &OpenCodeEditorPlugin::_on_send_pressed));
 	input_container->add_child(send_button);
 
-	// Stop button (Red)
 	stop_button = memnew(Button);
 	stop_button->set_text("Stop");
 	stop_button->set_visible(false);
@@ -136,7 +127,6 @@ void OpenCodeEditorPlugin::_create_input_area() {
 void OpenCodeEditorPlugin::_add_user_message(const String &p_text) {
 	HBoxContainer *row = memnew(HBoxContainer);
 	messages_container->add_child(row);
-
 	Control *spacer = memnew(Control);
 	spacer->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	spacer->set_stretch_ratio(1.0);
@@ -145,7 +135,6 @@ void OpenCodeEditorPlugin::_add_user_message(const String &p_text) {
 	PanelContainer *panel = memnew(PanelContainer);
 	panel->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	panel->set_stretch_ratio(4.0);
-
 	Ref<StyleBoxFlat> style;
 	style.instantiate();
 	style->set_bg_color(Color(0.25, 0.35, 0.6, 0.8));
@@ -188,32 +177,26 @@ void OpenCodeEditorPlugin::_ensure_block(BlockType p_type) {
 	if (current_block_type == p_type && current_message_label) {
 		return;
 	}
-
 	if (current_message_label) {
 		current_message_label = nullptr;
 		current_message_panel = nullptr;
 		current_message_text = "";
 	}
-
 	current_block_type = p_type;
 	current_message_panel = memnew(PanelContainer);
-
 	Ref<StyleBoxFlat> style;
 	style.instantiate();
 	VBoxContainer *vbox = memnew(VBoxContainer);
 	Label *header = memnew(Label);
-
 	if (p_type == BLOCK_THINKING) {
 		style->set_bg_color(Color(0.12, 0.12, 0.12, 0.6));
 		style->set_corner_radius_all(8 * EDSCALE);
 		style->set_content_margin_all(8 * EDSCALE);
 		style->set_border_width_all(1);
 		style->set_border_color(Color(0.3, 0.3, 0.3, 0.3));
-
 		header->set_text("Thinking...");
 		header->add_theme_color_override("font_color", Color(0.5, 0.5, 0.5));
 		header->add_theme_font_size_override("font_size", 10 * EDSCALE);
-
 		current_message_panel->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 		messages_container->add_child(current_message_panel);
 	} else {
@@ -223,27 +206,21 @@ void OpenCodeEditorPlugin::_ensure_block(BlockType p_type) {
 		style->set_content_margin_all(10 * EDSCALE);
 		style->set_border_width_all(1);
 		style->set_border_color(Color(0.3, 0.3, 0.35, 0.5));
-
 		header->set_text("OpenCode");
 		header->add_theme_color_override("font_color", Color(0.5, 0.8, 0.6));
 		header->add_theme_font_size_override("font_size", 10 * EDSCALE);
-
 		current_message_panel->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 		current_message_panel->set_stretch_ratio(4.0);
-
 		HBoxContainer *row = memnew(HBoxContainer);
 		messages_container->add_child(row);
 		row->add_child(current_message_panel);
-
 		Control *spacer = memnew(Control);
 		spacer->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 		spacer->set_stretch_ratio(1.0);
 		row->add_child(spacer);
 	}
-
 	current_message_panel->add_theme_style_override("panel", style);
 	vbox->add_child(header);
-
 	current_message_label = memnew(RichTextLabel);
 	current_message_label->set_use_bbcode(true);
 	current_message_label->set_fit_content(true);
@@ -253,7 +230,6 @@ void OpenCodeEditorPlugin::_ensure_block(BlockType p_type) {
 		current_message_label->add_theme_color_override("default_color", Color(0.5, 0.5, 0.5));
 	}
 	vbox->add_child(current_message_label);
-
 	current_message_panel->add_child(vbox);
 	current_message_text = "";
 }
@@ -402,7 +378,13 @@ void OpenCodeEditorPlugin::_on_input_submitted(const String &p_text) {
 	input_field->set_text("");
 	Dictionary params;
 	params["sessionId"] = session_id;
+
 	Array prompt;
+	Dictionary sys_block;
+	sys_block["type"] = "text";
+	sys_block["text"] = "### DEVELOPER NOTE\nYou are running inside the Redot Engine editor. Use these tools for editor actions:\n- `editor/openFile` (path/uri): Opens file in editor tabs.\n- `editor/createAndOpenScript` (path/uri, content): Creates and opens script.\n- `editor/createNode` (type, name, properties): Adds node to scene.\n- `editor/showNotification` (message): Shows editor toast.\n- `fs/listDirectory` (path): Lists files.\nPREFER `editor/openFile` over `fs/readTextFile` to show files to the user.";
+	prompt.push_back(sys_block);
+
 	Dictionary block;
 	block["type"] = "text";
 	block["text"] = p_text;
@@ -421,7 +403,11 @@ void OpenCodeEditorPlugin::_on_stop_pressed() {
 	if (!session_id.is_empty()) {
 		Dictionary params;
 		params["sessionId"] = session_id;
+		// Send multiple cancellation variants to ensure the agent stops
 		client->send_request("session/cancel", params);
+		client->send_notification("session/cancel", params);
+		client->send_request("session/stop", params);
+		client->send_notification("session/interrupt", params);
 	}
 	_set_processing(false);
 	_end_agent_message();
@@ -437,50 +423,68 @@ void OpenCodeEditorPlugin::_on_client_message(const Dictionary &p_message) {
 			Dictionary params = p_message["params"];
 			Dictionary update = params["update"];
 			if (update.has("sessionUpdate")) {
-				String update_type = update["sessionUpdate"];
-				if (update_type == "agent_thought_chunk") {
-					Dictionary content = update["content"];
-					if (content.has("text")) {
-						_process_chunk(content["text"], BLOCK_THINKING);
+				String type = update["sessionUpdate"];
+				if (type == "agent_thought_chunk") {
+					if (update.has("content") && Dictionary(update["content"]).has("text")) {
+						_process_chunk(Dictionary(update["content"])["text"], BLOCK_THINKING);
 					}
-				} else if (update_type == "agent_message_chunk") {
-					Dictionary content = update["content"];
-					if (content.has("text")) {
-						_process_chunk(content["text"], BLOCK_AGENT);
+				} else if (type == "agent_message_chunk") {
+					if (update.has("content") && Dictionary(update["content"]).has("text")) {
+						_process_chunk(Dictionary(update["content"])["text"], BLOCK_AGENT);
 					}
-				} else if (update_type == "agent_message_done" || update_type == "turn_complete") {
+				} else if (type == "agent_message_done" || type == "turn_complete") {
 					_set_processing(false);
-				} else if (update_type == "tool_call") {
-					String tool_name = update.has("toolName") ? String(update["toolName"]) : "unknown";
-					String args = update.has("arguments") ? JSON::stringify(update["arguments"]) : "";
-					_add_tool_call(tool_name, args);
-				} else if (update_type == "tool_result") {
-					bool success = update.has("success") ? bool(update["success"]) : true;
-					String result = update.has("result") ? String(update["result"]) : "";
-					_add_tool_result(result, success);
+				} else if (type == "tool_call") {
+					String name = "unknown";
+					static const char *keys[] = { "name", "method", "toolName", "tool", "function", "command", nullptr };
+
+					// Deep check for name
+					for (int i = 0; keys[i]; i++) {
+						if (update.has(keys[i])) {
+							name = update[keys[i]];
+							break;
+						}
+					}
+
+					// If still unknown, check if it's nested (e.g. update["call"]["name"])
+					if (name == "unknown") {
+						for (int i = 0; keys[i]; i++) {
+							if (update.has("call") && Dictionary(update["call"]).has(keys[i])) {
+								name = Dictionary(update["call"])[keys[i]];
+								break;
+							}
+							if (update.has("toolCall") && Dictionary(update["toolCall"]).has(keys[i])) {
+								name = Dictionary(update["toolCall"])[keys[i]];
+								break;
+							}
+						}
+					}
+
+					if (name == "unknown") {
+						print_line("OpenCode: Failed to find tool name in update: " + JSON::stringify(update));
+					}
+
+					_add_tool_call(name, update.has("arguments") ? JSON::stringify(update["arguments"]) : "");
+				} else if (type == "tool_result") {
+					_add_tool_result(update.has("result") ? String(update["result"]) : "", update.has("success") ? bool(update["success"]) : true);
 				}
 			}
+		} else if (method != "window/logMessage" && p_message.has("id")) {
+			_add_tool_call(method, p_message.has("params") ? JSON::stringify(p_message["params"]) : "");
 		}
 	} else if (p_message.has("result")) {
-		Variant result = p_message["result"];
-		if (result.get_type() == Variant::DICTIONARY) {
-			Dictionary d = result;
-			if (d.has("sessionId")) {
-				session_ready = true;
-				input_field->set_editable(true);
-				send_button->set_disabled(false);
-				_update_status("Ready");
-				_add_system_message("Session created. Ready for messages.", Color(0.4, 0.7, 0.4));
-			} else if (d.has("agentCapabilities")) {
-				_update_status("Creating session...");
-			} else if (d.has("stopReason")) {
-				_set_processing(false);
-			}
+		Dictionary d = p_message["result"];
+		if (d.has("sessionId")) {
+			session_ready = true;
+			input_field->set_editable(true);
+			send_button->set_disabled(false);
+			_update_status("Ready");
+			_add_system_message("Session created. Ready for messages.", Color(0.4, 0.7, 0.4));
+		} else if (d.has("stopReason")) {
+			_set_processing(false);
 		}
 	} else if (p_message.has("error")) {
-		Dictionary error = p_message["error"];
-		String error_msg = error.has("message") ? String(error["message"]) : "Unknown error";
-		_add_system_message("Error: " + error_msg, Color(0.8, 0.3, 0.3));
+		_add_system_message("Error: " + (Dictionary(p_message["error"]).has("message") ? String(Dictionary(p_message["error"])["message"]) : "Unknown"), Color(0.8, 0.3, 0.3));
 		_set_processing(false);
 	}
 }
@@ -495,8 +499,7 @@ void OpenCodeEditorPlugin::_on_client_connection_lost(const String &p_reason) {
 }
 
 void OpenCodeEditorPlugin::_on_model_selected(int p_index) {
-	String model = model_selector->get_item_text(p_index);
-	_add_system_message("Model: " + model, Color(0.6, 0.6, 0.6));
+	_add_system_message("Model: " + model_selector->get_item_text(p_index), Color(0.6, 0.6, 0.6));
 }
 
 void OpenCodeEditorPlugin::_populate_models() {
@@ -509,45 +512,22 @@ void OpenCodeEditorPlugin::_populate_models() {
 	model_selector->select(0);
 }
 
-// ============================================================================
-// State Management
-// ============================================================================
-
-void OpenCodeEditorPlugin::_set_processing(bool p_processing) {
-	is_processing = p_processing;
+void OpenCodeEditorPlugin::_set_processing(bool p_p) {
+	is_processing = p_p;
 	input_field->set_editable(session_ready);
-	send_button->set_visible(!p_processing);
-	send_button->set_disabled(p_processing || !session_ready);
-	stop_button->set_visible(p_processing);
-
-	if (p_processing) {
-		_update_status("Processing...");
-	} else if (session_ready) {
-		_update_status("Ready");
-	}
+	send_button->set_visible(!p_p);
+	send_button->set_disabled(p_p || !session_ready);
+	stop_button->set_visible(p_p);
+	_update_status(p_p ? "Processing..." : (session_ready ? "Ready" : "Offline"));
 }
 
-void OpenCodeEditorPlugin::_update_status(const String &p_status) {
-	status_label->set_text(p_status);
-
-	if (p_status == "Ready") {
-		status_label->add_theme_color_override("font_color", Color(0.4, 0.7, 0.4));
-	} else if (p_status == "Processing...") {
-		status_label->add_theme_color_override("font_color", Color(0.7, 0.7, 0.3));
-	} else if (p_status == "Disconnected") {
-		status_label->add_theme_color_override("font_color", Color(0.8, 0.3, 0.3));
-	} else {
-		status_label->add_theme_color_override("font_color", Color(0.6, 0.6, 0.6));
-	}
+void OpenCodeEditorPlugin::_update_status(const String &p_s) {
+	status_label->set_text(p_s);
+	Color c = (p_s == "Ready") ? Color(0.4, 0.7, 0.4) : ((p_s == "Processing...") ? Color(0.7, 0.7, 0.3) : Color(0.8, 0.3, 0.3));
+	status_label->add_theme_color_override("font_color", c);
 }
 
-// ============================================================================
-// Lifecycle
-// ============================================================================
-
-void OpenCodeEditorPlugin::_notification(int p_what) {
-}
-
+void OpenCodeEditorPlugin::_notification(int p_what) {}
 void OpenCodeEditorPlugin::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_on_input_submitted", "text"), &OpenCodeEditorPlugin::_on_input_submitted);
 	ClassDB::bind_method(D_METHOD("_on_send_pressed"), &OpenCodeEditorPlugin::_on_send_pressed);
@@ -565,27 +545,16 @@ OpenCodeEditorPlugin::OpenCodeEditorPlugin() {
 	main_control = memnew(VBoxContainer);
 	main_control->set_name("OpenCode");
 	main_control->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-
 	_create_toolbar();
 	_create_chat_area();
 	_create_input_area();
-
 	add_control_to_bottom_panel(main_control, "OpenCode");
-
 	client.instantiate();
 	client->connect("message_received", callable_mp(this, &OpenCodeEditorPlugin::_on_client_message));
 	client->connect("connection_lost", callable_mp(this, &OpenCodeEditorPlugin::_on_client_connection_lost));
-
 	_populate_models();
-
-	Error err = client->start();
-	if (err != OK) {
-		_add_system_message("Failed to start OpenCode (error " + itos(err) + ")", Color(0.8, 0.3, 0.3));
+	if (client->start() != OK) {
 		_update_status("Error");
-	} else {
-		_update_status("Connecting...");
 	}
 }
-
-OpenCodeEditorPlugin::~OpenCodeEditorPlugin() {
-}
+OpenCodeEditorPlugin::~OpenCodeEditorPlugin() {}

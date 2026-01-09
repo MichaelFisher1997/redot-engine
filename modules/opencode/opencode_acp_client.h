@@ -18,9 +18,6 @@
 /* permit persons to whom the Software is furnished to do so, subject to  */
 /* the following conditions:                                              */
 /*                                                                        */
-/* The above copyright notice and this permission notice shall be         */
-/* included in all copies or substantial portions of the Software.        */
-/*                                                                        */
 /* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
 /* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
 /* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
@@ -58,8 +55,14 @@ class OpenCodeACPClient : public RefCounted {
 	// Tool implementations
 	Dictionary _handle_fs_read_text_file(const Dictionary &p_params);
 	Dictionary _handle_fs_write_text_file(const Dictionary &p_params);
+	Dictionary _handle_fs_list_directory(const Dictionary &p_params);
 	Dictionary _handle_terminal_execute(const Dictionary &p_params);
+	Dictionary _handle_editor_show_notification(const Dictionary &p_params);
+	Dictionary _handle_editor_create_node(const Dictionary &p_params);
+	Dictionary _handle_editor_create_and_open_script(const Dictionary &p_params);
+	Dictionary _handle_editor_open_file(const Dictionary &p_params);
 
+	String _sanitize_path(const String &p_path);
 	void _on_process_exited();
 
 protected:
