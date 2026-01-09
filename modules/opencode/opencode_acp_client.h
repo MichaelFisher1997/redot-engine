@@ -55,6 +55,11 @@ class OpenCodeACPClient : public RefCounted {
 	void _handle_rpc_request(const Dictionary &p_request);
 	void _handle_rpc_response(const Dictionary &p_response);
 
+	// Tool implementations
+	Dictionary _handle_fs_read_text_file(const Dictionary &p_params);
+	Dictionary _handle_fs_write_text_file(const Dictionary &p_params);
+	Dictionary _handle_terminal_execute(const Dictionary &p_params);
+
 	void _on_process_exited();
 
 protected:
@@ -64,15 +69,13 @@ public:
 	Error start();
 	void stop();
 
-	bool is_running() const { return process_id != 0; }
+	void send_request(const String &p_method, const Dictionary &p_params);
+	void send_notification(const String &p_method, const Dictionary &p_params);
+	void send_response(const Variant &p_id, const Dictionary &p_result, const Dictionary &p_error = Dictionary());
 
 	void set_model(const String &p_model) { selected_model = p_model; }
 	String get_model() const { return selected_model; }
-
 	String get_sessionId() const { return sessionId; }
-
-	void send_request(const String &p_method, const Dictionary &p_params);
-	void send_notification(const String &p_method, const Dictionary &p_params);
 
 	OpenCodeACPClient();
 	~OpenCodeACPClient();

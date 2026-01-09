@@ -32,16 +32,21 @@
 
 #include "register_types.h"
 
+#include "core/string/print_string.h"
 #include "editor/editor_node.h"
 #include "opencode_acp_client.h"
 #include "opencode_editor_plugin.h"
 
 void initialize_opencode_module(ModuleInitializationLevel p_level) {
+	print_line("OpenCode Module: initialize called with level " + itos(p_level));
+
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
+		print_line("OpenCode Module: Registering editor plugin callback");
 		EditorNode::add_init_callback(OpenCodeEditorPlugin::initialize);
 	}
 
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
+		print_line("OpenCode Module: Registering OpenCodeACPClient class");
 		GDREGISTER_CLASS(OpenCodeACPClient);
 	}
 }
