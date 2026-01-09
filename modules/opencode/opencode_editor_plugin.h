@@ -83,6 +83,8 @@ class OpenCodeEditorPlugin : public EditorPlugin {
 	String parse_buffer;
 	bool in_thinking_tag = false;
 
+	Dictionary pending_tool_calls;
+
 	// UI Creation helpers
 	void _create_toolbar();
 	void _create_chat_area();

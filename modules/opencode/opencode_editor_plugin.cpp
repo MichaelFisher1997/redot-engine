@@ -18,9 +18,6 @@
 /* permit persons to whom the Software is furnished to do so, subject to  */
 /* the following conditions:                                              */
 /*                                                                        */
-/* The above copyright notice and this permission notice shall be         */
-/* included in all copies or substantial portions of the Software.        */
-/*                                                                        */
 /* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
 /* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
 /* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
@@ -332,15 +329,13 @@ void OpenCodeEditorPlugin::_add_tool_call(const String &p_tool, const String &p_
 	header->add_theme_color_override("font_color", Color(0.9, 0.7, 0.3));
 	header->add_theme_font_size_override("font_size", 10 * EDSCALE);
 	vbox->add_child(header);
-	if (!p_args.is_empty()) {
-		RichTextLabel *args_label = memnew(RichTextLabel);
-		args_label->set_use_bbcode(true);
-		args_label->set_fit_content(true);
-		args_label->set_scroll_active(false);
-		args_label->set_text("[code]" + p_args + "[/code]");
-		args_label->add_theme_color_override("default_color", Color(0.6, 0.6, 0.6));
-		vbox->add_child(args_label);
-	}
+	RichTextLabel *args_label = memnew(RichTextLabel);
+	args_label->set_use_bbcode(true);
+	args_label->set_fit_content(true);
+	args_label->set_scroll_active(false);
+	args_label->set_text("[code]" + p_args + "[/code]");
+	args_label->add_theme_color_override("default_color", Color(0.6, 0.6, 0.6));
+	vbox->add_child(args_label);
 	panel->add_child(vbox);
 	messages_container->add_child(panel);
 	_scroll_to_bottom();
@@ -360,10 +355,7 @@ void OpenCodeEditorPlugin::_scroll_to_bottom() {
 }
 
 void OpenCodeEditorPlugin::_on_input_submitted(const String &p_text) {
-	if (p_text.strip_edges().is_empty() || is_processing) {
-		return;
-	}
-	if (!session_ready) {
+	if (p_text.strip_edges().is_empty() || is_processing || !session_ready) {
 		return;
 	}
 	String session_id = client->get_sessionId();
@@ -378,13 +370,7 @@ void OpenCodeEditorPlugin::_on_input_submitted(const String &p_text) {
 	input_field->set_text("");
 	Dictionary params;
 	params["sessionId"] = session_id;
-
 	Array prompt;
-	Dictionary sys_block;
-	sys_block["type"] = "text";
-	sys_block["text"] = "### DEVELOPER NOTE\nYou are running inside the Redot Engine editor. Use these tools for editor actions:\n- `editor/openFile` (path/uri): Opens file in editor tabs.\n- `editor/createAndOpenScript` (path/uri, content): Creates and opens script.\n- `editor/createNode` (type, name, properties): Adds node to scene.\n- `editor/showNotification` (message): Shows editor toast.\n- `fs/listDirectory` (path): Lists files.\nPREFER `editor/openFile` over `fs/readTextFile` to show files to the user.";
-	prompt.push_back(sys_block);
-
 	Dictionary block;
 	block["type"] = "text";
 	block["text"] = p_text;
@@ -403,7 +389,6 @@ void OpenCodeEditorPlugin::_on_stop_pressed() {
 	if (!session_id.is_empty()) {
 		Dictionary params;
 		params["sessionId"] = session_id;
-		// Send multiple cancellation variants to ensure the agent stops
 		client->send_request("session/cancel", params);
 		client->send_notification("session/cancel", params);
 		client->send_request("session/stop", params);
@@ -434,37 +419,112 @@ void OpenCodeEditorPlugin::_on_client_message(const Dictionary &p_message) {
 					}
 				} else if (type == "agent_message_done" || type == "turn_complete") {
 					_set_processing(false);
-				} else if (type == "tool_call") {
+				} else if (type == "tool_call" || type == "tool_call_chunk") {
+					String call_id = update.has("toolCallId") ? String(update["toolCallId"]) : "";
+					String status = update.has("status") ? String(update["status"]) : "";
 					String name = "unknown";
-					static const char *keys[] = { "name", "method", "toolName", "tool", "function", "command", nullptr };
-
-					// Deep check for name
+					static const char *keys[] = { "title", "kind", "name", "method", "toolName", "tool", "function", "command", nullptr };
 					for (int i = 0; keys[i]; i++) {
 						if (update.has(keys[i])) {
 							name = update[keys[i]];
 							break;
 						}
 					}
-
-					// If still unknown, check if it's nested (e.g. update["call"]["name"])
 					if (name == "unknown") {
-						for (int i = 0; keys[i]; i++) {
-							if (update.has("call") && Dictionary(update["call"]).has(keys[i])) {
-								name = Dictionary(update["call"])[keys[i]];
-								break;
+						const char *nests[] = { "call", "toolCall", "tool_call", "request", nullptr };
+						for (int j = 0; nests[j]; j++) {
+							if (update.has(nests[j])) {
+								Dictionary nest = update[nests[j]];
+								for (int i = 0; keys[i]; i++) {
+									if (nest.has(keys[i])) {
+										name = nest[keys[i]];
+										break;
+									}
+								}
 							}
-							if (update.has("toolCall") && Dictionary(update["toolCall"]).has(keys[i])) {
-								name = Dictionary(update["toolCall"])[keys[i]];
+							if (name != "unknown") {
 								break;
 							}
 						}
 					}
 
-					if (name == "unknown") {
-						print_line("OpenCode: Failed to find tool name in update: " + JSON::stringify(update));
-					}
+					if (type == "tool_call") {
+						Variant raw_args;
+						if (update.has("arguments")) {
+							raw_args = update["arguments"];
+						} else if (update.has("params")) {
+							raw_args = update["params"];
+						} else if (update.has("rawInput")) {
+							raw_args = update["rawInput"];
+						} else if (update.has("input")) {
+							raw_args = update["input"];
+						}
 
-					_add_tool_call(name, update.has("arguments") ? JSON::stringify(update["arguments"]) : "");
+						Dictionary args;
+						if (raw_args.get_type() == Variant::DICTIONARY) {
+							args = raw_args;
+						} else {
+							String s = raw_args;
+							args["path"] = s;
+							args["command"] = s;
+							args["message"] = s;
+							args["_raw"] = s;
+						}
+
+						if (status == "pending") {
+							Dictionary pending;
+							pending["name"] = name;
+							pending["args"] = String("");
+							_add_tool_call(name, "");
+							if (messages_container->get_child_count() > 0) {
+								VBoxContainer *v = Object::cast_to<VBoxContainer>(messages_container->get_child(messages_container->get_child_count() - 1)->get_child(0));
+								if (v && v->get_child_count() > 1) {
+									pending["label"] = v->get_child(1);
+								}
+							}
+							pending_tool_calls[call_id] = pending;
+						} else {
+							if (pending_tool_calls.has(call_id)) {
+								Dictionary p = pending_tool_calls[call_id];
+								if (name == "unknown") {
+									name = p["name"];
+								}
+								if (args.is_empty() && !String(p["args"]).is_empty()) {
+									Ref<JSON> json;
+									json.instantiate();
+									if (json->parse(p["args"]) == OK) {
+										args = json->get_data();
+									} else {
+										args["_raw"] = p["args"];
+									}
+								}
+								pending_tool_calls.erase(call_id);
+							}
+							_add_tool_call(name, JSON::stringify(args));
+							if (!call_id.is_empty() && name != "unknown") {
+								client->execute_tool(name, args, call_id);
+							}
+						}
+					} else { // chunk
+						if (pending_tool_calls.has(call_id)) {
+							Dictionary p = pending_tool_calls[call_id];
+							String chunk;
+							if (update.has("content") && Dictionary(update["content"]).has("text")) {
+								chunk = Dictionary(update["content"])["text"];
+							} else if (update.has("arguments")) {
+								chunk = update["arguments"];
+							}
+							String acc = p["args"];
+							acc += chunk;
+							p["args"] = acc;
+							if (p.has("label")) {
+								RichTextLabel *l = Object::cast_to<RichTextLabel>(p["label"]);
+								if (l) {
+									l->set_text("[code]" + acc + "[/code]");
+								}
+							}
+						}
+					}
 				} else if (type == "tool_result") {
 					_add_tool_result(update.has("result") ? String(update["result"]) : "", update.has("success") ? bool(update["success"]) : true);
 				}

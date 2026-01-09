@@ -52,6 +52,9 @@ class OpenCodeACPClient : public RefCounted {
 	void _handle_rpc_request(const Dictionary &p_request);
 	void _handle_rpc_response(const Dictionary &p_response);
 
+	// Tool Routing
+	Dictionary _route_tool(const String &p_method, const Dictionary &p_params);
+
 	// Tool implementations
 	Dictionary _handle_fs_read_text_file(const Dictionary &p_params);
 	Dictionary _handle_fs_write_text_file(const Dictionary &p_params);
@@ -73,8 +76,11 @@ public:
 	void stop();
 
 	void send_request(const String &p_method, const Dictionary &p_params);
+	void send_request(const String &p_method, const Dictionary &p_params, int p_id);
 	void send_notification(const String &p_method, const Dictionary &p_params);
 	void send_response(const Variant &p_id, const Dictionary &p_result, const Dictionary &p_error = Dictionary());
+
+	void execute_tool(const String &p_method, const Dictionary &p_params, const String &p_call_id);
 
 	void set_model(const String &p_model) { selected_model = p_model; }
 	String get_model() const { return selected_model; }
