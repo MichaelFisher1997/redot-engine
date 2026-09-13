@@ -47,6 +47,7 @@
 #include "core/io/resource_loader.h"
 #include "core/io/resource_saver.h"
 #include "core/object/class_db.h"
+#include "core/object/script_language.h"
 #include "core/os/keyboard.h"
 #include "core/version.h"
 #include "mcp_bridge.h"
@@ -67,20 +68,224 @@
 // Helpers
 // ============================================================================
 
-Variant MCPTools::_json_to_variant(const Variant &p_json, Variant::Type p_type) {
-	if (p_json.get_type() == Variant::DICTIONARY) {
-		Dictionary d = p_json;
-		if (d.has("x") && d.has("y")) {
-			if (d.has("z")) {
-				return Vector3(d["x"], d["y"], d["z"]);
-			}
-			return Vector2(d["x"], d["y"]);
-		}
-		if (d.has("r") && d.has("g") && d.has("b")) {
-			return Color(d["r"], d["g"], d["b"], d.get("a", 1.0));
+bool MCPTools::_get_property_info(Object *p_object, const StringName &p_property, PropertyInfo &r_property_info) {
+	List<PropertyInfo> property_list;
+	p_object->get_property_list(&property_list);
+	for (const PropertyInfo &property_info : property_list) {
+		if (property_info.name == p_property) {
+			r_property_info = property_info;
+			return true;
 		}
 	}
-	return p_json;
+	return false;
+}
+
+bool MCPTools::_json_to_variant(const Variant &p_json, const PropertyInfo &p_property_info, Variant &r_variant, String &r_error) {
+	if (p_property_info.type == Variant::DICTIONARY) {
+		r_variant = p_json;
+		return true;
+	}
+
+	const bool is_resource_property = p_property_info.type == Variant::OBJECT && p_property_info.hint == PROPERTY_HINT_RESOURCE_TYPE;
+	if (is_resource_property) {
+		if (p_json.get_type() == Variant::NIL) {
+			r_variant = p_json;
+			return true;
+		}
+
+		String resource_path;
+		if (p_json.get_type() == Variant::STRING) {
+			resource_path = p_json;
+		} else if (p_json.get_type() == Variant::DICTIONARY) {
+			Dictionary envelope = p_json;
+			if (envelope.has("resource_path")) {
+				resource_path = envelope["resource_path"];
+			} else if (envelope.has("path")) {
+				resource_path = envelope["path"];
+			}
+		}
+
+		if (!resource_path.begins_with("res://") || !validate_path(resource_path)) {
+			r_error = "Resource properties require a res:// path or a {resource_path: \"res://...\"} envelope";
+			return false;
+		}
+
+		Ref<Resource> resource = ResourceLoader::load(normalize_path(resource_path));
+		if (resource.is_null()) {
+			r_error = "Failed to load resource: " + resource_path;
+			return false;
+		}
+
+		bool is_compatible = p_property_info.hint_string.is_empty();
+		Vector<String> accepted_types = p_property_info.hint_string.split(",", false);
+		for (const String &accepted_type_entry : accepted_types) {
+			StringName accepted_type = accepted_type_entry.strip_edges().trim_prefix("-");
+			if (accepted_type.is_empty()) {
+				continue;
+			}
+			if (ScriptServer::is_global_class(accepted_type)) {
+				Ref<Script> expected_script = ResourceLoader::load(ScriptServer::get_global_class_path(accepted_type), "Script");
+				Ref<Script> resource_script = resource->get_script();
+				if (expected_script.is_valid() && resource_script.is_valid() && (resource_script == expected_script || resource_script->inherits_script(expected_script))) {
+					is_compatible = true;
+					break;
+				}
+			} else if (resource->is_class(accepted_type)) {
+				is_compatible = true;
+				break;
+			}
+		}
+		if (!is_compatible) {
+			r_error = "Resource '" + resource_path + "' is not compatible with property type '" + p_property_info.hint_string + "'";
+			return false;
+		}
+
+		r_variant = resource;
+		return true;
+	}
+
+	if (p_json.get_type() == Variant::DICTIONARY) {
+		Dictionary dictionary = p_json;
+		switch (p_property_info.type) {
+			case Variant::VECTOR2:
+				if (dictionary.has("x") && dictionary.has("y")) {
+					r_variant = Vector2(dictionary["x"], dictionary["y"]);
+					return true;
+				}
+				break;
+			case Variant::VECTOR2I:
+				if (dictionary.has("x") && dictionary.has("y")) {
+					r_variant = Vector2i(dictionary["x"], dictionary["y"]);
+					return true;
+				}
+				break;
+			case Variant::VECTOR3:
+				if (dictionary.has("x") && dictionary.has("y") && dictionary.has("z")) {
+					r_variant = Vector3(dictionary["x"], dictionary["y"], dictionary["z"]);
+					return true;
+				}
+				break;
+			case Variant::VECTOR3I:
+				if (dictionary.has("x") && dictionary.has("y") && dictionary.has("z")) {
+					r_variant = Vector3i(dictionary["x"], dictionary["y"], dictionary["z"]);
+					return true;
+				}
+				break;
+			case Variant::VECTOR4:
+				if (dictionary.has("x") && dictionary.has("y") && dictionary.has("z") && dictionary.has("w")) {
+					r_variant = Vector4(dictionary["x"], dictionary["y"], dictionary["z"], dictionary["w"]);
+					return true;
+				}
+				break;
+			case Variant::VECTOR4I:
+				if (dictionary.has("x") && dictionary.has("y") && dictionary.has("z") && dictionary.has("w")) {
+					r_variant = Vector4i(dictionary["x"], dictionary["y"], dictionary["z"], dictionary["w"]);
+					return true;
+				}
+				break;
+			case Variant::COLOR:
+				if (dictionary.has("r") && dictionary.has("g") && dictionary.has("b")) {
+					r_variant = Color(dictionary["r"], dictionary["g"], dictionary["b"], dictionary.get("a", 1.0));
+					return true;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+
+	r_variant = p_json;
+	return true;
+}
+
+Node *MCPTools::_instantiate_node(const String &p_type, String &r_error) {
+	Object *object = nullptr;
+	if (ClassDB::class_exists(p_type)) {
+		object = ClassDB::instantiate(p_type);
+	} else {
+		if (!ScriptServer::is_global_class(p_type)) {
+			ProjectSettings::get_singleton()->refresh_global_class_list();
+		}
+		if (!ScriptServer::is_global_class(p_type)) {
+			r_error = "Unknown node type: " + p_type;
+			return nullptr;
+		}
+		if (ScriptServer::is_global_class_abstract(p_type)) {
+			r_error = "Script class is abstract: " + p_type;
+			return nullptr;
+		}
+
+		StringName native_base = ScriptServer::get_global_class_native_base(p_type);
+		if (!ClassDB::is_parent_class(native_base, SNAME("Node"))) {
+			r_error = "Script class '" + p_type + "' does not inherit Node";
+			return nullptr;
+		}
+		Ref<Script> script = ResourceLoader::load(ScriptServer::get_global_class_path(p_type), "Script");
+		if (script.is_null()) {
+			r_error = "Failed to load script class: " + p_type;
+			return nullptr;
+		}
+		if (!script->can_instantiate()) {
+			r_error = "Script class cannot be instantiated: " + p_type;
+			return nullptr;
+		}
+		object = ClassDB::instantiate(native_base);
+		Node *node = Object::cast_to<Node>(object);
+		if (!node) {
+			if (object) {
+				memdelete(object);
+			}
+			r_error = "Failed to create script class: " + p_type;
+			return nullptr;
+		}
+		node->set_script(script);
+		if (!node->get_script_instance()) {
+			memdelete(node);
+			r_error = "Failed to instantiate script class: " + p_type;
+			return nullptr;
+		}
+		return node;
+	}
+
+	Node *node = Object::cast_to<Node>(object);
+	if (!node) {
+		if (object) {
+			memdelete(object);
+		}
+		r_error = "Invalid node type: " + p_type;
+	}
+	return node;
+}
+
+bool MCPTools::_register_script_global_classes(const String &p_path, String &r_error) {
+	ScriptLanguage *language = ScriptServer::get_language_for_extension(p_path.get_extension());
+	if (!language) {
+		return true;
+	}
+
+	String base_type;
+	String icon_path;
+	bool is_abstract = false;
+	bool is_tool = false;
+	String class_name = language->get_global_class_name(p_path, &base_type, &icon_path, &is_abstract, &is_tool);
+	if (!class_name.is_empty() && ScriptServer::is_global_class(class_name) && ScriptServer::get_global_class_path(class_name) != p_path) {
+		r_error = "Global class '" + class_name + "' is already registered at " + ScriptServer::get_global_class_path(class_name);
+		return false;
+	}
+
+	ScriptServer::remove_global_class_by_path(p_path);
+	ScriptServer::remove_global_struct_by_path(p_path);
+
+	List<StringName> struct_names;
+	language->get_global_struct_names(p_path, &struct_names);
+	for (const StringName &struct_name : struct_names) {
+		ScriptServer::add_global_struct(struct_name, language->get_name(), p_path);
+	}
+	if (!class_name.is_empty()) {
+		ScriptServer::add_global_class(class_name, base_type, language->get_name(), p_path, is_abstract, is_tool);
+	}
+	ScriptServer::save_global_classes();
+	return true;
 }
 
 Error MCPTools::_ensure_callback_exists(const String &p_script_path, const String &p_callback_name) {
@@ -201,7 +406,7 @@ Array MCPTools::get_tool_definitions() {
 		props["node_type"] = MCPSchemaBuilder::make_string_property("Type for 'add' or 'create'");
 		props["node_name"] = MCPSchemaBuilder::make_string_property("Name for node");
 		props["property"] = MCPSchemaBuilder::make_string_property("Property name");
-		props["value"] = MCPSchemaBuilder::make_object_property("Value (supports numbers, strings, and objects like {x:0, y:0})");
+		props["value"] = MCPSchemaBuilder::make_any_property("Value (supports numbers, strings, arrays, dictionaries, resource paths, and objects like {x: 0, y: 0})");
 		props["signal"] = MCPSchemaBuilder::make_string_property("Signal name");
 		props["target_node"] = MCPSchemaBuilder::make_string_property("Target node path for connect/reparent");
 		props["method"] = MCPSchemaBuilder::make_string_property("Valid GDScript method identifier for connect");
@@ -226,7 +431,7 @@ Array MCPTools::get_tool_definitions() {
 		props["path"] = MCPSchemaBuilder::make_string_property("Path to resource (.tres) or asset");
 		props["type"] = MCPSchemaBuilder::make_string_property("Type for 'create'");
 		props["property"] = MCPSchemaBuilder::make_string_property("Property name");
-		props["value"] = MCPSchemaBuilder::make_object_property("Value");
+		props["value"] = MCPSchemaBuilder::make_any_property("Value");
 		props["new_path"] = MCPSchemaBuilder::make_string_property("Path for 'duplicate'");
 
 		Array required;
@@ -264,7 +469,7 @@ Array MCPTools::get_tool_definitions() {
 		Dictionary props;
 		props["action"] = MCPSchemaBuilder::make_string_property("Action: 'get_info', 'set_setting', 'add_input', 'add_autoload', 'run', 'stop', 'output', 'list_files', 'read_file_res', 'create_file_res', 'open_editor'");
 		props["setting"] = MCPSchemaBuilder::make_string_property("Used by 'set_setting' (key), 'add_input' (action name), 'add_autoload' (autoload name)");
-		props["value"] = MCPSchemaBuilder::make_object_property("Used by 'set_setting' (arbitrary value), 'add_input' ({keycode: int|str, deadzone: float}). NOT used by add_autoload.");
+		props["value"] = MCPSchemaBuilder::make_any_property("Used by 'set_setting' (arbitrary value), 'add_input' ({keycode: int|str, deadzone: float}). NOT used by add_autoload.");
 		props["path"] = MCPSchemaBuilder::make_string_property("Used by 'add_autoload' (script path res://), 'list_files', 'read_file_res', 'create_file_res'");
 		props["content"] = MCPSchemaBuilder::make_string_property("Content for 'create_file_res'");
 
@@ -283,15 +488,16 @@ Array MCPTools::get_tool_definitions() {
 	{
 		Dictionary props;
 		props["action"] = MCPSchemaBuilder::make_string_property("Action: 'capture', 'click', 'type', 'trigger_action', 'inspect_live', 'wait'");
-		props["scale"] = MCPSchemaBuilder::make_object_property("Scale for screenshot (0.1 to 1.0)");
+		props["scale"] = MCPSchemaBuilder::make_number_property("Scale for screenshot (0.1 to 1.0)");
 		props["node_path"] = MCPSchemaBuilder::make_string_property("Node path for click/inspect");
 		props["text"] = MCPSchemaBuilder::make_string_property("Text for 'type'");
 		props["action_name"] = MCPSchemaBuilder::make_string_property("Action name for 'trigger_action' (e.g. ui_cancel)");
-		props["x"] = MCPSchemaBuilder::make_object_property("X coord for click");
-		props["y"] = MCPSchemaBuilder::make_object_property("Y coord for click");
-		props["seconds"] = MCPSchemaBuilder::make_object_property("Wait duration");
+		props["x"] = MCPSchemaBuilder::make_number_property("X coord for click");
+		props["y"] = MCPSchemaBuilder::make_number_property("Y coord for click");
+		props["seconds"] = MCPSchemaBuilder::make_number_property("Wait duration");
 		props["recursive"] = MCPSchemaBuilder::make_boolean_property("Recursive tree dump (for inspect_live)");
-		props["depth"] = MCPSchemaBuilder::make_object_property("Max depth for recursive dump");
+		props["depth"] = MCPSchemaBuilder::make_number_property("Max depth for recursive dump");
+		props["timeout_ms"] = MCPSchemaBuilder::make_number_property("Bridge response timeout in milliseconds (default 5000, maximum 120000)");
 
 		Array required;
 		required.push_back("action");
@@ -346,6 +552,10 @@ MCPTools::ToolResult MCPTools::tool_scene_action(const Dictionary &p_args) {
 		result.set_error("Missing action or scene_path");
 		return result;
 	}
+	if (action != "add" && action != "remove" && action != "instance" && action != "set_prop" && action != "connect" && action != "get_node" && action != "reparent" && action != "create") {
+		result.set_error("Unknown scene action: " + action);
+		return result;
+	}
 
 	if (!validate_path(scene_path)) {
 		result.set_error("Invalid scene_path");
@@ -357,24 +567,19 @@ MCPTools::ToolResult MCPTools::tool_scene_action(const Dictionary &p_args) {
 	if (action == "create") {
 		String root_type = p_args.get("node_type", "Node2D");
 		String root_name = p_args.get("node_name", "");
-		if (!ClassDB::class_exists(root_type)) {
-			result.set_error("Unknown node type: " + root_type);
-			return result;
-		}
-		Object *obj = ClassDB::instantiate(root_type);
-		Node *root_node = Object::cast_to<Node>(obj);
+		String instantiate_error;
+		Node *root_node = _instantiate_node(root_type, instantiate_error);
 		if (!root_node) {
-			if (obj) {
-				memdelete(obj);
-			}
-			result.set_error("Failed to create root node");
+			result.set_error(instantiate_error);
 			return result;
 		}
 		root_node->set_name(root_name.is_empty() ? scene_path.get_file().get_basename() : root_name);
 		Ref<PackedScene> new_scene;
 		new_scene.instantiate();
-		new_scene->pack(root_node);
-		Error err = ResourceSaver::save(new_scene, normalized_scene);
+		Error err = new_scene->pack(root_node);
+		if (err == OK) {
+			err = ResourceSaver::save(new_scene, normalized_scene);
+		}
 		memdelete(root_node);
 		if (err != OK) {
 			result.set_error("Failed to save scene: " + itos(err));
@@ -384,13 +589,17 @@ MCPTools::ToolResult MCPTools::tool_scene_action(const Dictionary &p_args) {
 		return result;
 	}
 
-	Ref<PackedScene> scene = ResourceLoader::load(normalized_scene, "PackedScene");
+	Ref<PackedScene> scene = ResourceLoader::load(normalized_scene, "PackedScene", ResourceFormatLoader::CACHE_MODE_IGNORE);
 	if (scene.is_null()) {
 		result.set_error("Failed to load scene: " + normalized_scene);
 		return result;
 	}
 
+#ifdef TOOLS_ENABLED
+	Node *root = scene->instantiate(PackedScene::GEN_EDIT_STATE_MAIN);
+#else
 	Node *root = scene->instantiate();
+#endif
 	if (!root) {
 		result.set_error("Failed to instantiate scene");
 		return result;
@@ -436,13 +645,10 @@ MCPTools::ToolResult MCPTools::tool_scene_action(const Dictionary &p_args) {
 		if (!parent) {
 			result.set_error("Parent not found");
 		} else {
-			Object *obj = ClassDB::instantiate(node_type);
-			Node *new_node = Object::cast_to<Node>(obj);
+			String instantiate_error;
+			Node *new_node = _instantiate_node(node_type, instantiate_error);
 			if (!new_node) {
-				if (obj) {
-					memdelete(obj);
-				}
-				result.set_error("Invalid type");
+				result.set_error(instantiate_error);
 			} else {
 				if (!node_name.is_empty()) {
 					new_node->set_name(node_name);
@@ -471,11 +677,15 @@ MCPTools::ToolResult MCPTools::tool_scene_action(const Dictionary &p_args) {
 			result.set_error("Invalid instance_path: " + instance_path);
 		} else {
 			Node *parent = (parent_path == "." || parent_path.is_empty()) ? root : root->get_node_or_null(parent_path);
-			Ref<PackedScene> sub = ResourceLoader::load(normalize_path(instance_path), "PackedScene");
+			Ref<PackedScene> sub = ResourceLoader::load(normalize_path(instance_path), "PackedScene", ResourceFormatLoader::CACHE_MODE_IGNORE);
 			if (!parent || sub.is_null()) {
 				result.set_error("Parent or instance scene not found");
 			} else {
+#ifdef TOOLS_ENABLED
+				Node *instance = sub->instantiate(PackedScene::GEN_EDIT_STATE_INSTANCE);
+#else
 				Node *instance = sub->instantiate();
+#endif
 				if (!instance) {
 					result.set_error("Failed to instantiate scene: " + instance_path);
 				} else {
@@ -492,14 +702,31 @@ MCPTools::ToolResult MCPTools::tool_scene_action(const Dictionary &p_args) {
 	} else if (action == "set_prop") {
 		String node_path = p_args.get("node_path", ".");
 		String property = p_args.get("property", "");
-		Variant value = _json_to_variant(p_args.get("value", Variant()));
 		Node *target = (node_path == "." || node_path.is_empty()) ? root : root->get_node_or_null(node_path);
 		if (!target) {
 			result.set_error("Node not found");
+		} else if (property.is_empty()) {
+			result.set_error("Missing property");
 		} else {
-			target->set(property, value);
-			should_save = true;
-			result.add_text("Set property '" + property + "'");
+			PropertyInfo property_info;
+			if (!_get_property_info(target, property, property_info)) {
+				result.set_error("Property does not exist: " + property);
+			} else {
+				Variant value;
+				String conversion_error;
+				if (!_json_to_variant(p_args.get("value", Variant()), property_info, value, conversion_error)) {
+					result.set_error(conversion_error);
+				} else {
+					bool valid = false;
+					target->set(property, value, &valid);
+					if (!valid) {
+						result.set_error("Failed to set property: " + property);
+					} else {
+						should_save = true;
+						result.add_text("Set property '" + property + "'");
+					}
+				}
+			}
 		}
 	} else if (action == "connect") {
 		String node_path = p_args.get("node_path", ".");
@@ -592,6 +819,10 @@ MCPTools::ToolResult MCPTools::tool_resource_action(const Dictionary &p_args) {
 		result.set_error("Missing action or path");
 		return result;
 	}
+	if (action != "create" && action != "modify" && action != "inspect" && action != "duplicate" && action != "inspect_asset") {
+		result.set_error("Unknown resource action: " + action);
+		return result;
+	}
 	if (!validate_path(path)) {
 		result.set_error("Invalid path: " + path);
 		return result;
@@ -634,7 +865,7 @@ MCPTools::ToolResult MCPTools::tool_resource_action(const Dictionary &p_args) {
 		return result;
 	}
 
-	Ref<Resource> res = ResourceLoader::load(normalized);
+	Ref<Resource> res = ResourceLoader::load(normalized, "", ResourceFormatLoader::CACHE_MODE_IGNORE);
 	if (res.is_null()) {
 		result.set_error("Failed to load resource");
 		return result;
@@ -652,13 +883,32 @@ MCPTools::ToolResult MCPTools::tool_resource_action(const Dictionary &p_args) {
 		result.add_text(JSON::stringify(props, "  "));
 	} else if (action == "modify") {
 		String prop = p_args.get("property", "");
-		Variant val = _json_to_variant(p_args.get("value", Variant()));
-		res->set(prop, val);
-		Error err = ResourceSaver::save(res, normalized);
-		if (err != OK) {
-			result.set_error("Failed to save modified resource: " + itos(err));
+		if (prop.is_empty()) {
+			result.set_error("Missing property");
 		} else {
-			result.add_text("Modified resource");
+			PropertyInfo property_info;
+			if (!_get_property_info(res.ptr(), prop, property_info)) {
+				result.set_error("Property does not exist: " + prop);
+			} else {
+				Variant value;
+				String conversion_error;
+				if (!_json_to_variant(p_args.get("value", Variant()), property_info, value, conversion_error)) {
+					result.set_error(conversion_error);
+				} else {
+					bool valid = false;
+					res->set(prop, value, &valid);
+					if (!valid) {
+						result.set_error("Failed to set property: " + prop);
+					} else {
+						Error err = ResourceSaver::save(res, normalized);
+						if (err != OK) {
+							result.set_error("Failed to save modified resource: " + itos(err));
+						} else {
+							result.add_text("Modified resource");
+						}
+					}
+				}
+			}
 		}
 	} else if (action == "duplicate") {
 		String np = p_args.get("new_path", "");
@@ -856,6 +1106,10 @@ MCPTools::ToolResult MCPTools::tool_code_intel(const Dictionary &p_args) {
 MCPTools::ToolResult MCPTools::tool_project_config(const Dictionary &p_args) {
 	ToolResult result;
 	String action = p_args.get("action", "");
+	if (action != "get_info" && action != "set_setting" && action != "add_input" && action != "add_autoload" && action != "run" && action != "stop" && action != "output" && action != "list_files" && action != "read_file_res" && action != "create_file_res" && action != "open_editor") {
+		result.set_error("Unknown project action: " + action);
+		return result;
+	}
 	if (action == "get_info") {
 		Dictionary info;
 		info["name"] = ProjectSettings::get_singleton()->get_setting("application/config/name", "Unnamed");
@@ -951,10 +1205,44 @@ MCPTools::ToolResult MCPTools::tool_project_config(const Dictionary &p_args) {
 		if (!d->dir_exists(dir_path)) {
 			d->make_dir_recursive(dir_path);
 		}
+		bool file_existed = FileAccess::exists(norm_p);
+		Vector<uint8_t> previous_contents;
+		if (file_existed) {
+			Error backup_error;
+			previous_contents = FileAccess::get_file_as_bytes(norm_p, &backup_error);
+			if (backup_error != OK) {
+				result.set_error("Failed to back up existing file: " + norm_p);
+				return result;
+			}
+		}
+		auto restore_file = [&]() {
+			if (!file_existed) {
+				return DirAccess::remove_absolute(norm_p);
+			}
+			Error restore_error;
+			Ref<FileAccess> restore = FileAccess::open(norm_p, FileAccess::WRITE, &restore_error);
+			if (restore_error != OK) {
+				return restore_error;
+			}
+			restore->store_buffer(previous_contents.ptr(), previous_contents.size());
+			return restore->get_error();
+		};
 		Ref<FileAccess> f = FileAccess::open(norm_p, FileAccess::WRITE);
 		if (f.is_valid()) {
-			f->store_string(p_args.get("content", ""));
-			result.add_text("Wrote to " + norm_p);
+			if (!f->store_string(p_args.get("content", ""))) {
+				f.unref();
+				Error restore_error = restore_file();
+				result.set_error("Failed to write: " + norm_p + (restore_error == OK ? "" : " (and failed to restore the previous file)"));
+				return result;
+			}
+			f.unref();
+			String registration_error;
+			if (!_register_script_global_classes(norm_p, registration_error)) {
+				Error restore_error = restore_file();
+				result.set_error(registration_error + (restore_error == OK ? "" : " (and failed to restore the previous file)"));
+			} else {
+				result.add_text("Wrote to " + norm_p);
+			}
 		} else {
 			result.set_error("Failed to write: " + norm_p);
 		}
@@ -1079,7 +1367,10 @@ MCPTools::ToolResult MCPTools::tool_game_control(const Dictionary &p_args) {
 		result.set_error("Game process not connected to bridge yet. Try action='wait' first.");
 		return result;
 	}
-	Dictionary resp = MCPBridge::get_singleton()->send_command(action, p_args);
+	int timeout_msec = p_args.get("timeout_ms", 5000);
+	Dictionary bridge_args = p_args.duplicate();
+	bridge_args.erase("timeout_ms");
+	Dictionary resp = MCPBridge::get_singleton()->send_command(action, bridge_args, true, timeout_msec);
 	if (resp.has("error")) {
 		result.set_error(resp["error"]);
 	} else if (resp.has("image_base64")) {

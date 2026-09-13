@@ -493,7 +493,7 @@ void ScriptServer::add_global_class(const StringName &p_class, const StringName 
 	GlobalScriptClass *existing = global_classes.getptr(p_class);
 	if (existing) {
 		// Update an existing class (only set dirty if something changed).
-		if (existing->base != p_base || existing->path != p_path || existing->language != p_language) {
+		if (existing->base != p_base || existing->path != p_path || existing->language != p_language || existing->is_abstract != p_is_abstract || existing->is_tool != p_is_tool) {
 			existing->base = p_base;
 			existing->path = p_path;
 			existing->language = p_language;
@@ -612,10 +612,10 @@ void ScriptServer::save_global_classes() {
 	Array script_classes = ProjectSettings::get_singleton()->get_global_class_list();
 	for (const Variant &script_class : script_classes) {
 		Dictionary d = script_class;
-		if (!d.has("name") || !d.has("icon")) {
+		if (!d.has("class") || !d.has("icon")) {
 			continue;
 		}
-		class_icons[d["name"]] = d["icon"];
+		class_icons[d["class"]] = d["icon"];
 	}
 
 	LocalVector<StringName> gc;

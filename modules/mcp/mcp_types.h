@@ -147,6 +147,19 @@ public:
 		return prop;
 	}
 
+	static Dictionary make_any_property(const String &description) {
+		Dictionary prop;
+		prop["description"] = description;
+		return prop;
+	}
+
+	static Dictionary make_number_property(const String &description) {
+		Dictionary prop;
+		prop["type"] = "number";
+		prop["description"] = description;
+		return prop;
+	}
+
 	static Dictionary make_array_property(const String &description, const Dictionary &items = Dictionary()) {
 		Dictionary prop;
 		prop["type"] = "array";

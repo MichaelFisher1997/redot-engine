@@ -46,6 +46,8 @@
 #include "core/variant/dictionary.h"
 #include "core/variant/variant.h"
 
+class Node;
+
 class MCPTools : public Object {
 	GDCLASS(MCPTools, Object)
 
@@ -103,7 +105,10 @@ public:
 private:
 	/// @name Helpers
 	/// @{
-	static Variant _json_to_variant(const Variant &p_json, Variant::Type p_type = Variant::NIL);
+	static bool _get_property_info(Object *p_object, const StringName &p_property, PropertyInfo &r_property_info);
+	static bool _json_to_variant(const Variant &p_json, const PropertyInfo &p_property_info, Variant &r_variant, String &r_error);
+	static Node *_instantiate_node(const String &p_type, String &r_error);
+	static bool _register_script_global_classes(const String &p_path, String &r_error);
 	static Error _ensure_callback_exists(const String &p_script_path, const String &p_callback_name);
 	/// @}
 };
