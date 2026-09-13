@@ -43,6 +43,7 @@
 #include "core/input/input_enums.h"
 #include "core/input/input_map.h"
 #include "core/io/json.h"
+#include "core/math/math_funcs.h"
 #include "core/os/keyboard.h"
 #include "core/os/os.h"
 #include "scene/2d/node_2d.h"
@@ -56,6 +57,10 @@
 #include <functional>
 
 MCPBridge *MCPBridge::singleton = nullptr;
+
+static const int MCP_MAX_REQUEST_FRAME_SIZE = 1024 * 1024;
+static const int MCP_MAX_RESPONSE_FRAME_SIZE = 64 * 1024 * 1024;
+static const int MCP_MAX_TIMEOUT_MSEC = 120000;
 
 MCPBridge::MCPBridge() {
 	singleton = this;
@@ -95,8 +100,14 @@ Error MCPBridge::start_server(int p_port) {
 bool MCPBridge::is_client_connected() const {
 	MutexLock lock(mutex);
 	if (connection.is_valid()) {
-		connection->poll();
-		return connection->get_status() == StreamPeerTCP::STATUS_CONNECTED;
+		Error poll_err = connection->poll();
+		if (poll_err == OK && connection->get_status() == StreamPeerTCP::STATUS_CONNECTED) {
+			return true;
+		}
+		if (poll_err != OK || connection->get_status() != StreamPeerTCP::STATUS_CONNECTING) {
+			partial_data.clear();
+			host_receive_buffer.clear();
+		}
 	}
 	return false;
 }
@@ -104,102 +115,178 @@ bool MCPBridge::is_client_connected() const {
 Error MCPBridge::connect_to_server(const String &p_host, int p_port) {
 	MutexLock lock(mutex);
 	is_host = false;
+	if (connection.is_valid()) {
+		connection->disconnect_from_host();
+		connection.unref();
+	}
+	partial_data.clear();
+	host_receive_buffer.clear();
 	connection.instantiate();
 	port = p_port;
 	fprintf(stderr, "[MCP] Game process connecting to bridge at %s:%d\n", p_host.utf8().get_data(), port);
 	return connection->connect_to_host(p_host, p_port);
 }
 
-Dictionary MCPBridge::send_command(const String &p_action, const Dictionary &p_args, bool p_wait_for_response) {
-	Ref<StreamPeerTCP> conn;
-	{
-		MutexLock lock(mutex);
-		if (!connection.is_valid() || connection->get_status() != StreamPeerTCP::STATUS_CONNECTED) {
-			Dictionary err;
-			err["error"] = "Bridge not connected";
-			return err;
+Dictionary MCPBridge::send_command(const String &p_action, const Dictionary &p_args, bool p_wait_for_response, int p_timeout_msec) {
+	// Keep the mutex for the complete request/response exchange. In particular,
+	// update() must not poll or consume a response belonging to this command.
+	MutexLock lock(mutex);
+	Error poll_err = connection.is_valid() ? connection->poll() : ERR_UNAVAILABLE;
+	if (!connection.is_valid() || poll_err != OK || connection->get_status() != StreamPeerTCP::STATUS_CONNECTED) {
+		if (connection.is_valid()) {
+			connection->disconnect_from_host();
+			connection.unref();
+			partial_data.clear();
+			host_receive_buffer.clear();
 		}
-		conn = connection;
+		Dictionary err;
+		err["error"] = "Bridge not connected";
+		return err;
 	}
+	Ref<StreamPeerTCP> conn = connection;
 
 	Dictionary cmd;
 	cmd["action"] = p_action;
 	cmd["args"] = p_args;
+	String command_id = String::num_uint64(next_command_id++);
+	cmd["id"] = command_id;
+	cmd["expects_response"] = p_wait_for_response;
 
 	String json = JSON::stringify(cmd);
 	CharString utf8 = json.utf8();
-	conn->put_data((const uint8_t *)utf8.get_data(), utf8.length());
-	conn->put_u8('\n');
+	const uint8_t newline = '\n';
+	if (utf8.length() + 1 > MCP_MAX_REQUEST_FRAME_SIZE) {
+		Dictionary err;
+		err["error"] = "Bridge request exceeds frame limit";
+		return err;
+	}
+	if (conn->put_data((const uint8_t *)utf8.get_data(), utf8.length()) != OK || conn->put_data(&newline, 1) != OK) {
+		conn->disconnect_from_host();
+		if (connection == conn) {
+			connection.unref();
+		}
+		host_receive_buffer.clear();
+		Dictionary err;
+		err["error"] = "Bridge write failed";
+		return err;
+	}
 	if (!p_wait_for_response) {
 		return Dictionary();
 	}
 
-	// Wait for response (blocking with timeout)
+	// Wait for a matching response (blocking with timeout).
 	uint64_t start_time = OS::get_singleton()->get_ticks_msec();
-	CharString raw_buffer;
-	bool got_response = false;
-	while (OS::get_singleton()->get_ticks_msec() - start_time < 5000) {
-		conn->poll();
+	uint64_t timeout_msec = CLAMP(p_timeout_msec > 0 ? p_timeout_msec : 5000, 1, MCP_MAX_TIMEOUT_MSEC);
+	int receive_scan_offset = 0;
+	while (OS::get_singleton()->get_ticks_msec() - start_time < timeout_msec) {
+		if (conn->poll() != OK || conn->get_status() != StreamPeerTCP::STATUS_CONNECTED) {
+			conn->disconnect_from_host();
+			if (connection == conn) {
+				connection.unref();
+			}
+			host_receive_buffer.clear();
+			Dictionary err;
+			err["error"] = "Bridge connection lost";
+			return err;
+		}
 		int avail = conn->get_available_bytes();
+		if (avail < 0) {
+			conn->disconnect_from_host();
+			if (connection == conn) {
+				connection.unref();
+			}
+			host_receive_buffer.clear();
+			Dictionary err;
+			err["error"] = "Bridge read failed";
+			return err;
+		}
+		bool read_data = false;
 		if (avail > 0) {
 			uint8_t buf[4096];
 			int to_read = avail < (int)sizeof(buf) ? avail : (int)sizeof(buf);
 			int read_bytes = 0;
-			conn->get_partial_data(buf, to_read, read_bytes);
-			if (read_bytes > 0) {
-				// Append raw bytes to the buffer (resize + copy).
-				int old_len = raw_buffer.length();
-				raw_buffer.resize_uninitialized(old_len + read_bytes + 1);
-				char *dst = raw_buffer.ptrw();
-				memcpy(dst + old_len, buf, read_bytes);
-				dst[old_len + read_bytes] = 0;
-
-				// Only scan the newly appended bytes for the delimiter.
-				for (int i = old_len; i < old_len + read_bytes; i++) {
-					if (raw_buffer[i] == '\n') {
-						got_response = true;
-						break;
-					}
+			if (conn->get_partial_data(buf, to_read, read_bytes) != OK) {
+				conn->disconnect_from_host();
+				if (connection == conn) {
+					connection.unref();
 				}
-				if (got_response) {
+				host_receive_buffer.clear();
+				Dictionary err;
+				err["error"] = "Bridge read failed";
+				return err;
+			}
+			if (read_bytes > 0) {
+				int old_len = host_receive_buffer.size();
+				host_receive_buffer.resize(old_len + read_bytes);
+				uint8_t *dst = host_receive_buffer.ptrw();
+				memcpy(dst + old_len, buf, read_bytes);
+				read_data = true;
+			}
+		}
+
+		while (true) {
+			int newline_pos = -1;
+			for (int i = receive_scan_offset; i < host_receive_buffer.size(); i++) {
+				if (host_receive_buffer[i] == '\n') {
+					newline_pos = i;
 					break;
 				}
 			}
-		} else {
+
+			if (newline_pos < 0) {
+				receive_scan_offset = host_receive_buffer.size();
+				if (host_receive_buffer.size() > MCP_MAX_RESPONSE_FRAME_SIZE) {
+					conn->disconnect_from_host();
+					if (connection == conn) {
+						connection.unref();
+					}
+					host_receive_buffer.clear();
+					Dictionary err;
+					err["error"] = "Bridge response exceeds frame limit";
+					return err;
+				}
+				break;
+			}
+			if (newline_pos > MCP_MAX_RESPONSE_FRAME_SIZE) {
+				conn->disconnect_from_host();
+				if (connection == conn) {
+					connection.unref();
+				}
+				host_receive_buffer.clear();
+				Dictionary err;
+				err["error"] = "Bridge response exceeds frame limit";
+				return err;
+			}
+
+			String response_str = newline_pos > 0 ? String::utf8((const char *)host_receive_buffer.ptr(), newline_pos) : String();
+			host_receive_buffer = host_receive_buffer.slice(newline_pos + 1);
+			receive_scan_offset = 0;
+			Variant res_var = JSON::parse_string(response_str);
+			if (res_var.get_type() != Variant::DICTIONARY) {
+				continue;
+			}
+
+			Dictionary response = res_var;
+			if (response.has("id") && response["id"] != command_id) {
+				continue;
+			}
+			response.erase("id");
+			return response;
+		}
+		if (!read_data) {
 			OS::get_singleton()->delay_usec(1000);
 		}
 	}
 
-	if (!got_response) {
-		Dictionary err;
-		err["error"] = "Bridge timeout";
-		return err;
+	// A late legacy response has no ID and cannot be distinguished from a
+	// later request. Drop the connection so it cannot poison the next command.
+	conn->disconnect_from_host();
+	if (connection == conn) {
+		connection.unref();
 	}
-
-	// Decode the full buffer at once so multi-byte UTF-8 sequences
-	// spanning TCP chunk boundaries are handled correctly.
-	int nl = -1;
-	for (int i = 0; i < raw_buffer.length(); i++) {
-		if (raw_buffer[i] == '\n') {
-			nl = i;
-			break;
-		}
-	}
-	int len = (nl >= 0) ? nl : raw_buffer.length();
-	String response_str = String::utf8(raw_buffer.get_data(), len);
-	if (response_str.is_empty()) {
-		Dictionary err;
-		err["error"] = "Empty response";
-		return err;
-	}
-
-	Variant res_var = JSON::parse_string(response_str);
-	if (res_var.get_type() == Variant::DICTIONARY) {
-		return res_var;
-	}
-
+	host_receive_buffer.clear();
 	Dictionary err;
-	err["error"] = "Bridge invalid response: " + response_str;
+	err["error"] = "Bridge timeout";
 	return err;
 }
 
@@ -209,22 +296,31 @@ void MCPBridge::disconnect_peer() {
 		connection->disconnect_from_host();
 		connection.unref();
 	}
-	partial_data = "";
+	partial_data.clear();
+	host_receive_buffer.clear();
 }
 
 void MCPBridge::update() {
 	MutexLock lock(mutex);
 	if (is_host) {
+		bool current_ok = false;
+		if (connection.is_valid()) {
+			current_ok = connection->poll() == OK && connection->get_status() == StreamPeerTCP::STATUS_CONNECTED;
+			if (!current_ok) {
+				connection->disconnect_from_host();
+				connection.unref();
+				partial_data.clear();
+				host_receive_buffer.clear();
+			}
+		}
+
 		if (server->is_connection_available()) {
 			// Only replace the connection if the current one is stale/disconnected,
 			// so we never drop a peer mid-command from the bridge thread.
-			bool current_ok = false;
-			if (connection.is_valid()) {
-				connection->poll();
-				current_ok = (connection->get_status() == StreamPeerTCP::STATUS_CONNECTED);
-			}
 			if (!current_ok) {
 				connection = server->take_connection();
+				partial_data.clear();
+				host_receive_buffer.clear();
 				fprintf(stderr, "[MCP] Game process connected to bridge on host side\n");
 			} else {
 				// Drain and discard the extra pending connection.
@@ -236,39 +332,99 @@ void MCPBridge::update() {
 	} else {
 		// Client (Game) side
 		if (connection.is_valid()) {
-			connection->poll();
-			if (connection->get_status() == StreamPeerTCP::STATUS_CONNECTED) {
-				Ref<StreamPeerTCP> conn = connection;
-				while (conn->get_available_bytes() > 0) {
-					uint8_t c;
-					int read_bytes;
-					conn->get_partial_data(&c, 1, read_bytes);
-					if (read_bytes > 0) {
-						if (c == '\n') {
-							String cmd_str = partial_data;
-							partial_data = "";
+			Error poll_err = connection->poll();
+			if (poll_err != OK || connection->get_status() == StreamPeerTCP::STATUS_ERROR || connection->get_status() == StreamPeerTCP::STATUS_NONE) {
+				connection->disconnect_from_host();
+				connection.unref();
+				partial_data.clear();
+				host_receive_buffer.clear();
+				return;
+			}
+			if (connection->get_status() != StreamPeerTCP::STATUS_CONNECTED) {
+				return;
+			}
 
-							mutex.unlock();
-							Variant cmd_var = JSON::parse_string(cmd_str);
-							if (cmd_var.get_type() == Variant::DICTIONARY) {
-								Dictionary resp = _process_command(cmd_var);
-								String resp_json = JSON::stringify(resp);
-								CharString utf8 = resp_json.utf8();
+			Ref<StreamPeerTCP> conn = connection;
+			while (true) {
+				int available = conn->get_available_bytes();
+				if (available < 0) {
+					conn->disconnect_from_host();
+					if (connection == conn) {
+						connection.unref();
+					}
+					partial_data.clear();
+					host_receive_buffer.clear();
+					break;
+				}
+				if (available == 0) {
+					break;
+				}
 
-								mutex.lock();
-								if (connection.is_valid() && connection->get_status() == StreamPeerTCP::STATUS_CONNECTED) {
-									connection->put_data((const uint8_t *)utf8.get_data(), utf8.length());
-									connection->put_u8('\n');
-								}
-							} else {
-								mutex.lock();
-							}
-						} else {
-							if (partial_data.length() > 1024 * 1024) { // 1MB limit
-								partial_data = "";
-							}
-							partial_data += (char)c;
+				uint8_t c;
+				int read_bytes = 0;
+				if (conn->get_partial_data(&c, 1, read_bytes) != OK) {
+					conn->disconnect_from_host();
+					if (connection == conn) {
+						connection.unref();
+					}
+					partial_data.clear();
+					host_receive_buffer.clear();
+					break;
+				}
+				if (read_bytes == 0) {
+					break;
+				}
+
+				if (c != '\n') {
+					partial_data.append(c);
+					if (partial_data.size() > MCP_MAX_REQUEST_FRAME_SIZE) {
+						conn->disconnect_from_host();
+						if (connection == conn) {
+							connection.unref();
 						}
+						partial_data.clear();
+						host_receive_buffer.clear();
+						break;
+					}
+					continue;
+				}
+
+				String cmd_str = partial_data.is_empty() ? String() : String::utf8((const char *)partial_data.ptr(), partial_data.size());
+				partial_data.clear();
+
+				mutex.unlock();
+				Variant cmd_var = JSON::parse_string(cmd_str);
+				Dictionary resp;
+				bool send_response = false;
+				if (cmd_var.get_type() == Variant::DICTIONARY) {
+					Dictionary cmd = cmd_var;
+					resp = _process_command(cmd);
+					if (cmd.has("id")) {
+						resp["id"] = cmd["id"];
+					}
+					send_response = cmd.get("expects_response", true);
+				}
+				mutex.lock();
+
+				if (send_response && connection == conn) {
+					if (conn->poll() != OK || conn->get_status() != StreamPeerTCP::STATUS_CONNECTED) {
+						conn->disconnect_from_host();
+						connection.unref();
+						partial_data.clear();
+						host_receive_buffer.clear();
+						break;
+					}
+					String resp_json = JSON::stringify(resp);
+					CharString utf8 = resp_json.utf8();
+					const uint8_t newline = '\n';
+					if (conn->put_data((const uint8_t *)utf8.get_data(), utf8.length()) != OK || conn->put_data(&newline, 1) != OK) {
+						conn->disconnect_from_host();
+						if (connection == conn) {
+							connection.unref();
+						}
+						partial_data.clear();
+						host_receive_buffer.clear();
+						break;
 					}
 				}
 			}
@@ -343,6 +499,10 @@ Dictionary MCPBridge::_process_command(const Dictionary &p_cmd) {
 			}
 
 			float scale = args.get("scale", 1.0);
+			if (!Math::is_finite(scale) || scale < 0.1 || scale > 1.0) {
+				resp["error"] = "Capture scale must be between 0.1 and 1.0";
+				return resp;
+			}
 			if (scale != 1.0) {
 				img->resize(img->get_width() * scale, img->get_height() * scale);
 			}

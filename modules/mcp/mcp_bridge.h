@@ -56,7 +56,9 @@ private:
 
 	bool is_host = false;
 	int port = 0;
-	String partial_data;
+	uint64_t next_command_id = 1;
+	mutable PackedByteArray partial_data;
+	mutable PackedByteArray host_receive_buffer;
 
 	/// Internal command handling
 	Dictionary _process_command(const Dictionary &p_cmd);
@@ -81,7 +83,7 @@ public:
 
 	/// Communication
 	/// Sends a command and optionally waits for its response.
-	Dictionary send_command(const String &p_action, const Dictionary &p_args = Dictionary(), bool p_wait_for_response = true);
+	Dictionary send_command(const String &p_action, const Dictionary &p_args = Dictionary(), bool p_wait_for_response = true, int p_timeout_msec = 5000);
 	void disconnect_peer(); ///< Closes and clears the current bridge connection.
 	void update(); ///< Called by MainLoop or Server loop
 };
